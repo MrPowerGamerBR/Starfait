@@ -97,6 +97,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.SUB -> handleSub(reader, type1, type2)
                 Op.CALL -> handleCall(reader, extra)
                 Op.DUP -> handleDup(reader, type1, extra)
+                Op.BREAK -> handleBreak(reader)
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
         }
@@ -425,6 +426,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
             val target = stack.peekAt(dupBottom + it)
             stack.push().copyFrom(target)
         }
+    }
+
+    private fun handleBreak(reader: StarfaitByteBuffer) {
+        // For *real* games, the BREAK opcode is only used to check the array size to avoid querying out of bounds
+        println("BREAK opcode called, it isn't implemented yet")
     }
 
     /**

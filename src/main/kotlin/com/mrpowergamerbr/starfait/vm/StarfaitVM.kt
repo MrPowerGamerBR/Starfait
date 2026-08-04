@@ -95,6 +95,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 }
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.SUB -> handleSub(reader, type1, type2)
+                Op.MUL -> handleMul(reader, type1, type2)
                 Op.CALL -> handleCall(reader, extra)
                 Op.DUP -> handleDup(reader, type1, extra)
                 Op.BREAK -> handleBreak(reader)
@@ -412,6 +413,20 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val pushed = stack.push()
 
         pushed.setReal(left.real - right.real)
+    }
+
+    private fun handleMul(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
+        val type1DataType = InstructionDataType.byId(type1)
+        val type2DataType = InstructionDataType.byId(type2)
+
+        // The YoYo Runner uses the type1/type2 data types to know how many bytes to read from the stack
+        // Because we use tagged RValues, we don't need them for this
+        val right = stack.pop()
+        val left = stack.pop()
+
+        val pushed = stack.push()
+
+        pushed.setReal(left.real * right.real)
     }
 
     private fun handleDup(reader: StarfaitByteBuffer, type1: Int, extra: Int) {

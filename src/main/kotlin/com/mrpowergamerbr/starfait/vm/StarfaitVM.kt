@@ -278,44 +278,19 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
         println("ADD type1 is $type1DataType, type2 is $type2DataType")
 
-        val var1 = stack.pop()
-        val var2 = stack.pop()
+        // The YoYo Runner uses the type1/type2 data types to know how many bytes to read from the stack
+        // Because we use tagged RValues, we don't need them for this
+        val right = stack.pop()
+        val left = stack.pop()
 
-        when (type1DataType) {
-            InstructionDataType.DOUBLE -> TODO()
-            InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> {
-                when (type2DataType) {
-                    InstructionDataType.DOUBLE -> TODO()
-                    InstructionDataType.FLOAT -> TODO()
-                    InstructionDataType.INT32 -> stack.push().setInt(var1.int + var2.int)
-                    InstructionDataType.INT64 -> TODO()
-                    InstructionDataType.BOOLEAN -> TODO()
-                    InstructionDataType.VARIABLE -> stack.push().setInt(var1.int + var2.int)
-                    InstructionDataType.STRING -> TODO()
-                    InstructionDataType.INT16 -> TODO()
-                }
-            }
-            InstructionDataType.INT64 -> TODO()
-            InstructionDataType.BOOLEAN -> TODO()
-            InstructionDataType.VARIABLE -> {
-                when (type2DataType) {
-                    InstructionDataType.DOUBLE -> TODO()
-                    InstructionDataType.FLOAT -> TODO()
-                    InstructionDataType.INT32 -> TODO()
-                    InstructionDataType.INT64 -> TODO()
-                    InstructionDataType.BOOLEAN -> TODO()
-                    InstructionDataType.VARIABLE -> TODO()
-                    InstructionDataType.STRING -> {
-                        stack.push().setString(var2.toStringTyped() + var1.toStringTyped())
-                    }
-                    InstructionDataType.INT16 -> TODO()
-                }
-            }
-            InstructionDataType.STRING -> TODO()
-            InstructionDataType.INT16 -> TODO()
+        val pushed = stack.push()
+
+        if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
+            pushed.setString(left.toStringTyped() + right.toStringTyped())
+            return
         }
 
+        pushed.setInt(left.int + right.int)
     }
 
     /**

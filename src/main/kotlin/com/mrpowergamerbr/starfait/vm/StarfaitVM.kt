@@ -40,7 +40,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             val type2 = type2(word)
             val extra = extra(word)
 
-            println("opcode: ${opcode.toHexString()}, type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
+            println("opcode: ${opcode.toHexString()} (${Op.getOpcodeName(opcode)}), type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
 
             print("stack[${stack.top}] = ")
             for (i in 0 until stack.top) {

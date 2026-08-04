@@ -105,7 +105,13 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 val instanceId = if (hasInstanceIdOnStack(operand)) stack.pop().int else extra
 
                 // TODO: Use correct instance here!
-                pushVariableFromObject(global, operand)
+                pushVariableFromObject(
+                    when (instanceId) {
+                        SpecialObjectReferenceType.GLOBAL -> global
+                        else -> error("Unsupported instance ID $instanceId!")
+                    },
+                    operand
+                )
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }

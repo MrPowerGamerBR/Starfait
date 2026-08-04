@@ -66,6 +66,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                     }
                     stack.push().setBoolean(result)
                 }
+                Op.CONV -> handleConv(reader, type1, type2)
                 Op.BF -> {
                     val result = stack.pop().bool
                     if (!result)
@@ -148,6 +149,21 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
         }
+    }
+
+    private fun handleConv(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
+        // type1 is the source type, type2 is the destination type
+        val sourceType = InstructionDataType.byId(type1)
+        val destinationType = InstructionDataType.byId(type2)
+        println("Converting from $sourceType to $destinationType")
+        val popped = stack.pop()
+
+        // no-op, this is only useful if some day we decide to go with tagged variables (that is, using two arrays, one for native values and another for RValues)
+        // Because in that case, we would need to convert the RValue to the native type
+        if (destinationType == InstructionDataType.VARIABLE)
+            return
+
+        TODO()
     }
 
     private fun handlePushImmediate(reader: StarfaitByteBuffer, extra: Int) {

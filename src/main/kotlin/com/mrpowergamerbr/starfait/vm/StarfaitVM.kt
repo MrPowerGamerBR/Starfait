@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
+import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.ObjectBase
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
@@ -11,6 +12,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
     val variables = mutableMapOf<Int, RValue>()
     val global = ObjectBase()
+    var currentInstance: Instance? = null
     lateinit var currentCode: Code
 
     fun executeLoop(code: Code) {
@@ -107,6 +109,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
                     when (instanceId) {
+                        SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
                         SpecialObjectReferenceType.GLOBAL -> global
                         else -> error("Unsupported instance ID $instanceId!")
                     },

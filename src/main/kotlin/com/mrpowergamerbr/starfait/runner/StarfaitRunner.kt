@@ -25,6 +25,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
             // TODO: This is borked because we technically need to filter by the subtype
             val code = gameWAD.code.codes[gameObject.events[EventType.STEP][EventType.StepSubType.NORMAL].actions[0].codeId]
 
+            vm.currentInstance = instance
             vm.executeLoop(code)
         }
     }

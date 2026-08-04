@@ -21,17 +21,22 @@ class VARI(
 
             // The WAD doesn't give us the entry count (fun!)
             val remaining = ((start + chunkSize) - reader.position)
-            require(remaining % ENTRY_SIZE == 0) { "VARI chunk has trailing bytes! There are $remaining bytes remaining!" }
             val entryCount = remaining / ENTRY_SIZE
             val variables = ArrayList<Variable>(entryCount)
             repeat(entryCount) {
+                val name = reader.readStringPointer()
+                val instanceType = reader.readInt()
+                val varId = reader.readInt()
+                val occurrenceCount = reader.readInt()
+                val firstAddress = reader.readInt()
+
                 variables.add(
                     Variable(
-                        name = reader.readStringPointer(),
-                        instanceType = reader.readInt(),
-                        varId = reader.readInt(),
-                        occurrenceCount = reader.readInt(),
-                        firstAddress = reader.readInt()
+                        name = name,
+                        instanceType = instanceType,
+                        varId = varId,
+                        occurrenceCount = occurrenceCount,
+                        firstAddress = firstAddress
                     )
                 )
             }

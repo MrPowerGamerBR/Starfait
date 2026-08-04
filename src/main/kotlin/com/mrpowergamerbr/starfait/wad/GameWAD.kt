@@ -5,6 +5,7 @@ import com.mrpowergamerbr.starfait.wad.chunks.AUDO
 import com.mrpowergamerbr.starfait.wad.chunks.BGND
 import com.mrpowergamerbr.starfait.wad.chunks.CODE
 import com.mrpowergamerbr.starfait.wad.chunks.FONT
+import com.mrpowergamerbr.starfait.wad.chunks.FUNC
 import com.mrpowergamerbr.starfait.wad.chunks.GEN8
 import com.mrpowergamerbr.starfait.wad.chunks.OBJT
 import com.mrpowergamerbr.starfait.wad.chunks.OPTN
@@ -34,7 +35,8 @@ class GameWAD(
     val objt: OBJT,
     val room: ROOM,
     val code: CODE,
-    val vari: VARI
+    val vari: VARI,
+    val func: FUNC
 ) {
     companion object {
         fun read(reader: StarfaitByteBuffer): GameWAD {
@@ -60,6 +62,7 @@ class GameWAD(
             var room: ROOM? = null
             var code: CODE? = null
             var vari: VARI? = null
+            var func: FUNC? = null
 
             // wadSize + the form magic + the wad size int
             // This is essentially an IFF file format
@@ -86,6 +89,7 @@ class GameWAD(
                     "ROOM" -> room = ROOM.read(reader)
                     "CODE" -> code = CODE.read(reader)
                     "VARI" -> vari = VARI.read(reader, chunkSize)
+                    "FUNC" -> func = FUNC.read(reader, chunkSize)
                     else -> println("Unknown chunk $chunkName! (size: $chunkSize)")
                 }
 
@@ -108,6 +112,7 @@ class GameWAD(
             requireNotNull(room)
             requireNotNull(code)
             requireNotNull(vari)
+            requireNotNull(func)
 
             return GameWAD(
                 gen8,
@@ -125,7 +130,8 @@ class GameWAD(
                 objt,
                 room,
                 code,
-                vari
+                vari,
+                func
             )
         }
     }

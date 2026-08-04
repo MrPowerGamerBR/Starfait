@@ -9,6 +9,7 @@ import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.Background
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.Font
+import com.mrpowergamerbr.starfait.wad.Function
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
@@ -27,6 +28,7 @@ class StarfaitCLI : CliktCommand() {
     val printRooms by option()
     val printCodes by option()
     val printVariables by option()
+    val printFunctions by option()
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>, match: String) {
         for ((index, element) in list.withIndex()) {
@@ -80,9 +82,14 @@ class StarfaitCLI : CliktCommand() {
             return
         }
 
+        if (printFunctions != null) {
+            dump(gameWAD, "Function", gameWAD.func.functions, Function::name, printFunctions!!)
+            return
+        }
+
         val vm = StarfaitVM(gameWAD)
 
-        vm.remapVariableReferences()
+        vm.remapReferences()
 
         val runner = StarfaitRunner(gameWAD, vm)
         runner.start()

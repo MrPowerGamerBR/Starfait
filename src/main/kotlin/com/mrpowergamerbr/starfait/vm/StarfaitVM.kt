@@ -2,8 +2,6 @@ package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
-import com.mrpowergamerbr.starfait.StarfaitUtils
-import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.ObjectBase
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
@@ -48,8 +46,9 @@ class StarfaitVM(val gameWAD: GameWAD) {
             when (opcode) {
                 Op.PUSH -> handlePush(reader, type1)
                 Op.PUSH_GLOBAL -> handlePushGlobal(reader, type1)
-                Op.POP -> handlePop(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
+                Op.POP -> handlePop(reader, type1)
+                Op.POPZ -> stack.pop()
                 Op.CMP -> {
                     val right = stack.pop()
                     val left = stack.pop()
@@ -80,6 +79,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.B -> {
                     reader.position = start + branchOffset(word)
                 }
+                Op.CALL -> handleCall(reader)
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
         }
@@ -170,12 +170,19 @@ class StarfaitVM(val gameWAD: GameWAD) {
         stack.push().setInt(extra)
     }
 
+    private fun handleCall(reader: StarfaitByteBuffer) {
+        val functionIndex = reader.readInt()
+
+        // For now we don't really care
+        println("Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}")
+    }
+
     /**
-     * By default, each variable reference in the code references a delta offset on the `extra` field to the next reference of the variable.
+     * By default, each variable and function reference in the code references a delta offset on the `extra` field to the next reference of the variable.
      *
      * The remapper walks through all VARI variables and remaps the delta offsets to be VARI indices.
      */
-    fun remapVariableReferences() {
+    fun remapReferences() {
         // I'm not sure WHY the YoYo Runner does this!!
         val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode)
 
@@ -192,6 +199,25 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
                     reader.position = operandAddress
                     reader.writeInt((operand and 0xF0000000.toInt()) or (index and 0x0FFFFFFF))
+
+                    operandAddress += delta
+                }
+            }
+        }
+
+        for ((index, function) in gameWAD.func.functions.withIndex()) {
+            if (function.firstAddress != -1) {
+                // This points to the INSTRUCTION address, NOT the operand address, which is why we do +4
+                var operandAddress = (function.firstAddress - gameWAD.code.postAddressPosition) + 4
+
+                repeat(function.occurrenceCount) {
+                    reader.position = operandAddress
+
+                    val operand = reader.readInt()
+                    val delta = delta(operand)
+
+                    reader.position = operandAddress
+                    reader.writeInt(index) // For functions we don't need to "save" the nibble (w00t!)
 
                     operandAddress += delta
                 }

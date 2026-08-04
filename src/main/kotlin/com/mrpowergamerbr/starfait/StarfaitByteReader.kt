@@ -6,8 +6,15 @@ import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class StarfaitByteReader(byteArray: ByteArray) {
-    private val byteBuffer = ByteBuffer.wrap(byteArray).order(ByteOrder.LITTLE_ENDIAN)
+class StarfaitByteReader private constructor(private val byteBuffer: ByteBuffer) {
+    companion object {
+        fun fromByteArray(byteArray: ByteArray) = StarfaitByteReader(ByteBuffer.wrap(byteArray))
+        fun fromByteBuffer(byteBuffer: ByteBuffer) = StarfaitByteReader(byteBuffer)
+    }
+
+    init {
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
+    }
 
     var position: Int
         get() = byteBuffer.position()

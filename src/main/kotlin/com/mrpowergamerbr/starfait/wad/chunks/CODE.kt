@@ -3,15 +3,18 @@ package com.mrpowergamerbr.starfait.wad.chunks
 import com.mrpowergamerbr.starfait.StarfaitByteReader
 import com.mrpowergamerbr.starfait.wad.Code
 
-class CODE(val codes: List<Code>) {
+class CODE(val codes: List<Code>, val postAddressPosition: Int, val bytecode: ByteArray) {
     companion object {
-        private val EMPTY_BYTECODE_STREAM = ByteArray(0)
-
         fun read(reader: StarfaitByteReader): CODE {
             val addresses = reader.readAddresses()
 
+            val postAddressPosition = reader.position
             val codes = ArrayList<Code>(addresses.size)
-            val readBytecodeStreams = mutableMapOf<Int, ByteArray>()
+            val minAddressTarget = addresses.min()
+
+            // We want to read ALL the bytecode at once!
+            val bytecode = reader.readBytes(minAddressTarget - postAddressPosition)
+
             for (address in addresses) {
                 reader.position = address
 
@@ -20,28 +23,23 @@ class CODE(val codes: List<Code>) {
                 val localsCount = reader.readUShort()
                 val argumentsCount = reader.readUShort() // TODO: Is this even used?
                 val bytecodeRelativeOffsetFieldPosition = reader.position
-                val bytecodeRelativeOffset = reader.readInt()
+                val bytecodeRelativeOffset = reader.readInt() // This is relative based on the BEGINNING of this field
                 val offset = reader.readInt()
-
-                val data = if (length == 0u) {
-                    EMPTY_BYTECODE_STREAM
-                } else {
-                    reader.position = bytecodeRelativeOffsetFieldPosition + bytecodeRelativeOffset
-                    readBytecodeStreams.getOrPut(reader.position) { reader.readBytes(length.toInt()) }
-                }
 
                 codes.add(
                     Code(
                         name = name,
+                        length = length,
                         localsCount = localsCount,
                         argumentsCount = argumentsCount,
-                        offset = offset,
-                        data = data
+                        bytecodeRelativeOffsetFieldPosition = bytecodeRelativeOffsetFieldPosition,
+                        bytecodeRelativeOffset = bytecodeRelativeOffset,
+                        offset = offset
                     )
                 )
             }
 
-            return CODE(codes)
+            return CODE(codes, postAddressPosition, bytecode)
         }
     }
 }

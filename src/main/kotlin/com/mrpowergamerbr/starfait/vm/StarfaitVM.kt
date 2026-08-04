@@ -3,14 +3,24 @@ package com.mrpowergamerbr.starfait.vm
 import com.mrpowergamerbr.starfait.StarfaitByteReader
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import java.nio.ByteBuffer
 
 class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
 
     fun executeLoop(code: Code) {
-        val reader = StarfaitByteReader(code.data)
+        // We need to remap the bytecode relative offset field position
+        val reader = StarfaitByteReader.fromByteBuffer(
+            ByteBuffer.wrap(
+                gameWAD.code.bytecode,
+                // We do + on the offset because the offset is negative
+                (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
+                code.length.toInt()
+            )
+        )
 
-        while (code.data.size > reader.position) {
+        val lengthAsInt = code.length.toInt()
+        while (lengthAsInt > reader.position) {
             val word = reader.readInt()
 
             val opcode = opcode(word)

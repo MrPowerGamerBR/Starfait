@@ -44,7 +44,7 @@ class StarfaitCLI : CliktCommand() {
     }
 
     override fun run() {
-        val byteReader = StarfaitByteReader(File(wadPath).readBytes())
+        val byteReader = StarfaitByteReader.fromByteArray(File(wadPath).readBytes())
         val gameWAD = GameWAD.read(byteReader)
 
         if (printGameObjects != null) {

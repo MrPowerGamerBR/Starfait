@@ -88,18 +88,9 @@ class RValue {
     }
 
     fun makeIndependent(): RValue {
-        val rvalue = RValue()
-        rvalue.type = this.type
-        rvalue.bits = this.bits
-        rvalue.ref = this.ref
-        // GameMaker uses CoW for arrays, so we need to copy the ENTIRE array!
-        if (rvalue.ref is GMLArray) {
-            val oldGMLArray = rvalue.ref as GMLArray
-            val newGMLArray = GMLArray()
-            newGMLArray.entries.putAll(oldGMLArray.entries.mapValues { it.value.makeIndependent() })
-            rvalue.ref = newGMLArray
-        }
-        return rvalue
+        val new = RValue()
+        new.copyFrom(this)
+        return new
     }
 
     fun copyFrom(rvalue: RValue) {

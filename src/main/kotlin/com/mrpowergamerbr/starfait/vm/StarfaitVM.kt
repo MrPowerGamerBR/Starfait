@@ -207,7 +207,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
         println("The variable on ${objectBase} is ${variable?.toStringTyped()} (VarID: ${operand.variableIndex()})")
 
         if (variable == null)
-            error("Variable with VarID ${operand.variableIndex()} is not set before reading it")
+            error("Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not set before reading it")
 
         stack.push().copyFrom(variable)
     }
@@ -387,6 +387,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 }
             }
         }
+    }
+
+    private fun getVariableNameFromVariableIndex(index: Int): String {
+        val variable = gameWAD.vari.variables.getOrNull(index)?.name ?: return "<UnknownVariable>"
+        return gameWAD.strg.getString(variable)
     }
 
     private fun opcode(word: Int) = (word ushr 24) and 0xFF

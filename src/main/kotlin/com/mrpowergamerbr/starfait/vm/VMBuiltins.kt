@@ -21,10 +21,10 @@ class VMBuiltins(val vm: StarfaitVM) {
     }
 
     fun show_debug_message(args: List<RValue>, result: RValue) {
-        println("Game: ${args[0].toStringTyped()}")
+        println("Game: ${args[0].toGMLString()}")
     }
 
     fun string(args: List<RValue>, result: RValue) {
-        result.setString(args[0].toStringTyped())
+        result.setString(args[0].toGMLString())
     }
 }

@@ -47,6 +47,16 @@ class RValue {
         this.ref = null
     }
 
+    fun toGMLString(): String {
+        return when (type) {
+            RValueDataType.STRING -> ref as String
+            RValueDataType.INT32 -> bits.toString()
+            RValueDataType.BOOLEAN -> if (bits != 0L) "1" else "0"
+            RValueDataType.UNDEFINED -> "undefined"
+            else -> error("Cannot convert $type to a string!")
+        }
+    }
+
     fun toStringTyped(): String {
         return when (type) {
             RValueDataType.STRING -> "\"$ref\""

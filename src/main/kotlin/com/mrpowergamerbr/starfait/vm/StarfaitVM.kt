@@ -298,7 +298,14 @@ class StarfaitVM(val gameWAD: GameWAD) {
             if (left.type != RValueDataType.STRING || right.type != RValueDataType.STRING)
                 error("DoAdd :: Execution Error")
 
-            pushed.setString(left.toStringTyped() + right.toStringTyped())
+            val leftRef = left.ref
+            val rightRef = right.ref
+
+            // If the ref is not a string, then something went deeply wrong
+            require(leftRef is String)
+            require(rightRef is String)
+
+            pushed.setString(leftRef + rightRef)
             return
         }
 

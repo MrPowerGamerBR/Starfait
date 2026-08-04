@@ -51,6 +51,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
             when (opcode) {
                 Op.PUSH -> handlePush(reader, type1, extra)
+                Op.PUSH_LOCAL -> handlePushLocal(reader, type1, extra)
                 Op.PUSH_GLOBAL -> handlePushGlobal(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
                 Op.POP -> handlePop(reader, type1)
@@ -111,6 +112,39 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 pushVariableFromObject(
                     when (instanceId) {
                         SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                        SpecialObjectReferenceType.GLOBAL -> global
+                        else -> error("Unsupported instance ID $instanceId!")
+                    },
+                    operand
+                )
+            }
+            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
+        }
+    }
+
+
+    private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
+        val type1DataType = InstructionDataType.byId(type1)
+
+        println("push local $type1DataType")
+        when (type1DataType) {
+            InstructionDataType.INT16 -> TODO()
+            InstructionDataType.INT32 -> TODO()
+            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.DOUBLE -> TODO()
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.BOOLEAN -> TODO()
+            InstructionDataType.VARIABLE -> {
+                val operand = VariableReferenceOperand(reader.readInt())
+
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+
+                // TODO: Use correct instance here!
+                pushVariableFromObject(
+                    when (instanceId) {
+                        SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                        SpecialObjectReferenceType.LOCAL -> requireNotNull(currentInstance)
                         SpecialObjectReferenceType.GLOBAL -> global
                         else -> error("Unsupported instance ID $instanceId!")
                     },

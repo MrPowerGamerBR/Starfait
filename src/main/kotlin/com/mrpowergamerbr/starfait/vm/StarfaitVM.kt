@@ -10,9 +10,9 @@ import java.nio.ByteBuffer
 
 class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
-    val variables = mutableMapOf<Int, RValue>()
     val global = ObjectBase()
     var currentInstance: Instance? = null
+    var localVariables = mutableMapOf<Int, RValue>()
     lateinit var currentCode: Code
     val builtins = VMBuiltins(this)
 
@@ -40,21 +40,19 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
             println("opcode: ${opcode.toHexString()}, type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
 
-            if (stack.top != 0) {
-                print("stack[${stack.top}] = ")
-                for (i in 0 until stack.top) {
-                    print(stack.stack[i].toStringTyped())
-                    print(" ")
-                }
-                println()
+            print("stack[${stack.top}] = ")
+            for (i in 0 until stack.top) {
+                print(stack.stack[i].toStringTyped())
+                print(" ")
             }
+            println()
 
             when (opcode) {
                 Op.PUSH -> handlePush(reader, type1, extra)
                 Op.PUSH_LOCAL -> handlePushLocal(reader, type1, extra)
                 Op.PUSH_GLOBAL -> handlePushGlobal(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
-                Op.POP -> handlePop(reader, type1)
+                Op.POP -> handlePop(reader, type1, extra)
                 Op.POPZ -> stack.pop()
                 Op.CMP -> {
                     val right = stack.pop()
@@ -86,6 +84,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.B -> {
                     reader.position = start + branchOffset(word)
                 }
+                Op.ADD -> handleAdd(reader, type1, type2)
                 Op.CALL -> handleCall(reader, extra)
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
@@ -122,7 +121,6 @@ class StarfaitVM(val gameWAD: GameWAD) {
         }
     }
 
-
     private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         val type1DataType = InstructionDataType.byId(type1)
 
@@ -140,16 +138,19 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
-                // TODO: Use correct instance here!
-                pushVariableFromObject(
-                    when (instanceId) {
-                        SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
-                        SpecialObjectReferenceType.LOCAL -> requireNotNull(currentInstance)
-                        SpecialObjectReferenceType.GLOBAL -> global
-                        else -> error("Unsupported instance ID $instanceId!")
-                    },
-                    operand
-                )
+                println("array index? $arrayIndex")
+                println("instanceID? $instanceId")
+
+                val pushed = stack.push()
+                val localVariable = localVariables[operand.variableIndex()]
+
+                println("Local Variable with VarID ${operand.variableIndex()} is ${localVariable?.toStringTyped()}")
+
+                if (localVariable != null) {
+                    pushed.copyFrom(localVariable)
+                } else {
+                    pushed.setUndefined()
+                }
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
@@ -175,7 +176,9 @@ class StarfaitVM(val gameWAD: GameWAD) {
     }
 
     private fun pushVariableFromObject(objectBase: ObjectBase, operand: VariableReferenceOperand) {
+        println("The VarID of the operand is ${operand.variableIndex()}")
         val variable = objectBase.variables[operand.variableIndex()]
+        println("The variable on ${objectBase} is ${variable?.toStringTyped()} (VarID: ${operand.variableIndex()})")
         val pushedRValue = stack.push()
         if (variable == null) {
             pushedRValue.setUndefined()
@@ -184,9 +187,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
         }
     }
 
-    private fun handlePop(reader: StarfaitByteBuffer, type1: Int) {
+    private fun handlePop(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         val type1DataType = InstructionDataType.byId(type1)
-
         when (type1DataType) {
             InstructionDataType.DOUBLE -> TODO()
             InstructionDataType.FLOAT -> TODO()
@@ -195,7 +197,31 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
-                variables[operand.variableIndex()] = stack.pop().makeIndependent()
+
+                val varId = operand.variableIndex()
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+
+                println("array index? $arrayIndex")
+                println("instanceID? $instanceId")
+
+                // TODO: Use correct instance here!
+                val instance = when (instanceId) {
+                    SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                    SpecialObjectReferenceType.LOCAL -> {
+                        // ewww this is a horrible hack
+                        val popped = stack.pop()
+                        println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
+                        localVariables[varId] = popped.makeIndependent()
+                        return
+                    }
+                    SpecialObjectReferenceType.GLOBAL -> global
+                    else -> error("Unsupported instance ID $instanceId!")
+                }
+
+                instance.variables[varId] = stack.pop().also {
+                    println("Setting variable $instanceId to ${it.toStringTyped()}")
+                }
             }
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
@@ -244,6 +270,52 @@ class StarfaitVM(val gameWAD: GameWAD) {
         } else {
             println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
         }
+    }
+
+    private fun handleAdd(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
+        val type1DataType = InstructionDataType.byId(type1)
+        val type2DataType = InstructionDataType.byId(type2)
+
+        println("ADD type1 is $type1DataType, type2 is $type2DataType")
+
+        val var1 = stack.pop()
+        val var2 = stack.pop()
+
+        when (type1DataType) {
+            InstructionDataType.DOUBLE -> TODO()
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.INT32 -> {
+                when (type2DataType) {
+                    InstructionDataType.DOUBLE -> TODO()
+                    InstructionDataType.FLOAT -> TODO()
+                    InstructionDataType.INT32 -> stack.push().setInt(var1.int + var2.int)
+                    InstructionDataType.INT64 -> TODO()
+                    InstructionDataType.BOOLEAN -> TODO()
+                    InstructionDataType.VARIABLE -> stack.push().setInt(var1.int + var2.int)
+                    InstructionDataType.STRING -> TODO()
+                    InstructionDataType.INT16 -> TODO()
+                }
+            }
+            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.BOOLEAN -> TODO()
+            InstructionDataType.VARIABLE -> {
+                when (type2DataType) {
+                    InstructionDataType.DOUBLE -> TODO()
+                    InstructionDataType.FLOAT -> TODO()
+                    InstructionDataType.INT32 -> TODO()
+                    InstructionDataType.INT64 -> TODO()
+                    InstructionDataType.BOOLEAN -> TODO()
+                    InstructionDataType.VARIABLE -> TODO()
+                    InstructionDataType.STRING -> {
+                        stack.push().setString(var2.toStringTyped() + var1.toStringTyped())
+                    }
+                    InstructionDataType.INT16 -> TODO()
+                }
+            }
+            InstructionDataType.STRING -> TODO()
+            InstructionDataType.INT16 -> TODO()
+        }
+
     }
 
     /**

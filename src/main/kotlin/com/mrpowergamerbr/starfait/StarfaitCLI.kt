@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.Background
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.Font
@@ -73,6 +74,10 @@ class StarfaitCLI : CliktCommand() {
             dump(gameWAD, "Code", gameWAD.code.codes, Code::name, printCodes!!)
             return
         }
+
+        val vm = StarfaitVM()
+
+        vm.executeLoop(gameWAD, gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
     }
 }
 

@@ -480,11 +480,4 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val variable = gameWAD.vari.variables.getOrNull(index)?.name ?: return "<UnknownVariable>"
         return gameWAD.strg.getString(variable)
     }
-
-    private fun opcode(word: Int) = (word ushr 24) and 0xFF
-    private fun type1(word: Int) = (word ushr 16) and 0xF
-    private fun type2(word: Int) = (word ushr 20) and 0xF
-    private fun extra(word: Int) = word.toShort().toInt()
-    private fun comparisonFunction(word: Int) = (word ushr 8) and 0xF
-    private fun branchOffset(word: Int) = (word shl 9) shr 7
 }

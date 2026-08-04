@@ -6,6 +6,8 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
 object StarfaitUtils {
+    const val EPSILON = 1e-5
+
     fun dump(gameWAD: GameWAD, starfaitObject: Any, depth: Int) {
         // We want to preserve the constructor order
         val constructorParametersName = starfaitObject::class

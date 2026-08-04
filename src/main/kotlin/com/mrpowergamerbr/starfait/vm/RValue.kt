@@ -6,6 +6,9 @@ class RValue {
     var bits = 0L
     var ref: Any? = null
 
+    val real: Double
+        get() = Double.fromBits(bits)
+
     fun setString(value: String) {
         this.type = RValueDataType.STRING
         this.ref = value
@@ -14,6 +17,12 @@ class RValue {
     fun setInt(value: Int) {
         this.type = RValueDataType.INT16
         this.bits = value.toLong()
+        this.ref = null
+    }
+
+    fun setBoolean(value: Boolean) {
+        this.type = RValueDataType.BOOLEAN
+        this.bits = if (value) 1 else 0
         this.ref = null
     }
 

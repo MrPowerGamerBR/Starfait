@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
+import com.mrpowergamerbr.starfait.StarfaitUtils
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import java.nio.ByteBuffer
@@ -43,6 +44,22 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.PUSH -> handlePush(reader, type1)
                 Op.POP -> handlePop(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
+                Op.CMP -> {
+                    val right = stack.pop()
+                    val left = stack.pop()
+                    val diff = left.real - right.real
+                    val comparisonFunction = comparisonFunction(word)
+                    val result = when (comparisonFunction(word)) {
+                        1 -> diff < -StarfaitUtils.EPSILON
+                        2 -> diff <= StarfaitUtils.EPSILON
+                        3 -> if (diff < -StarfaitUtils.EPSILON) false else diff <= StarfaitUtils.EPSILON
+                        4 -> if (diff < -StarfaitUtils.EPSILON) true else StarfaitUtils.EPSILON < diff
+                        5 -> -StarfaitUtils.EPSILON <= diff
+                        6 -> StarfaitUtils.EPSILON < diff
+                        else -> error("Unsupported comparsion function $comparisonFunction")
+                    }
+                    stack.push().setBoolean(result)
+                }
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
         }
@@ -120,4 +137,5 @@ class StarfaitVM(val gameWAD: GameWAD) {
     private fun extra(word: Int) = word.toShort().toInt()
     private fun delta(operand: Int) = (operand shl 4) shr 4 // low 28 bits
     private fun variableIndex(operand: Int) = (operand shl 4) shr 4 // low 28 bits
+    private fun comparisonFunction(word: Int) = (word ushr 8) and 0xF
 }

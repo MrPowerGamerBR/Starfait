@@ -75,9 +75,9 @@ class StarfaitCLI : CliktCommand() {
             return
         }
 
-        val vm = StarfaitVM()
+        val vm = StarfaitVM(gameWAD)
 
-        vm.executeLoop(gameWAD, gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
+        vm.executeLoop(gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
     }
 }
 

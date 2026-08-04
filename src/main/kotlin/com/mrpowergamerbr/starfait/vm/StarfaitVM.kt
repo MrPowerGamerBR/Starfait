@@ -4,8 +4,10 @@ import com.mrpowergamerbr.starfait.StarfaitByteReader
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
 
-class StarfaitVM {
-    fun executeLoop(gameWAD: GameWAD, code: Code) {
+class StarfaitVM(val gameWAD: GameWAD) {
+    val stack = VMStack()
+
+    fun executeLoop(code: Code) {
         val reader = StarfaitByteReader(code.data)
 
         while (code.data.size > reader.position) {
@@ -18,24 +20,45 @@ class StarfaitVM {
 
             println("opcode: ${opcode.toHexString()}, type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
 
+            println(stack.stack)
             when (opcode) {
-                Op.PUSH -> {
-                    when (type1) {
-                        6 -> {
-                            val stringIndex = reader.readInt()
-                            println("Push ${gameWAD.strg.stringsByIndex[stringIndex]} to the stack")
-                        }
-                    }
-                }
-                Op.POP -> {
-                    when (type1) {
-                        5 -> {
-                            reader.readInt()
-                        }
-                    }
-                }
+                Op.PUSH -> handlePush(reader, type1)
+                Op.POP -> handlePop(reader, type1)
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
+        }
+    }
+
+    private fun handlePush(reader: StarfaitByteReader, type1: Int) {
+        val type1DataType = InstructionDataType.byId(type1)
+
+        when (type1DataType) {
+            InstructionDataType.INT16 -> {}
+            InstructionDataType.INT32 -> reader.readInt()
+            InstructionDataType.INT64 -> reader.readLong()
+            InstructionDataType.DOUBLE -> reader.readDouble()
+            InstructionDataType.FLOAT -> reader.readFloat()
+            InstructionDataType.BOOLEAN -> reader.readIntBoolean()
+            InstructionDataType.VARIABLE -> reader.readInt()
+            InstructionDataType.STRING -> stack.pushString(gameWAD.strg.stringsByIndex[reader.readInt()])
+        }
+    }
+
+    private fun handlePop(reader: StarfaitByteReader, type1: Int) {
+        val type1DataType = InstructionDataType.byId(type1)
+
+        when (type1DataType) {
+            InstructionDataType.DOUBLE -> TODO()
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.INT32 -> TODO()
+            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.BOOLEAN -> TODO()
+            InstructionDataType.VARIABLE -> {
+                reader.readInt()
+                stack.popString()
+            }
+            InstructionDataType.STRING -> TODO()
+            InstructionDataType.INT16 -> TODO()
         }
     }
 

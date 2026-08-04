@@ -8,4 +8,5 @@ class VMStack {
     fun push() = stack[top++]
     fun pop() = stack[--top]
     fun peek() = stack[top - 1]
+    fun peekAt(index: Int) = stack[index]
 }

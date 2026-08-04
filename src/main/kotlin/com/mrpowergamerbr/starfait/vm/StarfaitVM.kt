@@ -88,6 +88,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 }
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.CALL -> handleCall(reader, extra)
+                Op.DUP -> handleDup(reader, type1, extra)
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
         }
@@ -98,7 +99,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
         when (type1DataType) {
             InstructionDataType.INT16 -> TODO()
-            InstructionDataType.INT32 -> TODO()
+            InstructionDataType.INT32 -> stack.push().setInt(reader.readInt())
             InstructionDataType.INT64 -> TODO()
             InstructionDataType.DOUBLE -> stack.push().setReal(reader.readDouble())
             InstructionDataType.FLOAT -> TODO()
@@ -346,6 +347,20 @@ class StarfaitVM(val gameWAD: GameWAD) {
         }
 
         pushed.setReal(left.real + right.real)
+    }
+
+    private fun handleDup(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
+        // In the YoYo Runner, the type1 would've been used to figure out how many bytes to be copied from the stack
+        // Because all of our types are tagged RValues, we don't need to rely on it (yay)
+        // extra = how many additional elements will be copied from the stack, that is...
+        // If the stack is [a, b], and extra is 1, the result will be [a, b, a, b]
+        require(extra >= 0) { "Negative extra value on the dup!" }
+        val total = extra + 1
+        val dupBottom = stack.top - 1 - extra
+        repeat(total) {
+            val target = stack.peekAt(dupBottom + it)
+            stack.push().copyFrom(target)
+        }
     }
 
     /**

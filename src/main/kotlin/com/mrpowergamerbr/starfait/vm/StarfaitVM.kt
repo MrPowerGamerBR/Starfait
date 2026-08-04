@@ -14,6 +14,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
     val global = ObjectBase()
     var currentInstance: Instance? = null
     lateinit var currentCode: Code
+    val builtins = VMBuiltins(this)
 
     fun executeLoop(code: Code) {
         this.currentCode = code
@@ -193,13 +194,22 @@ class StarfaitVM(val gameWAD: GameWAD) {
         // extra = parameter count
         val arguments = ArrayList<RValue>(extra)
         repeat(extra) {
-            arguments.add(stack.pop())
+            // We make it independent because we push the stack right down below, and that can cause these variables to change
+            arguments.add(stack.pop().makeIndependent())
         }
 
         // For now we don't really care
-        println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+        val result = stack.push()
+        result.setUndefined()
 
-        stack.push().setUndefined()
+        val functionName = gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)
+        val functionHandler = builtins.registeredFunctions[functionName]
+
+        if (functionHandler != null) {
+            functionHandler.call(arguments, result)
+        } else {
+            println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+        }
     }
 
     /**

@@ -3,6 +3,8 @@ package com.mrpowergamerbr.starfait.vm
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.StarfaitUtils
+import com.mrpowergamerbr.starfait.runner.Instance
+import com.mrpowergamerbr.starfait.runner.ObjectBase
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import java.nio.ByteBuffer
@@ -10,6 +12,7 @@ import java.nio.ByteBuffer
 class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
     val variables = mutableMapOf<Int, RValue>()
+    val global = ObjectBase()
 
     fun executeLoop(code: Code) {
         // We need to remap the bytecode relative offset field position
@@ -44,6 +47,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
             when (opcode) {
                 Op.PUSH -> handlePush(reader, type1)
+                Op.PUSH_GLOBAL -> handlePushGlobal(reader, type1)
                 Op.POP -> handlePop(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
                 Op.CMP -> {
@@ -92,15 +96,39 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = reader.readInt()
-                val variable = variables[variableIndex(operand)]
-                val pushedRValue = stack.push()
-                if (variable == null) {
-                    pushedRValue.setUndefined()
-                } else {
-                    pushedRValue.copyFrom(variable)
-                }
+                // TODO: Use correct instance here!
+                pushVariableFromObject(global, operand)
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
+        }
+    }
+
+    private fun handlePushGlobal(reader: StarfaitByteBuffer, type1: Int) {
+        // TODO: Read the variable from the global variables
+        val type1DataType = InstructionDataType.byId(type1)
+
+        when (type1DataType) {
+            InstructionDataType.INT16 -> TODO()
+            InstructionDataType.INT32 -> TODO()
+            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.DOUBLE -> TODO()
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.BOOLEAN -> TODO()
+            InstructionDataType.VARIABLE -> {
+                val operand = reader.readInt()
+                pushVariableFromObject(global, operand)
+            }
+            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
+        }
+    }
+
+    private fun pushVariableFromObject(objectBase: ObjectBase, operand: Int) {
+        val variable = objectBase.variables[variableIndex(operand)]
+        val pushedRValue = stack.push()
+        if (variable == null) {
+            pushedRValue.setUndefined()
+        } else {
+            pushedRValue.copyFrom(variable)
         }
     }
 

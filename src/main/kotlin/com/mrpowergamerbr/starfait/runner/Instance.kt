@@ -1,5 +1,5 @@
 package com.mrpowergamerbr.starfait.runner
 
-class Instance(
-    var objectIndex: Int
-)
+import com.mrpowergamerbr.starfait.wad.Variable
+
+class Instance(var objectIndex: Int) : ObjectBase()

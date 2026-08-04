@@ -1,11 +1,11 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Room
 
 class ROOM(val rooms: List<Room>) {
     companion object {
-        fun read(reader: StarfaitByteReader): ROOM {
+        fun read(reader: StarfaitByteBuffer): ROOM {
             val addresses = reader.readAddresses()
 
             val rooms = ArrayList<Room>(addresses.size)

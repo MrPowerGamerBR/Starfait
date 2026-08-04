@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.vm
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import java.nio.ByteBuffer
@@ -8,9 +8,38 @@ import java.nio.ByteBuffer
 class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
 
+    /**
+     * By default, each variable reference in the code references a delta offset on the `extra` field to the next reference of the variable.
+     *
+     * The remapper walks through all VARI variables and remaps the delta offsets to be VARI indices.
+     */
+    fun remapVariableReferences() {
+        // I'm not sure WHY the YoYo Runner does this!!
+        val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode)
+
+        for ((index, variable) in gameWAD.vari.variables.withIndex()) {
+            if (variable.firstAddress != -1) {
+                // This points to the INSTRUCTION address, NOT the operand address, which is why we do +4
+                var operandAddress = (variable.firstAddress - gameWAD.code.postAddressPosition) + 4
+
+                repeat(variable.occurrenceCount) {
+                    reader.position = operandAddress
+
+                    val operand = reader.readInt()
+                    val delta = delta(operand)
+
+                    reader.position = operandAddress
+                    reader.writeInt((operand and 0xF0000000.toInt()) or (index and 0x0FFFFFFF))
+
+                    operandAddress += delta
+                }
+            }
+        }
+    }
+
     fun executeLoop(code: Code) {
         // We need to remap the bytecode relative offset field position
-        val reader = StarfaitByteReader.fromByteBuffer(
+        val reader = StarfaitByteBuffer.fromByteBuffer(
             ByteBuffer.wrap(
                 gameWAD.code.bytecode,
                 // We do + on the offset because the offset is negative
@@ -47,7 +76,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
         }
     }
 
-    private fun handlePush(reader: StarfaitByteReader, type1: Int) {
+    private fun handlePush(reader: StarfaitByteBuffer, type1: Int) {
         val type1DataType = InstructionDataType.byId(type1)
 
         when (type1DataType) {
@@ -62,7 +91,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
         }
     }
 
-    private fun handlePop(reader: StarfaitByteReader, type1: Int) {
+    private fun handlePop(reader: StarfaitByteBuffer, type1: Int) {
         val type1DataType = InstructionDataType.byId(type1)
 
         when (type1DataType) {
@@ -84,4 +113,5 @@ class StarfaitVM(val gameWAD: GameWAD) {
     private fun type1(word: Int) = (word ushr 16) and 0xF
     private fun type2(word: Int) = (word ushr 20) and 0xF
     private fun extra(word: Int) = word.toShort().toInt()
+    private fun delta(operand: Int) = (operand shl 4) shr 4 // low 28 bits
 }

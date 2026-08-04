@@ -1,11 +1,11 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Script
 
 class SCPT(val scripts: List<Script>) {
     companion object {
-        fun read(reader: StarfaitByteReader): SCPT {
+        fun read(reader: StarfaitByteBuffer): SCPT {
             val addresses = reader.readAddresses()
 
             val scripts = ArrayList<Script>(addresses.size)

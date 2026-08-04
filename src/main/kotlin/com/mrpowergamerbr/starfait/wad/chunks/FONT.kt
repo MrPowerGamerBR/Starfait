@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Font
 
 class FONT(
@@ -11,7 +11,7 @@ class FONT(
         // The last 0x200 bytes of the chunk are a code page translation table
         private const val CODE_PAGE_TRANSLATION_SIZE = 0x200
 
-        fun read(reader: StarfaitByteReader, chunkSize: Int): FONT {
+        fun read(reader: StarfaitByteBuffer, chunkSize: Int): FONT {
             val startOfChunk = reader.position
 
             val addresses = reader.readAddresses()

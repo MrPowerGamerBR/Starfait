@@ -1,12 +1,12 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Texture
 import java.nio.ByteOrder
 
 class TXTR(val textures: List<Texture>) {
     companion object {
-        fun read(reader: StarfaitByteReader): TXTR {
+        fun read(reader: StarfaitByteBuffer): TXTR {
             val addresses = reader.readAddresses()
 
             val textures = ArrayList<Texture>(addresses.size)

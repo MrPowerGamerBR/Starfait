@@ -1,11 +1,11 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Background
 
 class BGND(val backgrounds: List<Background>) {
     companion object {
-        fun read(reader: StarfaitByteReader): BGND {
+        fun read(reader: StarfaitByteBuffer): BGND {
             val addresses = reader.readAddresses()
 
             val backgrounds = ArrayList<Background>(addresses.size)

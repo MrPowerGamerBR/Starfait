@@ -1,11 +1,11 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Code
 
 class CODE(val codes: List<Code>, val postAddressPosition: Int, val bytecode: ByteArray) {
     companion object {
-        fun read(reader: StarfaitByteReader): CODE {
+        fun read(reader: StarfaitByteBuffer): CODE {
             val addresses = reader.readAddresses()
 
             val postAddressPosition = reader.position

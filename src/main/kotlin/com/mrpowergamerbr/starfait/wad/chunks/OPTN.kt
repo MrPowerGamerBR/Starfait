@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Constant
 import com.mrpowergamerbr.starfait.wad.OPTNFlags
 import com.mrpowergamerbr.starfait.wad.Pointer
@@ -19,7 +19,7 @@ class OPTN(
     val constants: List<Constant>
 ) {
     companion object {
-        fun read(reader: StarfaitByteReader): OPTN {
+        fun read(reader: StarfaitByteBuffer): OPTN {
             reader.readUInt() // magic
             reader.readUInt() // format version
             val flags = reader.readUInt()

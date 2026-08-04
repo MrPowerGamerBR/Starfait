@@ -3,7 +3,6 @@ package com.mrpowergamerbr.starfait
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.Background
@@ -15,9 +14,7 @@ import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.Sound
 import com.mrpowergamerbr.starfait.wad.StringPointer
 import com.mrpowergamerbr.starfait.wad.Variable
-import com.mrpowergamerbr.starfait.wad.chunks.OBJT
 import java.io.File
-import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
 
 class StarfaitCLI : CliktCommand() {
@@ -44,7 +41,7 @@ class StarfaitCLI : CliktCommand() {
     }
 
     override fun run() {
-        val byteReader = StarfaitByteReader.fromByteArray(File(wadPath).readBytes())
+        val byteReader = StarfaitByteBuffer.fromByteArray(File(wadPath).readBytes())
         val gameWAD = GameWAD.read(byteReader)
 
         if (printGameObjects != null) {
@@ -84,6 +81,7 @@ class StarfaitCLI : CliktCommand() {
 
         val vm = StarfaitVM(gameWAD)
 
+        vm.remapVariableReferences()
         vm.executeLoop(gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
     }
 }

@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
 
@@ -9,7 +9,7 @@ class SPRT(val sprites: List<Sprite>) {
         // A frame count of -1 means the sprite is a SWF or a Spine skeleton sprite instead of a regular one, which stores completely different data after this point
         private const val SPECIAL_SPRITE_FRAME_COUNT = -1
 
-        fun read(reader: StarfaitByteReader): SPRT {
+        fun read(reader: StarfaitByteBuffer): SPRT {
             val addresses = reader.readAddresses()
 
             val sprites = ArrayList<Sprite>(addresses.size)

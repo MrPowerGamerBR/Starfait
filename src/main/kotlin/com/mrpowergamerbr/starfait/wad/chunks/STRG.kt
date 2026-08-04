@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.StringPointer
 
 class STRG(
@@ -8,7 +8,7 @@ class STRG(
     val stringsByIndex: List<String>
 ) {
     companion object {
-        fun read(reader: StarfaitByteReader): STRG {
+        fun read(reader: StarfaitByteBuffer): STRG {
             val addresses = reader.readAddresses()
             val strings = HashMap<StringPointer, String>(addresses.size)
             val stringsByIndex = ArrayList<String>(addresses.size)

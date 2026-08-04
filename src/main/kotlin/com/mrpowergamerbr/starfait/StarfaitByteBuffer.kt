@@ -6,10 +6,10 @@ import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class StarfaitByteReader private constructor(private val byteBuffer: ByteBuffer) {
+class StarfaitByteBuffer private constructor(private val byteBuffer: ByteBuffer) {
     companion object {
-        fun fromByteArray(byteArray: ByteArray) = StarfaitByteReader(ByteBuffer.wrap(byteArray))
-        fun fromByteBuffer(byteBuffer: ByteBuffer) = StarfaitByteReader(byteBuffer)
+        fun fromByteArray(byteArray: ByteArray) = StarfaitByteBuffer(ByteBuffer.wrap(byteArray))
+        fun fromByteBuffer(byteBuffer: ByteBuffer) = StarfaitByteBuffer(byteBuffer)
     }
 
     init {
@@ -100,4 +100,6 @@ class StarfaitByteReader private constructor(private val byteBuffer: ByteBuffer)
         byteBuffer.get(bytes)
         return bytes.toString(Charsets.UTF_8)
     }
+
+    fun writeInt(value: Int) = byteBuffer.putInt(value)
 }

@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.StringPointer
 
 class GEN8(
@@ -31,7 +31,7 @@ class GEN8(
     val roomOrder: List<Int>
 ) {
     companion object {
-        fun read(reader: StarfaitByteReader): GEN8 {
+        fun read(reader: StarfaitByteBuffer): GEN8 {
             val debugWad = reader.readByteBoolean()
             val wadVersion = reader.readByte()
             reader.readBytes(2) // Padding

@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.wad
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.chunks.AUDO
 import com.mrpowergamerbr.starfait.wad.chunks.BGND
 import com.mrpowergamerbr.starfait.wad.chunks.CODE
@@ -37,7 +37,7 @@ class GameWAD(
     val vari: VARI
 ) {
     companion object {
-        fun read(reader: StarfaitByteReader): GameWAD {
+        fun read(reader: StarfaitByteBuffer): GameWAD {
             val magic = reader.readUTF8String(4)
 
             require(magic == "FORM") { "Invalid magic value!" }

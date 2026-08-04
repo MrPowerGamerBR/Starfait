@@ -1,12 +1,12 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.DnDArgument
 import com.mrpowergamerbr.starfait.wad.GameObject
 
 class OBJT(val objects: List<GameObject>) {
     companion object {
-        fun read(reader: StarfaitByteReader): OBJT {
+        fun read(reader: StarfaitByteBuffer): OBJT {
             val addresses = reader.readAddresses()
 
             val objects = ArrayList<GameObject>(addresses.size)

@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Variable
 
 class VARI(
@@ -13,7 +13,7 @@ class VARI(
         // See the variable entry format below
         private const val ENTRY_SIZE = 20
 
-        fun read(reader: StarfaitByteReader, chunkSize: Int): VARI {
+        fun read(reader: StarfaitByteBuffer, chunkSize: Int): VARI {
             val start = reader.position
             val globalVariables = reader.readInt()
             val instanceVariables = reader.readInt() // Somehow it seems that modern GM games always have globalVariables == instanceVariables

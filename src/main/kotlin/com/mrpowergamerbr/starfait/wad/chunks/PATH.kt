@@ -1,11 +1,11 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
-import com.mrpowergamerbr.starfait.StarfaitByteReader
+import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Path
 
 class PATH(val paths: List<Path>) {
     companion object {
-        fun read(reader: StarfaitByteReader): PATH {
+        fun read(reader: StarfaitByteBuffer): PATH {
             val addresses = reader.readAddresses()
 
             val paths = ArrayList<Path>(addresses.size)

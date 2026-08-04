@@ -98,7 +98,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.INT16 -> TODO()
             InstructionDataType.INT32 -> TODO()
             InstructionDataType.INT64 -> TODO()
-            InstructionDataType.DOUBLE -> TODO()
+            InstructionDataType.DOUBLE -> stack.push().setReal(reader.readDouble())
             InstructionDataType.FLOAT -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
@@ -187,12 +187,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
         println("The VarID of the operand is ${operand.variableIndex()}")
         val variable = objectBase.variables[operand.variableIndex()]
         println("The variable on ${objectBase} is ${variable?.toStringTyped()} (VarID: ${operand.variableIndex()})")
-        val pushedRValue = stack.push()
-        if (variable == null) {
-            pushedRValue.setUndefined()
-        } else {
-            pushedRValue.copyFrom(variable)
-        }
+
+        if (variable == null)
+            error("Variable with VarID ${operand.variableIndex()} is not set before reading it")
+
+        stack.push().copyFrom(variable)
     }
 
     private fun handlePop(reader: StarfaitByteBuffer, type1: Int, extra: Int) {

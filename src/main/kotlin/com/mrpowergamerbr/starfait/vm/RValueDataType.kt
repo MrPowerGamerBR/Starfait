@@ -8,5 +8,6 @@ value class RValueDataType(val id: Byte) {
         val STRING = RValueDataType(1)
         val INT32 = RValueDataType(2)
         val BOOLEAN = RValueDataType(3)
+        val REAL = RValueDataType(4)
     }
 }

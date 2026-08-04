@@ -8,6 +8,7 @@ class RValue {
 
     val real: Double
         get() = when (type) {
+            RValueDataType.REAL -> Double.fromBits(bits)
             RValueDataType.BOOLEAN, RValueDataType.INT32 -> bits.toDouble()
             RValueDataType.UNDEFINED -> 0.0
             else -> error("Cannot read $type as a real!")
@@ -41,6 +42,12 @@ class RValue {
         this.ref = null
     }
 
+    fun setReal(value: Double) {
+        this.type = RValueDataType.REAL
+        this.bits = value.toRawBits()
+        this.ref = null
+    }
+
     fun setBoolean(value: Boolean) {
         this.type = RValueDataType.BOOLEAN
         this.bits = if (value) 1 else 0
@@ -63,6 +70,7 @@ class RValue {
             RValueDataType.INT32 -> "int32($bits)"
             RValueDataType.BOOLEAN -> "boolean($bits)"
             RValueDataType.UNDEFINED -> "undefined"
+            RValueDataType.REAL -> "real($real)"
             else -> error("Unknown type $type!")
         }
     }

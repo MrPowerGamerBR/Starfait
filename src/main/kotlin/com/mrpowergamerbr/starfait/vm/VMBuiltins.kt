@@ -12,6 +12,7 @@ class VMBuiltins(val vm: StarfaitVM) {
     init {
         registerFunction("script_execute", ::script_execute)
         registerFunction("show_debug_message", ::show_debug_message)
+        registerFunction("string", ::string)
     }
 
     fun script_execute(args: List<RValue>, result: RValue) {
@@ -21,5 +22,9 @@ class VMBuiltins(val vm: StarfaitVM) {
 
     fun show_debug_message(args: List<RValue>, result: RValue) {
         println("Game: ${args[0].toStringTyped()}")
+    }
+
+    fun string(args: List<RValue>, result: RValue) {
+        result.setString(args[0].toStringTyped())
     }
 }

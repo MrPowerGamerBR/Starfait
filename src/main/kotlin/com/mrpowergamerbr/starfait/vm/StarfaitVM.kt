@@ -293,11 +293,13 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
         val pushed = stack.push()
 
+        println("ADD left type is ${left.type}, right type is ${right.type}")
         if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
             if (left.type != RValueDataType.STRING || right.type != RValueDataType.STRING)
                 error("DoAdd :: Execution Error")
 
             pushed.setString(left.toStringTyped() + right.toStringTyped())
+            return
         }
 
         pushed.setInt(left.int + right.int)

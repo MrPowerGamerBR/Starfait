@@ -43,8 +43,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
             ByteBuffer.wrap(
                 gameWAD.code.bytecode,
                 // We do + on the offset because the offset is negative
-                (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
-                code.length.toInt()
+                code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
+                code.length.toInt() - code.offset
             )
         )
 

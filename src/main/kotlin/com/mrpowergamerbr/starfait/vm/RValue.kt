@@ -1,5 +1,7 @@
 package com.mrpowergamerbr.starfait.vm
 
+import com.mrpowergamerbr.starfait.MathUtils
+
 // Yes this looks wonky as hell, but that's because we are trying to squeeze performance from the JVM (to avoid unnecessary allocations)
 class RValue {
     var type = RValueDataType.UNDEFINED
@@ -57,6 +59,7 @@ class RValue {
     fun toGMLString(): String {
         return when (type) {
             RValueDataType.STRING -> ref as String
+            RValueDataType.REAL -> MathUtils.formatReal(Double.fromBits(bits))
             RValueDataType.INT32 -> bits.toString()
             RValueDataType.BOOLEAN -> if (bits != 0L) "1" else "0"
             RValueDataType.UNDEFINED -> "undefined"

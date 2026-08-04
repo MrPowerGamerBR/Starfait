@@ -308,7 +308,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             return
         }
 
-        pushed.setInt(left.int + right.int)
+        pushed.setReal(left.real + right.real)
     }
 
     /**

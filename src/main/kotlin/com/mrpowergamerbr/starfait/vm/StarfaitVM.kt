@@ -11,8 +11,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
     val variables = mutableMapOf<Int, RValue>()
     val global = ObjectBase()
+    lateinit var currentCode: Code
 
     fun executeLoop(code: Code) {
+        this.currentCode = code
+
         // We need to remap the bytecode relative offset field position
         val reader = StarfaitByteBuffer.fromByteBuffer(
             ByteBuffer.wrap(
@@ -44,7 +47,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             }
 
             when (opcode) {
-                Op.PUSH -> handlePush(reader, type1)
+                Op.PUSH -> handlePush(reader, type1, extra)
                 Op.PUSH_GLOBAL -> handlePushGlobal(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
                 Op.POP -> handlePop(reader, type1)
@@ -79,13 +82,13 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.B -> {
                     reader.position = start + branchOffset(word)
                 }
-                Op.CALL -> handleCall(reader)
+                Op.CALL -> handleCall(reader, extra)
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
         }
     }
 
-    private fun handlePush(reader: StarfaitByteBuffer, type1: Int) {
+    private fun handlePush(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         val type1DataType = InstructionDataType.byId(type1)
 
         when (type1DataType) {
@@ -97,6 +100,10 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = reader.readInt()
+
+                val arrayIndex = if (hasArrayIndex(operand)) stack.pop().int else null
+                val instanceId = if (hasInstanceIdOnStack(operand)) stack.pop().int else extra
+
                 // TODO: Use correct instance here!
                 pushVariableFromObject(global, operand)
             }
@@ -156,7 +163,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val sourceType = InstructionDataType.byId(type1)
         val destinationType = InstructionDataType.byId(type2)
         println("Converting from $sourceType to $destinationType")
-        val popped = stack.pop()
+        val topOfTheStack = stack.peek()
 
         // no-op, this is only useful if some day we decide to go with tagged variables (that is, using two arrays, one for native values and another for RValues)
         // Because in that case, we would need to convert the RValue to the native type
@@ -170,11 +177,17 @@ class StarfaitVM(val gameWAD: GameWAD) {
         stack.push().setInt(extra)
     }
 
-    private fun handleCall(reader: StarfaitByteBuffer) {
+    private fun handleCall(reader: StarfaitByteBuffer, extra: Int) {
         val functionIndex = reader.readInt()
 
+        // extra = parameter count
+        val arguments = ArrayList<RValue>(extra)
+        repeat(extra) {
+            arguments.add(stack.pop())
+        }
+
         // For now we don't really care
-        println("Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}")
+        println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
     }
 
     /**
@@ -233,4 +246,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
     private fun variableIndex(operand: Int) = (operand shl 4) shr 4 // low 28 bits
     private fun comparisonFunction(word: Int) = (word ushr 8) and 0xF
     private fun branchOffset(word: Int) = (word shl 9) shr 7
+    private fun referenceFlags(operand: Int) = operand ushr 28
+    private fun hasArrayIndex(operand: Int) = operand >= 0
+    private fun hasInstanceIdOnStack(operand: Int) = (operand and 0x20000000) == 0
+    private fun isRoomInstanceId(operand: Int) = (operand and 0x40000000) != 0
 }

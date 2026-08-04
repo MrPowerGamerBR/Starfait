@@ -19,6 +19,12 @@ class RValue {
             else -> error("Cannot read $type as a boolean!")
         }
 
+    val int: Int
+        get() = when (type) {
+            RValueDataType.INT32 -> bits.toInt()
+            else -> error("Cannot read $type as an int!")
+        }
+
     fun setUndefined() {
         this.type = RValueDataType.UNDEFINED
         this.ref = null

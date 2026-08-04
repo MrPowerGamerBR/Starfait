@@ -19,6 +19,8 @@ class RValue {
     val bool: Boolean
         get() = when (type) {
             RValueDataType.BOOLEAN -> bits != 0L
+            // GameMaker-HTML5's yyGetBool returns true if the value is > 0.5
+            RValueDataType.REAL -> Double.fromBits(bits) > 0.5
             else -> error("Cannot read $type as a boolean!")
         }
 

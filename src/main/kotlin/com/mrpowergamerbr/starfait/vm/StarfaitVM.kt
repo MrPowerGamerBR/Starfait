@@ -286,6 +286,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
             return
         }
 
+        if (destinationType == InstructionDataType.BOOLEAN) {
+            topOfTheStack.setBoolean(topOfTheStack.bool)
+            return
+        }
+
         TODO()
     }
 

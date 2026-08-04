@@ -101,10 +101,10 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.FLOAT -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
-                val operand = reader.readInt()
+                val operand = VariableReferenceOperand(reader.readInt())
 
-                val arrayIndex = if (hasArrayIndex(operand)) stack.pop().int else null
-                val instanceId = if (hasInstanceIdOnStack(operand)) stack.pop().int else extra
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
@@ -132,15 +132,15 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.FLOAT -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
-                val operand = reader.readInt()
+                val operand = VariableReferenceOperand(reader.readInt())
                 pushVariableFromObject(global, operand)
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }
 
-    private fun pushVariableFromObject(objectBase: ObjectBase, operand: Int) {
-        val variable = objectBase.variables[variableIndex(operand)]
+    private fun pushVariableFromObject(objectBase: ObjectBase, operand: VariableReferenceOperand) {
+        val variable = objectBase.variables[operand.variableIndex()]
         val pushedRValue = stack.push()
         if (variable == null) {
             pushedRValue.setUndefined()
@@ -159,8 +159,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.INT64 -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
-                val operand = reader.readInt()
-                variables[variableIndex(operand)] = stack.pop().makeIndependent()
+                val operand = VariableReferenceOperand(reader.readInt())
+                variables[operand.variableIndex()] = stack.pop().makeIndependent()
             }
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
@@ -187,7 +187,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
     }
 
     private fun handleCall(reader: StarfaitByteBuffer, extra: Int) {
-        val functionIndex = reader.readInt()
+        val operand = FunctionReferenceOperand(reader.readInt())
+        val functionIndex = operand.functionIndex()
 
         // extra = parameter count
         val arguments = ArrayList<RValue>(extra)
@@ -218,11 +219,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 repeat(variable.occurrenceCount) {
                     reader.position = operandAddress
 
-                    val operand = reader.readInt()
-                    val delta = delta(operand)
+                    val operand = VariableReferenceOperand(reader.readInt())
+                    val delta = operand.delta()
 
                     reader.position = operandAddress
-                    reader.writeInt((operand and 0xF0000000.toInt()) or (index and 0x0FFFFFFF))
+                    reader.writeInt((operand.value and 0xF0000000.toInt()) or (index and 0x0FFFFFFF))
 
                     operandAddress += delta
                 }
@@ -237,8 +238,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 repeat(function.occurrenceCount) {
                     reader.position = operandAddress
 
-                    val operand = reader.readInt()
-                    val delta = delta(operand)
+                    val operand = FunctionReferenceOperand(reader.readInt())
+                    val delta = operand.delta()
 
                     reader.position = operandAddress
                     reader.writeInt(index) // For functions we don't need to "save" the nibble (w00t!)
@@ -253,12 +254,6 @@ class StarfaitVM(val gameWAD: GameWAD) {
     private fun type1(word: Int) = (word ushr 16) and 0xF
     private fun type2(word: Int) = (word ushr 20) and 0xF
     private fun extra(word: Int) = word.toShort().toInt()
-    private fun delta(operand: Int) = (operand shl 4) shr 4 // low 28 bits
-    private fun variableIndex(operand: Int) = (operand shl 4) shr 4 // low 28 bits
     private fun comparisonFunction(word: Int) = (word ushr 8) and 0xF
     private fun branchOffset(word: Int) = (word shl 9) shr 7
-    private fun referenceFlags(operand: Int) = operand ushr 28
-    private fun hasArrayIndex(operand: Int) = operand >= 0
-    private fun hasInstanceIdOnStack(operand: Int) = (operand and 0x20000000) == 0
-    private fun isRoomInstanceId(operand: Int) = (operand and 0x40000000) != 0
 }

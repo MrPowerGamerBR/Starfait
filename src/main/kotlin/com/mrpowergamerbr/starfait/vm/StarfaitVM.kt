@@ -124,20 +124,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                             return
                         }
                         instanceId == SpecialObjectReferenceType.GLOBAL -> global
-                        instanceId >= 0 -> {
-                            // This is a reference to all instances with a specific object index
-                            // Once again this is a horrible hack, fix it later!
-                            for (instance in runner.currentRoom.instances.filter { it.objectIndex == instanceId }) {
-                                val variable = instance.variables[operand.variableIndex()]
-                                println("The variable on ${instance} is ${variable?.toStringTyped()} (VarID: ${operand.variableIndex()})")
-
-                                if (variable == null)
-                                    error("Variable with VarID ${operand.variableIndex()} is not set before reading it")
-
-                                stack.push().copyFrom(variable)
-                            }
-                            return
-                        }
+                        instanceId >= 0 -> runner.currentRoom.instances.first { it.objectIndex == instanceId }
                         else -> error("Unsupported instance ID $instanceId!")
                     },
                     operand

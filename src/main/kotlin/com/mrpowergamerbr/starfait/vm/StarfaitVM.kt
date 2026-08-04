@@ -48,8 +48,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             )
         )
 
-        val lengthAsInt = code.length.toInt()
-        while (lengthAsInt > reader.position) {
+        while (reader.hasRemaining()) {
             val word = reader.readInt()
 
             val opcode = opcode(word)

@@ -102,4 +102,6 @@ class StarfaitByteBuffer private constructor(private val byteBuffer: ByteBuffer)
     }
 
     fun writeInt(value: Int) = byteBuffer.putInt(value)
+
+    fun hasRemaining() = byteBuffer.hasRemaining()
 }

@@ -7,6 +7,7 @@ import java.nio.ByteBuffer
 
 class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
+    val variables = mutableMapOf<Int, RValue>()
 
     fun executeLoop(code: Code) {
         // We need to remap the bytecode relative offset field position
@@ -72,8 +73,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = reader.readInt()
-                println(delta(operand))
-                stack.pop()
+                variables[variableIndex(operand)] = stack.pop().makeIndependent()
             }
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
@@ -108,10 +108,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
             }
         }
     }
-    
+
     private fun opcode(word: Int) = (word ushr 24) and 0xFF
     private fun type1(word: Int) = (word ushr 16) and 0xF
     private fun type2(word: Int) = (word ushr 20) and 0xF
     private fun extra(word: Int) = word.toShort().toInt()
     private fun delta(operand: Int) = (operand shl 4) shr 4 // low 28 bits
+    private fun variableIndex(operand: Int) = (operand shl 4) shr 4 // low 28 bits
 }

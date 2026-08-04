@@ -17,4 +17,12 @@ class RValue {
             else -> error("Unknown type $type!")
         }
     }
+
+    fun makeIndependent(): RValue {
+        val rvalue = RValue()
+        rvalue.type = this.type
+        rvalue.bits = this.bits
+        rvalue.ref = this.ref
+        return rvalue
+    }
 }

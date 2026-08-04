@@ -82,6 +82,7 @@ class RValue {
             RValueDataType.BOOLEAN -> "boolean($bits)"
             RValueDataType.UNDEFINED -> "undefined"
             RValueDataType.REAL -> "real($real)"
+            RValueDataType.ARRAY -> "array($ref)"
             else -> error("Unknown type $type!")
         }
     }
@@ -91,6 +92,13 @@ class RValue {
         rvalue.type = this.type
         rvalue.bits = this.bits
         rvalue.ref = this.ref
+        // GameMaker uses CoW for arrays, so we need to copy the ENTIRE array!
+        if (rvalue.ref is GMLArray) {
+            val oldGMLArray = rvalue.ref as GMLArray
+            val newGMLArray = GMLArray()
+            newGMLArray.entries.putAll(oldGMLArray.entries.mapValues { it.value.makeIndependent() })
+            rvalue.ref = newGMLArray
+        }
         return rvalue
     }
 
@@ -98,5 +106,12 @@ class RValue {
         this.type = rvalue.type
         this.bits = rvalue.bits
         this.ref = rvalue.ref
+        // GameMaker uses CoW for arrays, so we need to copy the ENTIRE array!
+        if (rvalue.ref is GMLArray) {
+            val oldGMLArray = rvalue.ref as GMLArray
+            val newGMLArray = GMLArray()
+            newGMLArray.entries.putAll(oldGMLArray.entries.mapValues { it.value.makeIndependent() })
+            rvalue.ref = newGMLArray
+        }
     }
 }

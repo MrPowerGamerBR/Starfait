@@ -225,7 +225,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             if (arrayIndex != null) {
                 require(variable.type == RValueDataType.ARRAY) { "Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not an array, but we wanted to read arrayIndex $arrayIndex from it!" }
                 val array = variable.ref as GMLArray
-                val variable = array.values[arrayIndex] ?: error("Trying to read from array index $arrayIndex, but the element does not exist!")
+                val variable = array.entries[arrayIndex] ?: error("Trying to read from array index $arrayIndex, but the element does not exist!")
                 result.copyFrom(variable)
             } else {
                 result.copyFrom(variable)
@@ -291,11 +291,11 @@ class StarfaitVM(val gameWAD: GameWAD) {
                             GMLArray()
                         }
 
-                        gmlArray.values[arrayIndex] = stack.pop().makeIndependent()
+                        gmlArray.entries[arrayIndex] = stack.pop().makeIndependent()
 
                         arrayRValue.setArray(gmlArray)
 
-                        println("GMLArray elements: ${gmlArray.values}")
+                        println("GMLArray elements: ${gmlArray.entries}")
 
                         // We don't need to make it independent because or it is a RValue that we already own, or it was the already existing RValue
                         instance.variables[varId] = arrayRValue

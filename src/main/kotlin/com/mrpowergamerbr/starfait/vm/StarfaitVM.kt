@@ -33,12 +33,12 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
         while (reader.hasRemaining()) {
             val start = reader.position
-            val word = reader.readInt()
+            val word = OpWord(reader.readInt())
 
-            val opcode = opcode(word)
-            val type1 = type1(word)
-            val type2 = type2(word)
-            val extra = extra(word)
+            val opcode = word.opcode()
+            val type1 = word.type1()
+            val type2 = word.type2()
+            val extra = word.extra()
 
             println("opcode: ${opcode.toHexString()} (${Op.getOpcodeName(opcode)}), type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
 
@@ -60,8 +60,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
                     val right = stack.pop()
                     val left = stack.pop()
                     val diff = left.real - right.real
-                    val comparisonFunction = comparisonFunction(word)
-                    val result = when (comparisonFunction(word)) {
+                    val comparisonFunction = word.comparisonFunction()
+                    val result = when (comparisonFunction) {
                         1 -> diff < -MathUtils.EPSILON
                         2 -> diff <= MathUtils.EPSILON
                         3 -> if (diff < -MathUtils.EPSILON) false else diff <= MathUtils.EPSILON
@@ -76,15 +76,15 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.BF -> {
                     val result = stack.pop().bool
                     if (!result)
-                        reader.position = start + branchOffset(word)
+                        reader.position = start + word.branchOffset()
                 }
                 Op.BT -> {
                     val result = stack.pop().bool
                     if (result)
-                        reader.position = start + branchOffset(word)
+                        reader.position = start + word.branchOffset()
                 }
                 Op.B -> {
-                    reader.position = start + branchOffset(word)
+                    reader.position = start + word.branchOffset()
                 }
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.CALL -> handleCall(reader, extra)

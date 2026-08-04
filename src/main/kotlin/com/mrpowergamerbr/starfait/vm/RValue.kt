@@ -25,6 +25,7 @@ class RValue {
     val int: Int
         get() = when (type) {
             RValueDataType.INT32 -> bits.toInt()
+            RValueDataType.REAL -> Double.fromBits(bits).toInt()
             else -> error("Cannot read $type as an int!")
         }
 

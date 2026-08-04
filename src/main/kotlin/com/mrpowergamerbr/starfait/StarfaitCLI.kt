@@ -14,6 +14,7 @@ import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.Sound
 import com.mrpowergamerbr.starfait.wad.StringPointer
+import com.mrpowergamerbr.starfait.wad.Variable
 import com.mrpowergamerbr.starfait.wad.chunks.OBJT
 import java.io.File
 import kotlin.reflect.KProperty0
@@ -27,6 +28,7 @@ class StarfaitCLI : CliktCommand() {
     val printFonts by option()
     val printRooms by option()
     val printCodes by option()
+    val printVariables by option()
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>, match: String) {
         for ((index, element) in list.withIndex()) {
@@ -72,6 +74,11 @@ class StarfaitCLI : CliktCommand() {
 
         if (printCodes != null) {
             dump(gameWAD, "Code", gameWAD.code.codes, Code::name, printCodes!!)
+            return
+        }
+
+        if (printVariables != null) {
+            dump(gameWAD, "Variable", gameWAD.vari.variables, Variable::name, printVariables!!)
             return
         }
 

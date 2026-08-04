@@ -46,6 +46,7 @@ class VMBuiltins(val vm: StarfaitVM) {
     }
 
     init {
+        // ===[ BUILTIN VARIABLES ]===
         registerReadOnlyVariable("os_type") { result -> result.setReal(runner.operatingSystem.id.toDouble()) }
         registerReadOnlyInstanceVariable("id") { instance, result -> result.setReal(instance.id.toDouble()) }
         registerInstanceVariable(
@@ -57,6 +58,8 @@ class VMBuiltins(val vm: StarfaitVM) {
                 instance.x = result.real.toFloat()
             }
         )
+
+        // ===[ BUILTIN FUNCTIONS ]===
         registerFunction("script_execute", ::script_execute)
         registerFunction("show_debug_message", ::show_debug_message)
         registerFunction("string", ::string)

@@ -11,9 +11,16 @@ class RValue {
         this.ref = value
     }
 
+    fun setInt(value: Int) {
+        this.type = RValueDataType.INT16
+        this.bits = value.toLong()
+        this.ref = null
+    }
+
     fun toStringTyped(): String {
         return when (type) {
             RValueDataType.STRING -> "\"$ref\""
+            RValueDataType.INT16 -> "int16($ref)"
             else -> error("Unknown type $type!")
         }
     }

@@ -6,5 +6,6 @@ value class RValueDataType(val id: Byte) {
     companion object {
         val UNDEFINED = RValueDataType(0)
         val STRING = RValueDataType(1)
+        val INT16 = RValueDataType(2)
     }
 }

@@ -42,6 +42,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             when (opcode) {
                 Op.PUSH -> handlePush(reader, type1)
                 Op.POP -> handlePop(reader, type1)
+                Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
         }
@@ -78,6 +79,10 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
         }
+    }
+
+    private fun handlePushImmediate(reader: StarfaitByteBuffer, extra: Int) {
+        stack.push().setInt(extra)
     }
 
     /**

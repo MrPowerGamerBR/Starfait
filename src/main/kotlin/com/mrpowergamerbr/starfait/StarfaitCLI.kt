@@ -4,6 +4,7 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.option
+import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.Background
 import com.mrpowergamerbr.starfait.wad.Code
@@ -82,7 +83,11 @@ class StarfaitCLI : CliktCommand() {
         val vm = StarfaitVM(gameWAD)
 
         vm.remapVariableReferences()
-        vm.executeLoop(gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
+
+        val runner = StarfaitRunner(gameWAD, vm)
+        runner.start()
+        runner.step()
+        // vm.executeLoop(gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
     }
 }
 

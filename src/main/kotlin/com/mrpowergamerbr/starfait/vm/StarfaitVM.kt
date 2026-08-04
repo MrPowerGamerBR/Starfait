@@ -106,11 +106,19 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+                val varId = operand.variableIndex()
 
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
                     when (instanceId) {
                         SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                        SpecialObjectReferenceType.LOCAL -> {
+                            // ewww this is a horrible hack
+                            val popped = stack.pop()
+                            println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
+                            localVariables[varId] = popped.makeIndependent()
+                            return
+                        }
                         SpecialObjectReferenceType.GLOBAL -> global
                         else -> error("Unsupported instance ID $instanceId!")
                     },
@@ -286,8 +294,10 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val pushed = stack.push()
 
         if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
+            if (left.type != RValueDataType.STRING || right.type != RValueDataType.STRING)
+                error("DoAdd :: Execution Error")
+
             pushed.setString(left.toStringTyped() + right.toStringTyped())
-            return
         }
 
         pushed.setInt(left.int + right.int)

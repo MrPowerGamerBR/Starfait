@@ -89,7 +89,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.CALL -> handleCall(reader, extra)
                 Op.DUP -> handleDup(reader, type1, extra)
-                else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
+                else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
         }
     }
@@ -97,8 +97,10 @@ class StarfaitVM(val gameWAD: GameWAD) {
     private fun handlePush(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         val type1DataType = InstructionDataType.byId(type1)
 
+        println(type1DataType)
         when (type1DataType) {
-            InstructionDataType.INT16 -> TODO()
+            // While there's already PUSH_IMMEDIATE for INT16, it seems that GameMaker also does use handlePush with INT16 sometimes, in this case the value is the "extra" field
+            InstructionDataType.INT16 -> stack.push().setInt(extra)
             InstructionDataType.INT32 -> stack.push().setInt(reader.readInt())
             InstructionDataType.INT64 -> TODO()
             InstructionDataType.DOUBLE -> stack.push().setReal(reader.readDouble())

@@ -23,6 +23,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
         )
 
         while (reader.hasRemaining()) {
+            val start = reader.position
             val word = reader.readInt()
 
             val opcode = opcode(word)
@@ -60,6 +61,19 @@ class StarfaitVM(val gameWAD: GameWAD) {
                         else -> error("Unsupported comparsion function $comparisonFunction")
                     }
                     stack.push().setBoolean(result)
+                }
+                Op.BF -> {
+                    val result = stack.pop().bool
+                    if (!result)
+                        reader.position = start + branchOffset(word)
+                }
+                Op.BT -> {
+                    val result = stack.pop().bool
+                    if (result)
+                        reader.position = start + branchOffset(word)
+                }
+                Op.B -> {
+                    reader.position = start + branchOffset(word)
                 }
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()}) while executing \"${gameWAD.strg.getString(code.name)}\"")
             }
@@ -148,4 +162,5 @@ class StarfaitVM(val gameWAD: GameWAD) {
     private fun delta(operand: Int) = (operand shl 4) shr 4 // low 28 bits
     private fun variableIndex(operand: Int) = (operand shl 4) shr 4 // low 28 bits
     private fun comparisonFunction(word: Int) = (word ushr 8) and 0xF
+    private fun branchOffset(word: Int) = (word shl 9) shr 7
 }

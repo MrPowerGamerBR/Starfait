@@ -20,7 +20,15 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
             println("opcode: ${opcode.toHexString()}, type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
 
-            println(stack.stack)
+            if (stack.top != 0) {
+                for (i in 0 until stack.top) {
+                    print("stack[${stack.top}] = ")
+                    print(stack.stack[i].toStringTyped())
+                    print(" ")
+                }
+                println()
+            }
+
             when (opcode) {
                 Op.PUSH -> handlePush(reader, type1)
                 Op.POP -> handlePop(reader, type1)
@@ -40,7 +48,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.FLOAT -> reader.readFloat()
             InstructionDataType.BOOLEAN -> reader.readIntBoolean()
             InstructionDataType.VARIABLE -> reader.readInt()
-            InstructionDataType.STRING -> stack.pushString(gameWAD.strg.stringsByIndex[reader.readInt()])
+            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }
 
@@ -55,7 +63,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 reader.readInt()
-                stack.popString()
+                stack.pop()
             }
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()

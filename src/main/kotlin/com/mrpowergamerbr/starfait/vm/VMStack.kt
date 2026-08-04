@@ -1,14 +1,10 @@
 package com.mrpowergamerbr.starfait.vm
 
 class VMStack {
-    val stack = Array<String?>(1024) { null }
+    val stack = Array(1024) { RValue() }
     var top = 0
+        private set
 
-    fun pushString(string: String) {
-        stack[top++] = string
-    }
-
-    fun popString(): String {
-        return stack[--top]!!
-    }
+    fun push() = stack[top++]
+    fun pop() = stack[--top]
 }

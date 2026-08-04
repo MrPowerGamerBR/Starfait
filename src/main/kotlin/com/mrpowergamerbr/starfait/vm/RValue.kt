@@ -7,7 +7,11 @@ class RValue {
     var ref: Any? = null
 
     val real: Double
-        get() = Double.fromBits(bits)
+        get() = when (type) {
+            RValueDataType.BOOLEAN, RValueDataType.INT16 -> bits.toDouble()
+            RValueDataType.UNDEFINED -> 0.0
+            else -> error("Cannot read $type as a real!")
+        }
 
     fun setUndefined() {
         this.type = RValueDataType.UNDEFINED

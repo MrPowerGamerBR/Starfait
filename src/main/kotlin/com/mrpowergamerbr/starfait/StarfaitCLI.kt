@@ -13,9 +13,11 @@ import com.mrpowergamerbr.starfait.wad.Function
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
+import com.mrpowergamerbr.starfait.wad.Script
 import com.mrpowergamerbr.starfait.wad.Sound
 import com.mrpowergamerbr.starfait.wad.StringPointer
 import com.mrpowergamerbr.starfait.wad.Variable
+import com.mrpowergamerbr.starfait.wad.chunks.SCPT
 import java.io.File
 import kotlin.reflect.KProperty1
 
@@ -26,6 +28,7 @@ class StarfaitCLI : CliktCommand() {
     val printSounds by option()
     val printFonts by option()
     val printRooms by option()
+    val printScripts by option()
     val printCodes by option()
     val printVariables by option()
     val printFunctions by option()
@@ -69,6 +72,11 @@ class StarfaitCLI : CliktCommand() {
 
         if (printRooms != null) {
             dump(gameWAD, "Room", gameWAD.room.rooms, Room::name, printRooms!!)
+            return
+        }
+
+        if (printScripts != null) {
+            dump(gameWAD, "Script", gameWAD.scpt.scripts, Script::name, printScripts!!)
             return
         }
 

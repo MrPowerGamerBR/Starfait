@@ -21,8 +21,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
             println("opcode: ${opcode.toHexString()}, type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
 
             if (stack.top != 0) {
+                print("stack[${stack.top}] = ")
                 for (i in 0 until stack.top) {
-                    print("stack[${stack.top}] = ")
                     print(stack.stack[i].toStringTyped())
                     print(" ")
                 }

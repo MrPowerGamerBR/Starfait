@@ -59,6 +59,11 @@ class RValue {
         this.ref = null
     }
 
+    fun setArray(array: GMLArray) {
+        this.type = RValueDataType.ARRAY
+        this.ref = array
+    }
+
     fun toGMLString(): String {
         return when (type) {
             RValueDataType.STRING -> ref as String

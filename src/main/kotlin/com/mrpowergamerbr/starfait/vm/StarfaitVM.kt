@@ -122,6 +122,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 val varId = operand.variableIndex()
 
                 println("instanceId is $instanceId")
+
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
                     when {
@@ -135,7 +136,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
                         instanceId >= 0 -> runner.currentRoom.instances.first { it.objectIndex == instanceId }
                         else -> error("Unsupported instance ID $instanceId!")
                     },
-                    operand
+                    operand,
+                    arrayIndex
                 )
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()].also {
@@ -204,13 +206,13 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
-                pushVariableFromObject(global, operand)
+                pushVariableFromObject(global, operand, null)
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }
 
-    private fun pushVariableFromObject(objectBase: ObjectBase, operand: VariableReferenceOperand) {
+    private fun pushVariableFromObject(objectBase: ObjectBase, operand: VariableReferenceOperand, arrayIndex: Int?) {
         println("The VarID of the operand is ${operand.variableIndex()}")
         val variableId = operand.variableIndex()
         // println("The variable on ${objectBase} is ${variableId?.toStringTyped()} (VarID: ${operand.variableIndex()})")
@@ -218,7 +220,14 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val result = stack.push()
         if (variableId >= REGULAR_VARIABLES_BASE) {
             val variable = objectBase.variables[variableId] ?: error("Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not set before reading it")
-            result.copyFrom(variable)
+            if (arrayIndex != null) {
+                require(variable.type == RValueDataType.ARRAY) { "Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not an array, but we wanted to read arrayIndex $arrayIndex from it!" }
+                val array = variable.ref as GMLArray
+                val variable = array.values[arrayIndex] ?: error("Trying to read from array index $arrayIndex, but the element does not exist!")
+                result.copyFrom(variable)
+            } else {
+                result.copyFrom(variable)
+            }
         } else {
             val builtinVariableHandler = builtinVariableHandlers[variableId]
             builtinVariableHandler.readHandler.invoke(result)
@@ -270,8 +279,26 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 }
 
                 if (varId >= REGULAR_VARIABLES_BASE) {
-                    instance.variables[varId] = stack.pop().makeIndependent().also {
-                        println("Setting variable $varId to ${it.toStringTyped()}")
+                    if (arrayIndex != null) {
+                        // Arrays a bit trickier...
+                        // In this case, we want to WRITE to a specific slot in the array
+                        val arrayRValue = instance.variables[varId] ?: RValue().apply { this.setUndefined() }
+                        val gmlArray = if (arrayRValue.type == RValueDataType.ARRAY) {
+                            arrayRValue.ref as GMLArray
+                        } else {
+                            GMLArray()
+                        }
+
+                        gmlArray.values[arrayIndex] = stack.pop().makeIndependent()
+
+                        arrayRValue.setArray(gmlArray)
+
+                        println("GMLArray elements: ${gmlArray.values}")
+
+                        // We don't need to make it independent because or it is a RValue that we already own, or it was the already existing RValue
+                        instance.variables[varId] = arrayRValue
+                    } else {
+                        instance.variables[varId] = stack.pop().makeIndependent()
                     }
                 } else {
                     // Builtin variable!

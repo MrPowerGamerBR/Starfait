@@ -9,6 +9,11 @@ class RValue {
     val real: Double
         get() = Double.fromBits(bits)
 
+    fun setUndefined() {
+        this.type = RValueDataType.UNDEFINED
+        this.ref = null
+    }
+
     fun setString(value: String) {
         this.type = RValueDataType.STRING
         this.ref = value
@@ -29,7 +34,9 @@ class RValue {
     fun toStringTyped(): String {
         return when (type) {
             RValueDataType.STRING -> "\"$ref\""
-            RValueDataType.INT16 -> "int16($ref)"
+            RValueDataType.INT16 -> "int16($bits)"
+            RValueDataType.BOOLEAN -> "boolean($bits)"
+            RValueDataType.UNDEFINED -> "undefined"
             else -> error("Unknown type $type!")
         }
     }
@@ -40,5 +47,11 @@ class RValue {
         rvalue.bits = this.bits
         rvalue.ref = this.ref
         return rvalue
+    }
+
+    fun copyFrom(rvalue: RValue) {
+        this.type = rvalue.type
+        this.bits = rvalue.bits
+        this.ref = rvalue.ref
     }
 }

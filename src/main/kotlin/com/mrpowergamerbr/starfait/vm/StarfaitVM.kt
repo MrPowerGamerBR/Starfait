@@ -69,13 +69,22 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val type1DataType = InstructionDataType.byId(type1)
 
         when (type1DataType) {
-            InstructionDataType.INT16 -> {}
-            InstructionDataType.INT32 -> reader.readInt()
-            InstructionDataType.INT64 -> reader.readLong()
-            InstructionDataType.DOUBLE -> reader.readDouble()
-            InstructionDataType.FLOAT -> reader.readFloat()
-            InstructionDataType.BOOLEAN -> reader.readIntBoolean()
-            InstructionDataType.VARIABLE -> reader.readInt()
+            InstructionDataType.INT16 -> TODO()
+            InstructionDataType.INT32 -> TODO()
+            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.DOUBLE -> TODO()
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.BOOLEAN -> TODO()
+            InstructionDataType.VARIABLE -> {
+                val operand = reader.readInt()
+                val variable = variables[variableIndex(operand)]
+                val pushedRValue = stack.push()
+                if (variable == null) {
+                    pushedRValue.setUndefined()
+                } else {
+                    pushedRValue.copyFrom(variable)
+                }
+            }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }

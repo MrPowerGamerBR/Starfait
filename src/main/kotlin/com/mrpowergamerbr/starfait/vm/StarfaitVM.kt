@@ -8,35 +8,6 @@ import java.nio.ByteBuffer
 class StarfaitVM(val gameWAD: GameWAD) {
     val stack = VMStack()
 
-    /**
-     * By default, each variable reference in the code references a delta offset on the `extra` field to the next reference of the variable.
-     *
-     * The remapper walks through all VARI variables and remaps the delta offsets to be VARI indices.
-     */
-    fun remapVariableReferences() {
-        // I'm not sure WHY the YoYo Runner does this!!
-        val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode)
-
-        for ((index, variable) in gameWAD.vari.variables.withIndex()) {
-            if (variable.firstAddress != -1) {
-                // This points to the INSTRUCTION address, NOT the operand address, which is why we do +4
-                var operandAddress = (variable.firstAddress - gameWAD.code.postAddressPosition) + 4
-
-                repeat(variable.occurrenceCount) {
-                    reader.position = operandAddress
-
-                    val operand = reader.readInt()
-                    val delta = delta(operand)
-
-                    reader.position = operandAddress
-                    reader.writeInt((operand and 0xF0000000.toInt()) or (index and 0x0FFFFFFF))
-
-                    operandAddress += delta
-                }
-            }
-        }
-    }
-
     fun executeLoop(code: Code) {
         // We need to remap the bytecode relative offset field position
         val reader = StarfaitByteBuffer.fromByteBuffer(
@@ -100,7 +71,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.INT64 -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
-                reader.readInt()
+                val operand = reader.readInt()
+                println(delta(operand))
                 stack.pop()
             }
             InstructionDataType.STRING -> TODO()
@@ -108,6 +80,35 @@ class StarfaitVM(val gameWAD: GameWAD) {
         }
     }
 
+    /**
+     * By default, each variable reference in the code references a delta offset on the `extra` field to the next reference of the variable.
+     *
+     * The remapper walks through all VARI variables and remaps the delta offsets to be VARI indices.
+     */
+    fun remapVariableReferences() {
+        // I'm not sure WHY the YoYo Runner does this!!
+        val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode)
+
+        for ((index, variable) in gameWAD.vari.variables.withIndex()) {
+            if (variable.firstAddress != -1) {
+                // This points to the INSTRUCTION address, NOT the operand address, which is why we do +4
+                var operandAddress = (variable.firstAddress - gameWAD.code.postAddressPosition) + 4
+
+                repeat(variable.occurrenceCount) {
+                    reader.position = operandAddress
+
+                    val operand = reader.readInt()
+                    val delta = delta(operand)
+
+                    reader.position = operandAddress
+                    reader.writeInt((operand and 0xF0000000.toInt()) or (index and 0x0FFFFFFF))
+
+                    operandAddress += delta
+                }
+            }
+        }
+    }
+    
     private fun opcode(word: Int) = (word ushr 24) and 0xFF
     private fun type1(word: Int) = (word ushr 16) and 0xF
     private fun type2(word: Int) = (word ushr 20) and 0xF

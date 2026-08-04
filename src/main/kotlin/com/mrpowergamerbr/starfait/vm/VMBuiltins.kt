@@ -65,8 +65,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerFunction("string", ::string)
     }
 
-    fun cb() {}
-
     fun script_execute(args: List<RValue>, result: RValue) {
         println("Called script_execute! :3 - Args are ${args.joinToString { it.toStringTyped() }}")
         result.setString("howdy!!")

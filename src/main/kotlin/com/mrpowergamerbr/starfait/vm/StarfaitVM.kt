@@ -7,9 +7,14 @@ import com.mrpowergamerbr.starfait.runner.ObjectBase
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import com.mrpowergamerbr.starfait.wad.Variable
 import java.nio.ByteBuffer
 
 class StarfaitVM(val gameWAD: GameWAD) {
+    companion object {
+        private const val REGULAR_VARIABLES_BASE = 100_000
+    }
+
     lateinit var runner: StarfaitRunner
     val stack = VMStack()
     val global = ObjectBase()
@@ -17,6 +22,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
     var localVariables = mutableMapOf<Int, RValue>()
     lateinit var currentCode: Code
     val builtins = VMBuiltins(this)
+    lateinit var builtinVariableHandlers: Array<BuiltinVariable>
 
     fun executeLoop(code: Code) {
         this.currentCode = code
@@ -144,10 +150,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val operand = VariableReferenceOperand(reader.readInt())
         val varId = operand.variableIndex()
 
-        val variableName = getVariableNameFromVariableIndex(varId)
-
         val pushed = stack.push()
-        val builtinVariable = builtins.registeredVariables[variableName] ?: error("Builtin variable $variableName not found!")
+        val builtinVariable = builtinVariableHandlers[varId]
 
         builtinVariable.readHandler.invoke(pushed)
     }
@@ -208,23 +212,17 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
     private fun pushVariableFromObject(objectBase: ObjectBase, operand: VariableReferenceOperand) {
         println("The VarID of the operand is ${operand.variableIndex()}")
-        val variable = objectBase.variables[operand.variableIndex()]
-        println("The variable on ${objectBase} is ${variable?.toStringTyped()} (VarID: ${operand.variableIndex()})")
+        val variableId = operand.variableIndex()
+        // println("The variable on ${objectBase} is ${variableId?.toStringTyped()} (VarID: ${operand.variableIndex()})")
 
-        if (variable == null) {
-            // Wow this is a HORRIBLE hack
-            // We also should check if the variable is -6
-            val variableDef = gameWAD.vari.variables[operand.variableIndex()]
-
-            if (variableDef.varId == -6) {
-                builtins.registeredVariables[gameWAD.strg.getString(variableDef.name)]?.readHandler?.invoke(stack.push())
-                return
-            }
-
-            error("Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not set before reading it")
+        val result = stack.push()
+        if (variableId >= REGULAR_VARIABLES_BASE) {
+            val variable = objectBase.variables[variableId] ?: error("Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not set before reading it")
+            result.copyFrom(variable)
+        } else {
+            val builtinVariableHandler = builtinVariableHandlers[variableId]
+            builtinVariableHandler.readHandler.invoke(result)
         }
-
-        stack.push().copyFrom(variable)
     }
 
     private fun handlePop(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
@@ -239,7 +237,6 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
-                val variable = gameWAD.vari.variables[varId]
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
@@ -272,14 +269,14 @@ class StarfaitVM(val gameWAD: GameWAD) {
                     else -> error("Unsupported instance ID $instanceId!")
                 }
 
-                println("InstanceType is ${variable.instanceType}")
-                if (variable.varId == -6 && instance is Instance) {
-                    println("Writing it as a builtin")
-                    instance.x = stack.pop().real.toFloat()
-                } else {
+                if (varId >= REGULAR_VARIABLES_BASE) {
                     instance.variables[varId] = stack.pop().makeIndependent().also {
                         println("Setting variable $varId to ${it.toStringTyped()}")
                     }
+                } else {
+                    // Builtin variable!
+                    val builtinVariableHandler = builtinVariableHandlers[varId]
+                    builtinVariableHandler.writeHandler.invoke(stack.pop().makeIndependent())
                 }
             }
             InstructionDataType.STRING -> TODO()
@@ -411,9 +408,26 @@ class StarfaitVM(val gameWAD: GameWAD) {
     fun remapReferences() {
         // I'm not sure WHY the YoYo Runner does this!!
         val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode)
+        val allocatedBuiltinVariables = mutableListOf<Variable>()
+        val allocatedRegularVariables = mutableListOf<Variable>()
 
-        for ((index, variable) in gameWAD.vari.variables.withIndex()) {
+        for (variable in gameWAD.vari.variables) {
             if (variable.firstAddress != -1) {
+                // Here's the thing:
+                // For builtin variables, we store it sequentially, starting from 0
+                // For regular variables, we store it sequentially, starting from REGULAR_VARIABLES_BASE
+                // This way we can differentiate directly on the operand itself, and we can store the handlers densely
+                var variableHandlerId: Int
+                if (variable.varId == -6) {
+                    val index = allocatedBuiltinVariables.size
+                    allocatedBuiltinVariables.add(variable)
+                    variableHandlerId = index
+                } else {
+                    val index = allocatedRegularVariables.size
+                    allocatedRegularVariables.add(variable)
+                    variableHandlerId = index + REGULAR_VARIABLES_BASE
+                }
+
                 // This points to the INSTRUCTION address, NOT the operand address, which is why we do +4
                 var operandAddress = (variable.firstAddress - gameWAD.code.postAddressPosition) + 4
 
@@ -424,7 +438,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                     val delta = operand.delta()
 
                     reader.position = operandAddress
-                    reader.writeInt((operand.value and 0xF0000000.toInt()) or (index and 0x0FFFFFFF))
+                    reader.writeInt((operand.value and 0xF0000000.toInt()) or (variableHandlerId and 0x0FFFFFFF))
 
                     operandAddress += delta
                 }
@@ -448,6 +462,17 @@ class StarfaitVM(val gameWAD: GameWAD) {
                     operandAddress += delta
                 }
             }
+        }
+
+        // Register the builtin variable handlers
+        builtinVariableHandlers = Array(allocatedBuiltinVariables.size) { index ->
+            val name = gameWAD.strg.getString(allocatedBuiltinVariables[index].name)
+
+            // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
+            builtins.registeredVariables[name] ?: BuiltinVariable(
+                { error("Tried reading from unimplemented builtin variable \"$name\"!") },
+                { error("Tried writing to unimplemented builtin variable \"$name\"!") },
+            )
         }
     }
 

@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.vm
 
+import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.StarfaitUtils
 import com.mrpowergamerbr.starfait.wad.Code
@@ -50,12 +51,12 @@ class StarfaitVM(val gameWAD: GameWAD) {
                     val diff = left.real - right.real
                     val comparisonFunction = comparisonFunction(word)
                     val result = when (comparisonFunction(word)) {
-                        1 -> diff < -StarfaitUtils.EPSILON
-                        2 -> diff <= StarfaitUtils.EPSILON
-                        3 -> if (diff < -StarfaitUtils.EPSILON) false else diff <= StarfaitUtils.EPSILON
-                        4 -> if (diff < -StarfaitUtils.EPSILON) true else StarfaitUtils.EPSILON < diff
-                        5 -> -StarfaitUtils.EPSILON <= diff
-                        6 -> StarfaitUtils.EPSILON < diff
+                        1 -> diff < -MathUtils.EPSILON
+                        2 -> diff <= MathUtils.EPSILON
+                        3 -> if (diff < -MathUtils.EPSILON) false else diff <= MathUtils.EPSILON
+                        4 -> if (diff < -MathUtils.EPSILON) true else MathUtils.EPSILON < diff
+                        5 -> -MathUtils.EPSILON <= diff
+                        6 -> MathUtils.EPSILON < diff
                         else -> error("Unsupported comparsion function $comparisonFunction")
                     }
                     stack.push().setBoolean(result)

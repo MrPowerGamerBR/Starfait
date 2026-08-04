@@ -4,11 +4,13 @@ import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.ObjectBase
+import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import java.nio.ByteBuffer
 
 class StarfaitVM(val gameWAD: GameWAD) {
+    lateinit var runner: StarfaitRunner
     val stack = VMStack()
     val global = ObjectBase()
     var currentInstance: Instance? = null
@@ -110,22 +112,38 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
-                    when (instanceId) {
-                        SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
-                        SpecialObjectReferenceType.LOCAL -> {
+                    when {
+                        instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                        instanceId == SpecialObjectReferenceType.LOCAL -> {
                             // ewww this is a horrible hack
                             val popped = stack.pop()
                             println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
                             localVariables[varId] = popped.makeIndependent()
                             return
                         }
-                        SpecialObjectReferenceType.GLOBAL -> global
+                        instanceId == SpecialObjectReferenceType.GLOBAL -> global
+                        instanceId >= 0 -> {
+                            // This is a reference to all instances with a specific object index
+                            // Once again this is a horrible hack, fix it later!
+                            for (instance in runner.currentRoom.instances.filter { it.objectIndex == instanceId }) {
+                                val variable = instance.variables[operand.variableIndex()]
+                                println("The variable on ${instance} is ${variable?.toStringTyped()} (VarID: ${operand.variableIndex()})")
+
+                                if (variable == null)
+                                    error("Variable with VarID ${operand.variableIndex()} is not set before reading it")
+
+                                stack.push().copyFrom(variable)
+                            }
+                            return
+                        }
                         else -> error("Unsupported instance ID $instanceId!")
                     },
                     operand
                 )
             }
-            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
+            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()].also {
+                println("Pushed string \"$it\" to the stack")
+            })
         }
     }
 
@@ -213,20 +231,32 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 println("instanceID? $instanceId")
 
                 // TODO: Use correct instance here!
-                val instance = when (instanceId) {
-                    SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
-                    SpecialObjectReferenceType.LOCAL -> {
+                val instance = when {
+                    instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                    instanceId == SpecialObjectReferenceType.LOCAL -> {
                         // ewww this is a horrible hack
                         val popped = stack.pop()
                         println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
                         localVariables[varId] = popped.makeIndependent()
                         return
                     }
-                    SpecialObjectReferenceType.GLOBAL -> global
+                    instanceId == SpecialObjectReferenceType.GLOBAL -> global
+                    instanceId >= 0 -> {
+                        // This is a reference to all instances with a specific object index
+                        // Once again this is a horrible hack, fix it later!
+                        for (instance in runner.currentRoom.instances) {
+                            if (instance.objectIndex == instanceId) {
+                                instance.variables[varId] = stack.pop().makeIndependent().also {
+                                    println("Setting variable $instanceId to ${it.toStringTyped()}")
+                                }
+                            }
+                        }
+                        return
+                    }
                     else -> error("Unsupported instance ID $instanceId!")
                 }
 
-                instance.variables[varId] = stack.pop().also {
+                instance.variables[varId] = stack.pop().makeIndependent().also {
                     println("Setting variable $instanceId to ${it.toStringTyped()}")
                 }
             }

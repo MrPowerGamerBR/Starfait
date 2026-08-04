@@ -100,6 +100,7 @@ class StarfaitCLI : CliktCommand() {
         vm.remapReferences()
 
         val runner = StarfaitRunner(gameWAD, vm)
+        vm.runner = runner
         runner.start()
         runner.step()
         // vm.executeLoop(gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })

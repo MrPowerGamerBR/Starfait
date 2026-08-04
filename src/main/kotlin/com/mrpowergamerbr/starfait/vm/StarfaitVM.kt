@@ -115,6 +115,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
                 val varId = operand.variableIndex()
 
+                println("instanceId is $instanceId")
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
                     when {
@@ -138,6 +139,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
     }
 
     private fun handlePushBuiltin(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
+        // Pushes a builtin variable to the stack
         // handlePushBuiltin type1 is always "VARIABLE"
         val operand = VariableReferenceOperand(reader.readInt())
         val varId = operand.variableIndex()
@@ -145,9 +147,9 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val variableName = getVariableNameFromVariableIndex(varId)
 
         val pushed = stack.push()
-        when (variableName) {
-            "os_type" -> pushed.setReal(0.0)
-        }
+        val builtinVariable = builtins.registeredVariables[variableName] ?: error("Builtin variable $variableName not found!")
+
+        builtinVariable.readHandler.invoke(pushed)
     }
 
     private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
@@ -209,8 +211,18 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val variable = objectBase.variables[operand.variableIndex()]
         println("The variable on ${objectBase} is ${variable?.toStringTyped()} (VarID: ${operand.variableIndex()})")
 
-        if (variable == null)
+        if (variable == null) {
+            // Wow this is a HORRIBLE hack
+            // We also should check if the variable is -6
+            val variableDef = gameWAD.vari.variables[operand.variableIndex()]
+
+            if (variableDef.varId == -6) {
+                builtins.registeredVariables[gameWAD.strg.getString(variableDef.name)]?.readHandler?.invoke(stack.push())
+                return
+            }
+
             error("Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not set before reading it")
+        }
 
         stack.push().copyFrom(variable)
     }
@@ -227,6 +239,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
+                val variable = gameWAD.vari.variables[varId]
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
@@ -250,7 +263,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                         for (instance in runner.currentRoom.instances) {
                             if (instance.objectIndex == instanceId) {
                                 instance.variables[varId] = stack.pop().makeIndependent().also {
-                                    println("Setting variable $instanceId to ${it.toStringTyped()}")
+                                    println("Setting variable $varId to ${it.toStringTyped()}")
                                 }
                             }
                         }
@@ -259,8 +272,14 @@ class StarfaitVM(val gameWAD: GameWAD) {
                     else -> error("Unsupported instance ID $instanceId!")
                 }
 
-                instance.variables[varId] = stack.pop().makeIndependent().also {
-                    println("Setting variable $instanceId to ${it.toStringTyped()}")
+                println("InstanceType is ${variable.instanceType}")
+                if (variable.varId == -6 && instance is Instance) {
+                    println("Writing it as a builtin")
+                    instance.x = stack.pop().real.toFloat()
+                } else {
+                    instance.variables[varId] = stack.pop().makeIndependent().also {
+                        println("Setting variable $varId to ${it.toStringTyped()}")
+                    }
                 }
             }
             InstructionDataType.STRING -> TODO()
@@ -318,7 +337,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
         val functionHandler = builtins.registeredFunctions[functionName]
 
         if (functionHandler != null) {
-            functionHandler.call(arguments, result)
+            functionHandler.invoke(arguments, result)
         } else {
             println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
         }

@@ -5,7 +5,14 @@ import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 
 class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
+    companion object {
+        // You can check that by creating a room with a single instance where the instance's code is just "show_debug_message(id)"
+        const val BASE_INSTANCE_ID = 100_000
+    }
+
     lateinit var currentRoom: RunnerRoom
+    val operatingSystem = YYOperatingSystem.WINDOWS
+    var currentInstanceId = BASE_INSTANCE_ID
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
@@ -14,7 +21,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
         val currentRoom = RunnerRoom()
 
         for (instance in room.instances) {
-            val gameInstance = Instance(instance.objectIndex)
+            val gameInstance = Instance(currentInstanceId++, instance.objectIndex)
             currentRoom.instances.add(gameInstance)
             val gameObject = getGameObjectFromInstance(gameInstance)
 

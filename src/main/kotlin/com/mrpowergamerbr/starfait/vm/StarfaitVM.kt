@@ -54,6 +54,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                 Op.PUSH_LOCAL -> handlePushLocal(reader, type1, extra)
                 Op.PUSH_GLOBAL -> handlePushGlobal(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
+                Op.PUSH_BUILTIN -> handlePushBuiltin(reader, type1, extra)
                 Op.POP -> handlePop(reader, type1, extra)
                 Op.POPZ -> stack.pop()
                 Op.CMP -> {
@@ -133,6 +134,19 @@ class StarfaitVM(val gameWAD: GameWAD) {
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()].also {
                 println("Pushed string \"$it\" to the stack")
             })
+        }
+    }
+
+    private fun handlePushBuiltin(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
+        // handlePushBuiltin type1 is always "VARIABLE"
+        val operand = VariableReferenceOperand(reader.readInt())
+        val varId = operand.variableIndex()
+
+        val variableName = getVariableNameFromVariableIndex(varId)
+
+        val pushed = stack.push()
+        when (variableName) {
+            "os_type" -> pushed.setReal(0.0)
         }
     }
 

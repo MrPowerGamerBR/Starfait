@@ -8,7 +8,7 @@ class RValue {
 
     val real: Double
         get() = when (type) {
-            RValueDataType.BOOLEAN, RValueDataType.INT16 -> bits.toDouble()
+            RValueDataType.BOOLEAN, RValueDataType.INT32 -> bits.toDouble()
             RValueDataType.UNDEFINED -> 0.0
             else -> error("Cannot read $type as a real!")
         }
@@ -24,7 +24,7 @@ class RValue {
     }
 
     fun setInt(value: Int) {
-        this.type = RValueDataType.INT16
+        this.type = RValueDataType.INT32
         this.bits = value.toLong()
         this.ref = null
     }
@@ -38,7 +38,7 @@ class RValue {
     fun toStringTyped(): String {
         return when (type) {
             RValueDataType.STRING -> "\"$ref\""
-            RValueDataType.INT16 -> "int16($bits)"
+            RValueDataType.INT32 -> "int32($bits)"
             RValueDataType.BOOLEAN -> "boolean($bits)"
             RValueDataType.UNDEFINED -> "undefined"
             else -> error("Unknown type $type!")

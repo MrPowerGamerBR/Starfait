@@ -5,10 +5,13 @@ import com.mrpowergamerbr.starfait.wad.Code
 
 class CODE(val codes: List<Code>) {
     companion object {
+        private val EMPTY_BYTECODE_STREAM = ByteArray(0)
+
         fun read(reader: StarfaitByteReader): CODE {
             val addresses = reader.readAddresses()
 
             val codes = ArrayList<Code>(addresses.size)
+            val readBytecodeStreams = mutableMapOf<Int, ByteArray>()
             for (address in addresses) {
                 reader.position = address
 
@@ -20,8 +23,12 @@ class CODE(val codes: List<Code>) {
                 val bytecodeRelativeOffset = reader.readInt()
                 val offset = reader.readInt()
 
-                reader.position = bytecodeRelativeOffsetFieldPosition + bytecodeRelativeOffset
-                val data = reader.readBytes(length.toInt())
+                val data = if (length == 0u) {
+                    EMPTY_BYTECODE_STREAM
+                } else {
+                    reader.position = bytecodeRelativeOffsetFieldPosition + bytecodeRelativeOffset
+                    readBytecodeStreams.getOrPut(reader.position) { reader.readBytes(length.toInt()) }
+                }
 
                 codes.add(
                     Code(

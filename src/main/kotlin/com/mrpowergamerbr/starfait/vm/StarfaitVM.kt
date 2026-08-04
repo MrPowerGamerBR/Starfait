@@ -477,7 +477,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
     }
 
     private fun getVariableNameFromVariableIndex(index: Int): String {
-        val variable = gameWAD.vari.variables.getOrNull(index)?.name ?: return "<UnknownVariable>"
+        require(index >= REGULAR_VARIABLES_BASE) { "Trying to get the name of a builtin variable!" }
+        val variable = gameWAD.vari.variables.getOrNull(index - REGULAR_VARIABLES_BASE)?.name ?: return "<UnknownVariable>"
         return gameWAD.strg.getString(variable)
     }
 }

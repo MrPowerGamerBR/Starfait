@@ -188,6 +188,8 @@ class StarfaitVM(val gameWAD: GameWAD) {
 
         // For now we don't really care
         println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+
+        stack.push().setUndefined()
     }
 
     /**

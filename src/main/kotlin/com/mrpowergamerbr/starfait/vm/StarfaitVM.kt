@@ -119,9 +119,7 @@ class StarfaitVM(val gameWAD: GameWAD) {
                         instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
                         instanceId == SpecialObjectReferenceType.LOCAL -> {
                             // ewww this is a horrible hack
-                            val popped = stack.pop()
-                            println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
-                            localVariables[varId] = popped.makeIndependent()
+                            stack.push().copyFrom(localVariables[varId]!!)
                             return
                         }
                         instanceId == SpecialObjectReferenceType.GLOBAL -> global

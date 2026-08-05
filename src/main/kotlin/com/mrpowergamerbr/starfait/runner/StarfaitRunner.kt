@@ -24,16 +24,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
         val currentRoom = initializeRoom(firstRoomId, room)
         this.currentRoom = currentRoom
 
-        for (instance in currentRoom.instances) {
-            val gameObject = getGameObjectFromInstance(instance)
-            val gameStartEvents = gameObject.events[EventType.OTHER]
-            for (action in gameStartEvents.filter { it.subtype == EventType.OtherSubType.GAME_START } .flatMap { it.actions }) {
-                val code = gameWAD.code.codes[action.codeId]
-
-                vm.currentInstance = instance
-                vm.executeCode(code, emptyArray())
-            }
-        }
+        dispatchEventToAllInstances(EventType.OTHER, EventType.OtherSubType.GAME_START)
     }
 
     fun initializeRoom(roomId: Int, room: Room): RunnerRoom {

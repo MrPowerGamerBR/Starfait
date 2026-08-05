@@ -209,7 +209,7 @@ class StarfaitVM(
         val pushed = stack.push()
         val builtinVariable = builtinVariableHandlers[varId]
 
-        builtinVariable.readHandler.invoke(pushed, null)
+        builtinVariable.readHandler.invoke(null, pushed, null)
     }
 
     private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
@@ -284,7 +284,7 @@ class StarfaitVM(
             }
         } else {
             val builtinVariableHandler = builtinVariableHandlers[variableId]
-            builtinVariableHandler.readHandler.invoke(result, arrayIndex)
+            builtinVariableHandler.readHandler.invoke(objectBase as Instance, result, arrayIndex)
         }
     }
 
@@ -335,7 +335,7 @@ class StarfaitVM(
                                     instance.variables[varId] = poppedValue.makeIndependent() // .also { println("Setting variable $varId to ${it.toStringTyped()}") }
                                 } else {
                                     val builtinVariableHandler = builtinVariableHandlers[varId]
-                                    builtinVariableHandler.writeHandler.invoke(poppedValue, null)
+                                    builtinVariableHandler.writeHandler.invoke(instance, poppedValue, null)
                                 }
                             }
                         }
@@ -369,7 +369,7 @@ class StarfaitVM(
                 } else {
                     // Builtin variable!
                     val builtinVariableHandler = builtinVariableHandlers[varId]
-                    builtinVariableHandler.writeHandler.invoke(stack.pop().makeIndependent(), arrayIndex)
+                    builtinVariableHandler.writeHandler.invoke(instance as Instance, stack.pop().makeIndependent(), arrayIndex)
                 }
             }
             InstructionDataType.STRING -> TODO()
@@ -639,8 +639,8 @@ class StarfaitVM(
 
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
-                { _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
-                { _, _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
+                { _, _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
+                { _, _, _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
             )
         }
 

@@ -17,18 +17,18 @@ class VMBuiltins(val vm: StarfaitVM) {
         registeredFunctions[name] = handler
     }
 
-    fun registerVariable(name: String, readHandler: (RValue, Int?) -> (Unit), writeHandler: (RValue, Int?) -> (Unit)) {
+    fun registerVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
         registeredVariables[name] = BuiltinVariable(readHandler, writeHandler)
     }
 
-    fun registerReadOnlyVariable(name: String, readHandler: (RValue, Int?) -> (Unit)) {
-        registerVariable(name, readHandler, { _, _ -> error("Cannot write to read-only variable $name!") })
+    fun registerReadOnlyVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit)) {
+        registerVariable(name, readHandler, { _, _, _ -> error("Cannot write to read-only variable $name!") })
     }
 
     fun registerInstanceVariable(name: String, readHandler: (Instance, RValue, Int?) -> (Unit), writeHandler: (Instance, RValue, Int?) -> (Unit)) {
         registeredVariables[name] = BuiltinVariable(
-            { source, arrayIndex -> readHandler(vm.currentInstance, source, arrayIndex) },
-            { value, arrayIndex -> writeHandler(vm.currentInstance, value, arrayIndex) }
+            { instance, source, arrayIndex -> readHandler(requireNotNull(instance), source, arrayIndex) },
+            { instance, value, arrayIndex -> writeHandler(requireNotNull(instance), value, arrayIndex) }
         )
     }
 
@@ -56,7 +56,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
     init {
         // ===[ BUILTIN VARIABLES ]===
-        registerReadOnlyVariable("os_type") { result, arrayIndex -> result.setReal(runner.operatingSystem.id.toDouble()) }
+        registerReadOnlyVariable("os_type") { _, result, arrayIndex -> result.setReal(runner.operatingSystem.id.toDouble()) }
         registerReadOnlyInstanceVariable("id") { instance, result, arrayIndex -> result.setReal(instance.id.toDouble()) }
         registerInstanceRealVariable("x", Instance::x)
         registerInstanceRealVariable("y", Instance::y)
@@ -69,19 +69,19 @@ class VMBuiltins(val vm: StarfaitVM) {
         repeat(16) {
             registerVariable(
                 "argument$it",
-                { result, _ ->
+                { _, result, _ ->
                     result.copyFrom(vm.currentCallFrame.arguments[it])
                 },
-                { source, _ ->
+                { _, source, _ ->
                     vm.currentCallFrame.arguments[it].copyFrom(source)
                 }
             )
         }
         // TODO: Pretty sure this is writeable
-        registerReadOnlyVariable("argument") { result, arrayIndex ->
+        registerReadOnlyVariable("argument") { _, result, arrayIndex ->
             result.copyFrom(vm.currentCallFrame.arguments[arrayIndex!!])
         }
-        registerReadOnlyVariable("argument_count") { result, _ ->
+        registerReadOnlyVariable("argument_count") { _, result, _ ->
             result.setReal(vm.currentCallFrame.arguments.size.toDouble())
         }
         registerInstanceVariable(
@@ -103,15 +103,15 @@ class VMBuiltins(val vm: StarfaitVM) {
             }
         )
         // TODO: Those should be writeable
-        registerReadOnlyVariable("room_width") { result, _ -> result.setInt32(runner.currentRoom.width) }
-        registerReadOnlyVariable("room_height") { result, _ -> result.setInt32(runner.currentRoom.height) }
+        registerReadOnlyVariable("room_width") { _, result, _ -> result.setInt32(runner.currentRoom.width) }
+        registerReadOnlyVariable("room_height") { _, result, _ -> result.setInt32(runner.currentRoom.height) }
 
-        registerReadOnlyVariable("view_current") { result, arrayIndex -> result.setReal(0.0) } // Should be 0 outside of draw events
-        registerReadOnlyVariable("view_xview") { result, arrayIndex -> result.setReal(0.0) }
-        registerReadOnlyVariable("view_yview") { result, arrayIndex -> result.setReal(0.0) }
-        registerReadOnlyVariable("view_wview") { result, arrayIndex -> result.setReal(640.0) }
-        registerReadOnlyVariable("view_hview") { result, arrayIndex -> result.setReal(480.0) }
-        registerReadOnlyVariable("application_surface") { result, arrayIndex -> result.setReal(-1.0) }
+        registerReadOnlyVariable("view_current") { _, result, arrayIndex -> result.setReal(0.0) } // Should be 0 outside of draw events
+        registerReadOnlyVariable("view_xview") { _, result, arrayIndex -> result.setReal(0.0) }
+        registerReadOnlyVariable("view_yview") { _, result, arrayIndex -> result.setReal(0.0) }
+        registerReadOnlyVariable("view_wview") { _, result, arrayIndex -> result.setReal(640.0) }
+        registerReadOnlyVariable("view_hview") { _, result, arrayIndex -> result.setReal(480.0) }
+        registerReadOnlyVariable("application_surface") { _, result, arrayIndex -> result.setReal(-1.0) }
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerFunction("script_execute") { args, result ->

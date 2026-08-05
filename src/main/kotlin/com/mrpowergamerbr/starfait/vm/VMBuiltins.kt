@@ -83,6 +83,8 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerFunction("script_execute", ::script_execute)
         registerFunction("show_debug_message", ::show_debug_message)
         registerFunction("string", ::string)
+        registerFunction("steam_initialised") { args, result -> result.setBoolean(true) }
+        registerFunction("steam_file_exists") { args, result -> result.setBoolean(false) }
     }
 
     fun script_execute(args: List<RValue>, result: RValue) {

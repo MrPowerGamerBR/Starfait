@@ -16,9 +16,18 @@ class VMBuiltins(val vm: StarfaitVM) {
     /**
      * Registers a function named [name] that has [parameterCount] parameters (null if variadic)
      */
-    fun registerFunction(name: String, parameterCount: Int?, handler: (List<RValue>, RValue) -> Unit) {
+    fun registerFunction(name: String, parameterCount: Int?, handler: (List<RValue>) -> BuiltinResult) {
         require(name !in registeredFunctions) { "Tried registering function $name, but it already exists!" }
-        registeredFunctions[name] = BuiltinFunction(parameterCount, handler)
+        registeredFunctions[name] = BuiltinFunction(parameterCount) { args, result ->
+            val builtinResult = handler(args)
+            when (builtinResult) {
+                is BuiltinResult.RValue -> result.copyFrom(builtinResult.value)
+                is BuiltinResult.Boolean -> result.setBoolean(builtinResult.value)
+                is BuiltinResult.Real -> result.setReal(builtinResult.value)
+                is BuiltinResult.String -> result.setString(builtinResult.value)
+                BuiltinResult.Undefined -> result.setUndefined()
+            }
+        }
     }
 
     fun registerVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
@@ -119,96 +128,96 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerReadOnlyVariable("application_surface") { _, result, arrayIndex -> result.setReal(-1.0) }
 
         // ===[ BUILTIN FUNCTIONS ]===
-        registerFunction("script_execute", null) { args, result ->
+        registerFunction("script_execute", null) { args ->
             val scriptId = args[0].int
             val script = vm.gameWAD.scpt.scripts[scriptId]
             val code = vm.gameWAD.code.codes[script.codeIndex]
             val arguments = args.drop(1).map { it.makeIndependent() }.toTypedArray()
             val scriptResult = vm.executeCode(code, vm.currentInstance, arguments)
             if (scriptResult != null) {
-                result.copyFrom(scriptResult)
+                return@registerFunction BuiltinResult.RValue(scriptResult)
             } else {
-                result.setUndefined()
+                return@registerFunction BuiltinResult.Undefined
             }
         }
 
-        registerFunction("show_debug_message", null, ::show_debug_message)
-        registerFunction("string", null, ::string)
+        registerFunction("show_debug_message", null) { args ->
+            println("Game: ${args[0].toGMLString()}")
+            return@registerFunction BuiltinResult.Undefined
+        }
+        registerFunction("string", 1) { args ->
+            return@registerFunction BuiltinResult.String(args[0].toGMLString())
+        }
         // TODO: Add some stub warnings?
-        registerFunction("steam_initialised", null) { args, result -> result.setBoolean(true) }
-        registerFunction("steam_file_exists", null) { args, result -> result.setBoolean(false) }
-        registerFunction("file_exists", null) { args, result -> result.setBoolean(false) }
-        registerFunction("os_get_language", null) { args, result -> result.setString("pt") }
-        registerFunction("os_get_region", null) { args, result -> result.setString("BR") }
-        registerFunction("string_upper", null) { args, result -> result.setString(args[0].toGMLString().uppercase()) }
-        registerFunction("variable_global_exists", null) { args, result ->
+        registerFunction("steam_initialised", null) { args -> BuiltinResult.Boolean(true) }
+        registerFunction("steam_file_exists", null) { args -> BuiltinResult.Boolean(false) }
+        registerFunction("file_exists", null) { args -> BuiltinResult.Boolean(false) }
+        registerFunction("os_get_language", null) { args -> BuiltinResult.String("pt") }
+        registerFunction("os_get_region", null) { args -> BuiltinResult.String("BR") }
+        registerFunction("string_upper", null) { args -> BuiltinResult.String(args[0].toGMLString().uppercase()) }
+        registerFunction("variable_global_exists", null) { args ->
             val variableName = args[0].toGMLString()
             // TODO: This is kinda nasty, I think it would be better to have a proper variable name -> varId lookup table
             val varId = vm.getVariableIndexFromVariableName(variableName)
             println("varId: $varId")
-            result.setBoolean(vm.global.variables.containsKey(varId))
+            return@registerFunction BuiltinResult.Boolean(vm.global.variables.containsKey(varId))
         }
-        registerFunction("room_goto_next", null) { args, result ->
+        registerFunction("room_goto_next", null) { args ->
             val newRoomIndex = vm.gameWAD.gen8.roomOrder.indexOf(runner.currentRoom.roomId) + 1
             val room = vm.gameWAD.room.rooms[newRoomIndex]
             runner.pendingRoom = PendingRoom(newRoomIndex, room)
+            return@registerFunction BuiltinResult.Undefined
         }
-        registerFunction("is_undefined", null) { args, result ->
-            result.setBoolean(args[0].type == RValueDataType.UNDEFINED)
+        registerFunction("is_undefined", null) { args ->
+            return@registerFunction BuiltinResult.Boolean(args[0].type == RValueDataType.UNDEFINED)
         }
-        registerFunction("instance_create", null) { args, result ->
+        registerFunction("instance_create", null) { args ->
             val objectId = args[2].int
             val instance = runner.currentRoom.createAndSpawnInstance(objectId)
-            result.setInt32(instance.id)
+            return@registerFunction BuiltinResult.Real(instance.id.toDouble())
         }
-        registerFunction("keyboard_check_pressed", null) { args, result -> result.setBoolean(false) }
-        registerFunction("ds_map_create", null) { args, result ->
+        registerFunction("keyboard_check_pressed", null) { args -> BuiltinResult.Boolean(false) }
+        registerFunction("ds_map_create", null) { args ->
             val newIndex = vm.dsMapPool.size
             vm.dsMapPool.add(DSMap())
-            result.setInt32(newIndex)
+            return@registerFunction BuiltinResult.Real(newIndex.toDouble())
         }
 
-        registerFunction("ds_map_add", null) { args, result ->
+        registerFunction("ds_map_add", null) { args ->
             val dsMap = vm.dsMapPool[args[0].int]
             dsMap.set(args[1], args[2])
-            result.setBoolean(true)
+            return@registerFunction BuiltinResult.Boolean(true)
         }
 
-        registerFunction("ds_map_find_value", null) { args, result ->
+        registerFunction("ds_map_find_value", null) { args ->
             val dsMap = vm.dsMapPool[args[0].int]
             val value = dsMap.get(args[1])
-            if (value == null) {
-                result.setUndefined()
-                return@registerFunction
-            }
-            result.copyFrom(value)
+            if (value == null)
+                return@registerFunction BuiltinResult.Undefined
+
+            return@registerFunction BuiltinResult.RValue(value)
         }
 
-        registerFunction("string_length", null) { args, result ->
-            if (args[0].type != RValueDataType.STRING) {
-                result.setInt32(0)
-                return@registerFunction
-            }
+        registerFunction("string_length", null) { args ->
+            if (args[0].type != RValueDataType.STRING)
+                return@registerFunction BuiltinResult.Real(0.0)
 
             val string = args[0].refAsString()
-            result.setInt32(string.length)
+            return@registerFunction BuiltinResult.Real(string.length.toDouble())
         }
 
-        registerFunction("string_copy", null) { args, result ->
-            if (args[0].type != RValueDataType.STRING) {
-                println("string_copy called with $result")
-                result.setString("")
-                return@registerFunction
-            }
+        registerFunction("string_copy", null) { args ->
+            if (args[0].type != RValueDataType.STRING)
+                return@registerFunction BuiltinResult.String("")
 
             val index = args[1].int - 1 // "The position of the first character in the string to copy from (numbered from 1)"
             val count = args[2].int
 
             val string = args[0].refAsString()
-            result.setString(string.substring(index, index + count))
+            return@registerFunction BuiltinResult.String(string.substring(index, index + count))
         }
 
-        registerFunction("event_inherited", null) { args, result ->
+        registerFunction("event_inherited", null) { args ->
             // event_inherited is like a script_execute, but for parent events
             val currentInstance = vm.currentInstance
             println("My parent ID is ${currentInstance.gameObject.parentId}")
@@ -237,15 +246,15 @@ class VMBuiltins(val vm: StarfaitVM) {
                 this.runner.vm.executeCode(code, currentInstance, emptyArray())
             }
 
-            result.setUndefined()
+            return@registerFunction BuiltinResult.Undefined
         }
 
-        registerFunction("string_replace_all", null) { args, result ->
+        registerFunction("string_replace_all", null) { args ->
             val string = args[0].refAsString()
-            result.setString(string.replace(args[1].refAsString(), args[2].refAsString()))
+            return@registerFunction BuiltinResult.String(string.replace(args[1].refAsString(), args[2].refAsString()))
         }
 
-        registerFunction("string_char_at", null) { args, result ->
+        registerFunction("string_char_at", null) { args ->
             val string = args[0].refAsString()
 
             // "with the index starting at 1 for the first character"
@@ -254,22 +263,12 @@ class VMBuiltins(val vm: StarfaitVM) {
             val char = string.getOrNull(index)
 
             // If no character is found or the string is shorter than the given index value, an empty string "" is returned,
-            if (char == null) {
-                result.setUndefined()
-                return@registerFunction
-            }
+            if (char == null)
+                return@registerFunction BuiltinResult.String("")
 
-            result.setString(char.toString())
+            return@registerFunction BuiltinResult.String(char.toString())
         }
 
-        registerFunction("random", null) { args, result -> result.setReal(0.0) }
-    }
-
-    fun show_debug_message(args: List<RValue>, result: RValue) {
-        println("Game: ${args[0].toGMLString()}")
-    }
-
-    fun string(args: List<RValue>, result: RValue) {
-        result.setString(args[0].toGMLString())
+        registerFunction("random", null) { args -> return@registerFunction BuiltinResult.Real(0.0) }
     }
 }

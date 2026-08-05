@@ -62,6 +62,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
 
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
+        dispatchEventToAllInstances(EventType.DRAW, EventType.DrawSubType.DRAW)
 
         val pendingRoom = this.pendingRoom
         if (pendingRoom != null) {

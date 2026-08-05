@@ -6,6 +6,7 @@ object EventType {
     const val ALARM = 2
     const val STEP = 3
     const val OTHER = 7
+    const val DRAW = 8
 
     object StepSubType {
         const val NORMAL = 0
@@ -15,5 +16,9 @@ object EventType {
 
     object OtherSubType {
         const val GAME_START = 2
+    }
+
+    object DrawSubType {
+        const val DRAW = 0
     }
 }

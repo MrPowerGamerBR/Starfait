@@ -35,13 +35,17 @@ class VMBuiltins(val vm: StarfaitVM) {
     fun registerIntAsRealFunction(name: String, parameterCount: Int?, handler: IntAsRealFunction) = registerRawFunction(name, parameterCount) { args, result -> result.setReal(handler.invoke(args).toDouble()) }
     fun registerFloatAsRealFunction(name: String, parameterCount: Int?, handler: FloatAsRealFunction) = registerRawFunction(name, parameterCount) { args, result -> result.setReal(handler.invoke(args).toDouble()) }
 
-    fun warnStub(name: String) {
+    fun warnFunctionStub(name: String) {
         println("VM: [${vm.currentCallFrameCodeName}] Stubbed function \"$name\"!")
     }
 
-    fun registerBooleanStubFunction(name: String, parameterCount: Int?, value: Boolean) = registerBooleanFunction(name, parameterCount) { _ -> warnStub(name); value }
-    fun registerRealStubFunction(name: String, parameterCount: Int?, value: Double) = registerRealFunction(name, parameterCount) { _ -> warnStub(name); value }
-    fun registerStringStubFunction(name: String, parameterCount: Int?, value: String) = registerStringFunction(name, parameterCount) { _ -> warnStub(name); value }
+    fun warnVariableStub(name: String) {
+        println("VM: [${vm.currentCallFrameCodeName}] Stubbed built-in variable \"$name\"!")
+    }
+
+    fun registerBooleanStubFunction(name: String, parameterCount: Int?, value: Boolean) = registerBooleanFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
+    fun registerRealStubFunction(name: String, parameterCount: Int?, value: Double) = registerRealFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
+    fun registerStringStubFunction(name: String, parameterCount: Int?, value: String) = registerStringFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
 
     fun registerVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
         require(name !in registeredVariables) { "Tried registering variable $name, but it already exists!" }
@@ -51,6 +55,8 @@ class VMBuiltins(val vm: StarfaitVM) {
     fun registerReadOnlyVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit)) {
         registerVariable(name, readHandler, { _, _, _ -> error("Cannot write to read-only variable $name!") })
     }
+
+    fun registerRealStubbedVariable(name: String, value: Double) = registerReadOnlyVariable(name) { _, result, _ -> warnVariableStub(name); result.setReal(value) }
 
     fun registerInstanceVariable(name: String, readHandler: (Instance, RValue, Int?) -> (Unit), writeHandler: (Instance, RValue, Int?) -> (Unit)) {
         registerVariable(
@@ -131,15 +137,16 @@ class VMBuiltins(val vm: StarfaitVM) {
             }
         )
         // TODO: Those should be writeable
+
         registerReadOnlyVariable("room_width") { _, result, _ -> result.setInt32(runner.currentRoom.width) }
         registerReadOnlyVariable("room_height") { _, result, _ -> result.setInt32(runner.currentRoom.height) }
 
-        registerReadOnlyVariable("view_current") { _, result, arrayIndex -> result.setReal(0.0) } // Should be 0 outside of draw events
-        registerReadOnlyVariable("view_xview") { _, result, arrayIndex -> result.setReal(0.0) }
-        registerReadOnlyVariable("view_yview") { _, result, arrayIndex -> result.setReal(0.0) }
-        registerReadOnlyVariable("view_wview") { _, result, arrayIndex -> result.setReal(640.0) }
-        registerReadOnlyVariable("view_hview") { _, result, arrayIndex -> result.setReal(480.0) }
-        registerReadOnlyVariable("application_surface") { _, result, arrayIndex -> result.setReal(-1.0) }
+        registerRealStubbedVariable("view_current", 0.0) // Should be 0 outside of draw events
+        registerRealStubbedVariable("view_xview", 0.0)
+        registerRealStubbedVariable("view_yview", 0.0)
+        registerRealStubbedVariable("view_wview", 640.0)
+        registerRealStubbedVariable("view_hview", 480.0)
+        registerRealStubbedVariable("application_surface", -1.0)
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerRawFunction("script_execute", null) { args, result ->

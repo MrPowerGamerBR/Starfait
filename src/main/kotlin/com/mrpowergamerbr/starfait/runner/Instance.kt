@@ -29,10 +29,26 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     }
 
     fun dispatchEvent(eventType: Int, eventSubtype: Int) {
-        val gameObject = this.runner.gameWAD.objt.objects[this.objectIndex]
+        var gameObject = this.runner.gameWAD.objt.objects[this.objectIndex]
         val events = gameObject.events[eventType]
 
-        val subtypeEvents = events.filter { it.subtype == eventSubtype }.flatMap { it.actions }
+        var subtypeEvents = events
+            .filter { it.subtype == eventSubtype }
+            .flatMap { it.actions }
+
+        // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
+        var attempts = 0
+        while (subtypeEvents.isEmpty()) {
+            if (0 > gameObject.parentId)
+                break
+
+            gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
+            subtypeEvents = gameObject.events[eventType]
+                .filter { it.subtype == eventSubtype }
+                .flatMap { it.actions }
+            attempts++
+        }
+
         for (action in subtypeEvents) {
             val code = this.runner.gameWAD.code.codes[action.codeId]
             this.runner.vm.executeCode(code, this, emptyArray())

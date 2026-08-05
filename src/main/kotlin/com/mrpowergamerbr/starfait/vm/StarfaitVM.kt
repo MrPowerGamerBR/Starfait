@@ -24,6 +24,7 @@ class StarfaitVM(
     val global = ObjectBase()
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
+    lateinit var regularVariableNames: Array<String>
     val callFrameStack = ArrayDeque<CallFrame>()
 
     private var currentOrNullCallFrame: CallFrame? = null
@@ -641,6 +642,9 @@ class StarfaitVM(
                 { _, _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
             )
         }
+
+        // Register the regular variable names
+        regularVariableNames = Array(allocatedRegularVariables.size) { index -> gameWAD.strg.getString(allocatedRegularVariables[index].name) }
     }
 
     fun getVariableIndexFromVariableName(name: String): Int {
@@ -650,7 +654,6 @@ class StarfaitVM(
 
     private fun getVariableNameFromVariableIndex(index: Int): String {
         require(index >= REGULAR_VARIABLES_BASE) { "Trying to get the name of a builtin variable!" }
-        val variable = gameWAD.vari.variables.getOrNull(index - REGULAR_VARIABLES_BASE)?.name ?: return "<UnknownVariable>"
-        return gameWAD.strg.getString(variable)
+        return regularVariableNames.getOrNull(index - REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
     }
 }

@@ -11,7 +11,7 @@ class RValue {
     val real: Double
         get() = when (type) {
             RValueDataType.REAL -> Double.fromBits(bits)
-            RValueDataType.BOOLEAN, RValueDataType.INT32 -> bits.toDouble()
+            RValueDataType.BOOLEAN, RValueDataType.INT32, RValueDataType.INT64 -> bits.toDouble()
             RValueDataType.UNDEFINED -> 0.0
             else -> error("Cannot read $type as a real!")
         }
@@ -41,9 +41,15 @@ class RValue {
         this.ref = value
     }
 
-    fun setInt(value: Int) {
+    fun setInt32(value: Int) {
         this.type = RValueDataType.INT32
         this.bits = value.toLong()
+        this.ref = null
+    }
+
+    fun setInt64(value: Long) {
+        this.type = RValueDataType.INT64
+        this.bits = value
         this.ref = null
     }
 
@@ -69,6 +75,7 @@ class RValue {
             RValueDataType.STRING -> ref as String
             RValueDataType.REAL -> MathUtils.formatReal(Double.fromBits(bits))
             RValueDataType.INT32 -> bits.toString()
+            RValueDataType.INT64 -> bits.toString()
             RValueDataType.BOOLEAN -> if (bits != 0L) "1" else "0"
             RValueDataType.UNDEFINED -> "undefined"
             else -> error("Cannot convert $type to a string!")
@@ -79,6 +86,7 @@ class RValue {
         return when (type) {
             RValueDataType.STRING -> "\"$ref\""
             RValueDataType.INT32 -> "int32($bits)"
+            RValueDataType.INT64 -> "int64($bits)"
             RValueDataType.BOOLEAN -> "boolean($bits)"
             RValueDataType.UNDEFINED -> "undefined"
             RValueDataType.REAL -> "real($real)"

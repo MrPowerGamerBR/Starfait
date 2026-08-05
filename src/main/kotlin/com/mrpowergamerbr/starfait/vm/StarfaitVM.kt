@@ -130,9 +130,9 @@ class StarfaitVM(
         println(type1DataType)
         when (type1DataType) {
             // While there's already PUSH_IMMEDIATE for INT16, it seems that GameMaker also does use handlePush with INT16 sometimes, in this case the value is the "extra" field
-            InstructionDataType.INT16 -> stack.push().setInt(extra)
-            InstructionDataType.INT32 -> stack.push().setInt(reader.readInt())
-            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.INT16 -> stack.push().setInt32(extra)
+            InstructionDataType.INT32 -> stack.push().setInt32(reader.readInt())
+            InstructionDataType.INT64 -> stack.push().setInt64(reader.readLong())
             InstructionDataType.DOUBLE -> stack.push().setReal(reader.readDouble())
             InstructionDataType.FLOAT -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
@@ -348,7 +348,7 @@ class StarfaitVM(
             return
 
         if (destinationType == InstructionDataType.INT32) {
-            topOfTheStack.setInt(topOfTheStack.int)
+            topOfTheStack.setInt32(topOfTheStack.int)
             return
         }
 
@@ -361,7 +361,7 @@ class StarfaitVM(
     }
 
     private fun handlePushImmediate(reader: StarfaitByteBuffer, extra: Int) {
-        stack.push().setInt(extra)
+        stack.push().setInt32(extra)
     }
 
     private fun handleCall(reader: StarfaitByteBuffer, extra: Int) {

@@ -7,8 +7,9 @@ value class RValueDataType(val id: Byte) {
         val UNDEFINED = RValueDataType(0)
         val STRING = RValueDataType(1)
         val INT32 = RValueDataType(2)
-        val BOOLEAN = RValueDataType(3)
-        val REAL = RValueDataType(4)
-        val ARRAY = RValueDataType(5)
+        val INT64 = RValueDataType(3)
+        val BOOLEAN = RValueDataType(4)
+        val REAL = RValueDataType(5)
+        val ARRAY = RValueDataType(6)
     }
 }

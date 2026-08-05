@@ -133,10 +133,7 @@ class StarfaitVM(
                     currentCallFrame.returnValue = stack.pop().makeIndependent()
                     return
                 }
-                Op.EXIT -> {
-                    currentCallFrame.returnValue = RValue().apply { setUndefined() }
-                    return
-                }
+                Op.EXIT -> return
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(currentCallFrame.code.name)}\"")
             }
         }
@@ -406,9 +403,15 @@ class StarfaitVM(
         val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
-            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray()) ?: error("Script return value is null!")
-            val result = stack.push()
-            result.copyFrom(returnValue)
+            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray())
+            if (returnValue == null) {
+                // This happens when...
+                // * Op.EXIT is called
+                // * The script exits without any "return" or "exit" statement
+                stack.push().setUndefined()
+                return
+            }
+            stack.push().copyFrom(returnValue)
             return
         }
 

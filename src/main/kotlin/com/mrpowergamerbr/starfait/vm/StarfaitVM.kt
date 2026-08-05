@@ -345,7 +345,7 @@ class StarfaitVM(
                 } else {
                     // Builtin variable!
                     val builtinVariableHandler = builtinVariableHandlers[varId]
-                    builtinVariableHandler.writeHandler.invoke(stack.pop().makeIndependent())
+                    builtinVariableHandler.writeHandler.invoke(stack.pop().makeIndependent(), arrayIndex)
                 }
             }
             InstructionDataType.STRING -> TODO()
@@ -577,7 +577,7 @@ class StarfaitVM(
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
                 { _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
-                { _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
+                { _, _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
             )
         }
     }

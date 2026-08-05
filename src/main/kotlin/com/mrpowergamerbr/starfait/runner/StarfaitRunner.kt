@@ -9,6 +9,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
     companion object {
         // You can check that by creating a room with a single instance where the instance's code is just "show_debug_message(id)"
         const val BASE_INSTANCE_ID = 100_000
+        const val MAX_ALARMS = 12
     }
 
     lateinit var currentRoom: RunnerRoom
@@ -37,6 +38,8 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
 
     fun initializeRoom(roomId: Int, room: Room): RunnerRoom {
         val currentRoom = RunnerRoom(roomId)
+        currentRoom.width = room.width
+        currentRoom.height = room.height
 
         for (instance in room.instances) {
             val gameInstance = Instance(currentInstanceId++, instance.objectIndex)

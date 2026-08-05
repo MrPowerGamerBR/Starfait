@@ -45,7 +45,8 @@ class VMBuiltins(val vm: StarfaitVM) {
     }
 
     fun registerInstanceVariable(name: String, readHandler: (Instance, RValue, Int?) -> (Unit), writeHandler: (Instance, RValue, Int?) -> (Unit)) {
-        registeredVariables[name] = BuiltinVariable(
+        registerVariable(
+            name,
             { instance, source, arrayIndex -> readHandler(requireNotNull(instance), source, arrayIndex) },
             { instance, value, arrayIndex -> writeHandler(requireNotNull(instance), value, arrayIndex) }
         )

@@ -245,7 +245,7 @@ class StarfaitVM(
         if (variableId >= REGULAR_VARIABLES_BASE) {
             val variable = objectBase.variables[variableId] ?: error("Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not set before reading it")
             if (arrayIndex != null) {
-                require(variable.type == RValueDataType.ARRAY) { "Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not an array, but we wanted to read arrayIndex $arrayIndex from it!" }
+                check(variable.type == RValueDataType.ARRAY) { "Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not an array, but we wanted to read arrayIndex $arrayIndex from it!" }
                 val array = variable.ref as GMLArray
                 val variable = array.entries[arrayIndex] ?: error("Trying to read from array index $arrayIndex, but the element does not exist!")
                 result.copyFrom(variable)
@@ -423,8 +423,8 @@ class StarfaitVM(
             val rightRef = right.ref
 
             // If the ref is not a string, then something went deeply wrong
-            require(leftRef is String)
-            require(rightRef is String)
+            check(leftRef is String)
+            check(rightRef is String)
 
             pushed.setString(leftRef + rightRef)
             return

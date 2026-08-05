@@ -50,6 +50,7 @@ class StarfaitCLI : CliktCommand() {
     override fun run() {
         val byteReader = StarfaitByteBuffer.fromByteArray(File(wadPath).readBytes())
         val gameWAD = GameWAD.read(byteReader)
+        println("Loaded \"${gameWAD.strg.getString(gameWAD.gen8.gameDisplayName)}\" successfully! [WAD Version ${gameWAD.gen8.wadVersion}]")
 
         if (printGameObjects != null) {
             dump(gameWAD, "Object", gameWAD.objt.objects, GameObject::name, printGameObjects!!)

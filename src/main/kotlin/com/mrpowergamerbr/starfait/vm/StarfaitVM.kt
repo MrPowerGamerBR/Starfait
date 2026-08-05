@@ -133,6 +133,7 @@ class StarfaitVM(
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.SUB -> handleSub(reader, type1, type2)
                 Op.MUL -> handleMul(reader, type1, type2)
+                Op.NOT -> handleNot(reader, type1)
                 Op.CALL -> handleCall(reader, extra)
                 Op.DUP -> handleDup(reader, type1, extra)
                 Op.BREAK -> handleBreak(reader)
@@ -141,10 +142,6 @@ class StarfaitVM(
                     return
                 }
                 Op.EXIT -> return
-                Op.NOT -> {
-                    val booleanValue = stack.pop().bool
-                    stack.push().setBoolean(!booleanValue)
-                }
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"$currentCallFrameCodeName\"")
             }
         }
@@ -518,6 +515,23 @@ class StarfaitVM(
     private fun handleBreak(reader: StarfaitByteBuffer) {
         // For *real* games, the BREAK opcode is only used to check the array size to avoid querying out of bounds
         println("BREAK opcode called, it isn't implemented yet")
+    }
+
+    private fun handleNot(reader: StarfaitByteBuffer, type1: Int) {
+        val targetType = InstructionDataType.byId(type1)
+        val poppedValue = stack.pop().makeIndependent() // Create a copy so that the push below doesn't overwrite it
+        val pushedValue = stack.push()
+
+        when (targetType) {
+            InstructionDataType.DOUBLE -> TODO()
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.INT32 -> pushedValue.setInt32(poppedValue.int.inv()) // Same thing as ~Number
+            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.BOOLEAN -> pushedValue.setBoolean(!poppedValue.bool)
+            InstructionDataType.VARIABLE -> TODO()
+            InstructionDataType.STRING -> TODO()
+            InstructionDataType.INT16 -> TODO()
+        }
     }
 
     /**

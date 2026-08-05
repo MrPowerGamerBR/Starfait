@@ -144,6 +144,9 @@ class VMBuiltins(val vm: StarfaitVM) {
             val room = vm.gameWAD.room.rooms[newRoomIndex]
             runner.pendingRoom = PendingRoom(newRoomIndex, room)
         }
+        registerFunction("is_undefined") { args, result ->
+            result.setBoolean(args[0].type == RValueDataType.UNDEFINED)
+        }
     }
     fun show_debug_message(args: List<RValue>, result: RValue) {
         println("Game: ${args[0].toGMLString()}")

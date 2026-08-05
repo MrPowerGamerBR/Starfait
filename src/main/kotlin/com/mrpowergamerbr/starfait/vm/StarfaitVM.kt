@@ -12,7 +12,8 @@ import java.nio.ByteBuffer
 
 class StarfaitVM(
     val gameWAD: GameWAD,
-    val gmlScriptsOpcodesToBeTraced: Set<String>
+    val gmlScriptsOpcodesToBeTraced: Set<String>,
+    val alarmsToBeTraced: Set<String>
 ) {
     companion object {
         private const val REGULAR_VARIABLES_BASE = 100_000
@@ -28,6 +29,8 @@ class StarfaitVM(
     private var currentOrNullCallFrame: CallFrame? = null
     val currentCallFrame: CallFrame
         get() = currentOrNullCallFrame ?: error("No current call frame!")
+    val currentCallFrameCodeName: String
+        get() = gameWAD.strg.getString(currentCallFrame.code.name)
 
     fun executeCode(code: Code, arguments: Array<RValue>): RValue? {
         val callFrame = CallFrame(code, arguments, mutableMapOf(), stack.top)
@@ -66,7 +69,7 @@ class StarfaitVM(
 
             val scriptName = gameWAD.strg.getString(currentCallFrame.code.name)
             if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName)) {
-                print("VM: [${gameWAD.strg.getString(currentCallFrame.code.name)}] [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
+                print("VM: [$currentCallFrameCodeName] [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
 
                 for (i in 0 until stack.top) {
                     if (i != 0)
@@ -138,7 +141,7 @@ class StarfaitVM(
                     val booleanValue = stack.pop().bool
                     stack.push().setBoolean(!booleanValue)
                 }
-                else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(currentCallFrame.code.name)}\"")
+                else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"$currentCallFrameCodeName\"")
             }
         }
     }

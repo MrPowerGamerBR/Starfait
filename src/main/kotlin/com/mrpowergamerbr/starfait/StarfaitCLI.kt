@@ -33,6 +33,7 @@ class StarfaitCLI : CliktCommand() {
     val printVariables by option()
     val printFunctions by option()
     val traceOpcodes by option()
+    val traceAlarms by option()
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>, match: String) {
         for ((index, element) in list.withIndex()) {
@@ -99,15 +100,17 @@ class StarfaitCLI : CliktCommand() {
 
         val vm = StarfaitVM(
             gameWAD,
-            gmlScriptsOpcodesToBeTraced = traceOpcodes?.split(",")?.toSet().orEmpty()
+            gmlScriptsOpcodesToBeTraced = traceOpcodes?.split(",")?.toSet().orEmpty(),
+            alarmsToBeTraced = traceAlarms?.split(",")?.toSet().orEmpty(),
         )
         vm.remapReferences()
 
         val runner = StarfaitRunner(gameWAD, vm)
         vm.runner = runner
         runner.start()
-        runner.step()
-        runner.step()
+        repeat(60) {
+            runner.step()
+        }
         // vm.executeLoop(gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
     }
 }

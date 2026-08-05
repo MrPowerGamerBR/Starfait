@@ -42,7 +42,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
         currentRoom.height = room.height
 
         for (instance in room.instances) {
-            val gameInstance = Instance(currentInstanceId++, instance.objectIndex)
+            val gameInstance = Instance(this, currentInstanceId++, instance.objectIndex)
             currentRoom.instances.add(gameInstance)
             val gameObject = getGameObjectFromInstance(gameInstance)
 
@@ -71,6 +71,36 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 vm.currentInstance = instance
                 vm.executeCode(code, emptyArray())
             }
+        }
+
+        // Alarms are checked PER ALARM ID, not per instance!
+        repeat(MAX_ALARMS) { alarmId ->
+            for (instance in currentRoom.instances) {
+                val gameObject = gameWAD.objt.objects[instance.objectIndex]
+                val alarmTick = instance.alarms[alarmId]
+
+                // >= because we also need to tick down from 0 to -1
+                if (alarmTick >= 0) {
+                    val newValue = alarmTick - 1
+                    instance.alarms[alarmId] = newValue
+
+                    if (newValue == 0) {
+                        println("Runner: [${instance.objectName}] Alarm $alarmId triggered!")
+                        val alarmEvents = gameObject.events[EventType.ALARM].filter { it.subtype == alarmId }.flatMap { it.actions }
+
+                        for (action in alarmEvents) {
+                            val code = gameWAD.code.codes[action.codeId]
+                            vm.currentInstance = instance
+                            vm.executeCode(code, emptyArray())
+                        }
+                    }
+                }
+            }
+        }
+
+        for (instance in currentRoom.instances) {
+            val gameObject = gameWAD.objt.objects[instance.objectIndex]
+            val stepEvents = gameObject.events[EventType.STEP]
 
             val normalStepEvents = stepEvents.filter { it.subtype == EventType.StepSubType.NORMAL }.flatMap { it.actions }
             for (action in normalStepEvents) {

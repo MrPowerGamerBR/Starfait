@@ -93,7 +93,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 source.setReal(instance.alarms[arrayIndex!!].toDouble())
             },
             { instance, value, arrayIndex ->
-                instance.alarms[arrayIndex!!] = value.int
+                instance.setAlarm(arrayIndex!!, value.int)
             }
         )
         registerInstanceVariable(

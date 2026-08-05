@@ -7,4 +7,6 @@ class CallFrame(
     val arguments: Array<RValue>,
     val localVariables: MutableMap<Int, RValue>,
     val stackTopWhenTheCallFrameWasCreated: Int
-)
+) {
+    var returnValue: RValue? = null
+}

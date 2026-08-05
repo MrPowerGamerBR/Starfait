@@ -29,7 +29,7 @@ class StarfaitVM(
     val currentCallFrame: CallFrame
         get() = currentOrNullCallFrame ?: error("No current call frame!")
 
-    fun executeCode(code: Code, arguments: Array<RValue>) {
+    fun executeCode(code: Code, arguments: Array<RValue>): RValue? {
         val callFrame = CallFrame(code, arguments, mutableMapOf(), stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
@@ -48,6 +48,8 @@ class StarfaitVM(
 
         this.callFrameStack.removeLast()
         this.currentOrNullCallFrame = this.callFrameStack.lastOrNull()
+
+        return callFrame.returnValue
     }
 
     private fun executeBytecodeInstructions(bytecodeStream: ByteBuffer) {
@@ -119,7 +121,10 @@ class StarfaitVM(
                 Op.CALL -> handleCall(reader, extra)
                 Op.DUP -> handleDup(reader, type1, extra)
                 Op.BREAK -> handleBreak(reader)
-                Op.RET -> return
+                Op.RET -> {
+                    currentCallFrame.returnValue = stack.pop().makeIndependent()
+                    return
+                }
                 Op.EXIT -> return
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(currentCallFrame.code.name)}\"")
             }
@@ -390,7 +395,9 @@ class StarfaitVM(
         val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
-            executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray())
+            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray()) ?: error("Script return value is null!") // TODO: Pretty sure we must return undefined here
+            val result = stack.push()
+            result.copyFrom(returnValue)
             return
         }
 

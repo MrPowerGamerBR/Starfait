@@ -67,6 +67,17 @@ class VMBuiltins(val vm: StarfaitVM) {
                 instance.imageSpeed = source.real.toFloat()
             }
         )
+        repeat(16) {
+            registerVariable(
+                "argument$it",
+                { result ->
+                    result.copyFrom(vm.currentCallFrame.arguments[it])
+                },
+                { source ->
+                    vm.currentCallFrame.arguments[it].copyFrom(source)
+                }
+            )
+        }
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerFunction("script_execute", ::script_execute)

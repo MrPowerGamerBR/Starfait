@@ -26,6 +26,7 @@ class StarfaitVM(
     lateinit var currentCode: Code
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
+    var currentCallFrame = CallFrame(Array<RValue>(0) { RValue() })
 
     fun executeLoop(code: Code) {
         this.currentCode = code
@@ -375,6 +376,7 @@ class StarfaitVM(
             // This may be a user script!
             val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
             if (script != null) {
+                this.currentCallFrame = CallFrame(arguments.toTypedArray())
                 executeLoop(gameWAD.code.codes[script.codeIndex])
                 return
             }

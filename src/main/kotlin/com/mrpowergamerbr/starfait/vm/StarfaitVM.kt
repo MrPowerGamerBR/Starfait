@@ -331,7 +331,12 @@ class StarfaitVM(
 
                             if (matched) {
                                 // Only the FIRST match receives the value
-                                instance.variables[varId] = poppedValue.makeIndependent() // .also { println("Setting variable $varId to ${it.toStringTyped()}") }
+                                if (varId >= REGULAR_VARIABLES_BASE) {
+                                    instance.variables[varId] = poppedValue.makeIndependent() // .also { println("Setting variable $varId to ${it.toStringTyped()}") }
+                                } else {
+                                    val builtinVariableHandler = builtinVariableHandlers[varId]
+                                    builtinVariableHandler.writeHandler.invoke(poppedValue, null)
+                                }
                             }
                         }
                         return

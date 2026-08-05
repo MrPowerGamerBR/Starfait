@@ -202,15 +202,24 @@ class VMBuiltins(val vm: StarfaitVM) {
             // event_inherited is like a script_execute, but for parent events
             val currentInstance = vm.currentInstance
             println("My parent ID is ${currentInstance.gameObject.parentId}")
-            val parentGameObject = vm.gameWAD.objt.objects[currentInstance.gameObject.parentId]
+            var gameObject = this.runner.gameWAD.objt.objects[currentInstance.gameObject.parentId]
+            val events = gameObject.events[EventType.CREATE]
 
-            // TODO: This is VERY hacky
-            val events = parentGameObject.events[EventType.CREATE]
-            val subtypeEvents = events.flatMap { it.actions }
+            var subtypeEvents = events
+                .filter { it.subtype == 0 }
+                .flatMap { it.actions }
 
-            for (action in subtypeEvents) {
-                val code = this.runner.gameWAD.code.codes[action.codeId]
-                this.runner.vm.executeCode(code, currentInstance, emptyArray())
+            // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
+            var attempts = 0
+            while (subtypeEvents.isEmpty()) {
+                if (0 > gameObject.parentId)
+                    break
+
+                gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
+                subtypeEvents = gameObject.events[EventType.CREATE]
+                    .filter { it.subtype == 0 }
+                    .flatMap { it.actions }
+                attempts++
             }
 
             result.setUndefined()

@@ -241,7 +241,18 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerFunction("string_char_at") { args, result ->
             val string = args[0].refAsString()
-            result.setString(string[args[1].int].toString())
+
+            // "however if the given index is equal to or smaller than 0, then the first character of the string is returned."
+            val index = args[1].int.coerceAtLeast(0)
+            val char = string.getOrNull(index)
+
+            // If no character is found or the string is shorter than the given index value, an empty string "" is returned,
+            if (char == null) {
+                result.setUndefined()
+                return@registerFunction
+            }
+            
+            result.setString(char.toString())
         }
 
         registerFunction("random") { args, result -> result.setReal(0.0) }

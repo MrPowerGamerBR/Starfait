@@ -93,18 +93,18 @@ class StarfaitVM(
 
                     if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
                         val isEqual = left.ref == right.ref
-                        stack.push().setBoolean(if (comparisonFunction == 1) isEqual else !isEqual)
+                        stack.push().setBoolean(if (comparisonFunction == CmpOp.EQUAL) isEqual else !isEqual)
                         continue
                     }
 
                     val diff = left.real - right.real
                     val result = when (comparisonFunction) {
-                        1 -> diff < -MathUtils.EPSILON
-                        2 -> diff <= MathUtils.EPSILON
-                        3 -> if (diff < -MathUtils.EPSILON) false else diff <= MathUtils.EPSILON
-                        4 -> if (diff < -MathUtils.EPSILON) true else MathUtils.EPSILON < diff
-                        5 -> -MathUtils.EPSILON <= diff
-                        6 -> MathUtils.EPSILON < diff
+                        CmpOp.LESS_THAN -> diff < -MathUtils.EPSILON
+                        CmpOp.LESS_THAN_OR_EQUAL -> diff <= MathUtils.EPSILON
+                        CmpOp.EQUAL -> if (diff < -MathUtils.EPSILON) false else diff <= MathUtils.EPSILON
+                        CmpOp.NOT_EQUAL -> if (diff < -MathUtils.EPSILON) true else MathUtils.EPSILON < diff
+                        CmpOp.GREATER_THAN_OR_EQUAL -> -MathUtils.EPSILON <= diff
+                        CmpOp.GREATER_THAN -> MathUtils.EPSILON < diff
                         else -> error("Unsupported comparsion function $comparisonFunction")
                     }
                     stack.push().setBoolean(result)
@@ -133,7 +133,10 @@ class StarfaitVM(
                     currentCallFrame.returnValue = stack.pop().makeIndependent()
                     return
                 }
-                Op.EXIT -> return
+                Op.EXIT -> {
+                    currentCallFrame.returnValue = RValue().apply { setUndefined() }
+                    return
+                }
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(currentCallFrame.code.name)}\"")
             }
         }
@@ -403,7 +406,7 @@ class StarfaitVM(
         val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
-            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray()) ?: error("Script return value is null!") // TODO: Pretty sure we must return undefined here
+            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray()) ?: error("Script return value is null!")
             val result = stack.push()
             result.copyFrom(returnValue)
             return

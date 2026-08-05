@@ -315,11 +315,18 @@ class StarfaitVM(
                     instanceId >= 0 -> {
                         // This is a reference to all instances with a specific object index
                         // Once again this is a horrible hack, fix it later!
+                        val poppedValue = stack.pop()
+
                         for (instance in runner.currentRoom.instances) {
-                            if (instance.objectIndex == instanceId) {
-                                instance.variables[varId] = stack.pop().makeIndependent().also {
-                                    println("Setting variable $varId to ${it.toStringTyped()}")
-                                }
+                            val matched = if (instanceId >= StarfaitRunner.BASE_INSTANCE_ID) {
+                                instance.id == instanceId
+                            } else {
+                                instance.objectIndex == instanceId
+                            }
+
+                            if (matched) {
+                                // Only the FIRST match receives the value
+                                instance.variables[varId] = poppedValue.makeIndependent().also { println("Setting variable $varId to ${it.toStringTyped()}") }
                             }
                         }
                         return

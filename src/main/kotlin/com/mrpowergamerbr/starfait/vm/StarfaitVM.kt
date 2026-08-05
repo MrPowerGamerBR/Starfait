@@ -30,7 +30,7 @@ class StarfaitVM(
         get() = currentOrNullCallFrame ?: error("No current call frame!")
 
     fun executeCode(code: Code, arguments: Array<RValue>) {
-        val callFrame = CallFrame(code, arguments, mutableMapOf())
+        val callFrame = CallFrame(code, arguments, mutableMapOf(), stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
 
@@ -43,6 +43,8 @@ class StarfaitVM(
         )
 
         executeBytecodeInstructions(bytecodeInstructions)
+
+        check(callFrame.stackTopWhenTheCallFrameWasCreated == stack.top) { "Unbalanced stack! Stack top is ${stack.top} when it should've been ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString { gameWAD.strg.getString(it.code.name) }}"}
 
         this.callFrameStack.removeLast()
         this.currentOrNullCallFrame = this.callFrameStack.lastOrNull()

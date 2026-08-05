@@ -44,7 +44,7 @@ class StarfaitVM(
 
         executeBytecodeInstructions(bytecodeInstructions)
 
-        check(callFrame.stackTopWhenTheCallFrameWasCreated == stack.top) { "Unbalanced stack! Stack top is ${stack.top} when it should've been ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString { gameWAD.strg.getString(it.code.name) }}"}
+        check(callFrame.stackTopWhenTheCallFrameWasCreated == stack.top) { "Unbalanced stack! Stack top is ${stack.top} when it should've been ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString(" -> ") { gameWAD.strg.getString(it.code.name) }}"}
 
         this.callFrameStack.removeLast()
         this.currentOrNullCallFrame = this.callFrameStack.lastOrNull()

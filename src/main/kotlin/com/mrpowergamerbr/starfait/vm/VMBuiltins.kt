@@ -104,6 +104,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         // TODO: Those should be writeable
         registerReadOnlyVariable("room_width") { result, _ -> result.setInt32(runner.currentRoom.width) }
         registerReadOnlyVariable("room_height") { result, _ -> result.setInt32(runner.currentRoom.height) }
+        registerReadOnlyVariable("view_current") { result, arrayIndex -> result.setReal(0.0) } // Should be 0 outside of draw events
+        registerReadOnlyVariable("view_xview") { result, arrayIndex -> result.setReal(0.0) }
+        registerReadOnlyVariable("view_yview") { result, arrayIndex -> result.setReal(0.0) }
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerFunction("script_execute") { args, result ->

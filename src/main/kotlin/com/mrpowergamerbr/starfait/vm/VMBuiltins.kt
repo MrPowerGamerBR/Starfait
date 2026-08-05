@@ -179,7 +179,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.pendingRoom = PendingRoom(newRoomIndex, room)
         }
         registerBooleanFunction("is_undefined", 1) { args -> args[0].type == RValueDataType.UNDEFINED }
-        registerIntAsRealFunction("instance_create", null) { args ->
+        registerIntAsRealFunction("instance_create", 3) { args ->
             val x = args[0].real
             val y = args[1].real
             val objectId = args[2].int
@@ -188,7 +188,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 this.x = x.toFloat()
                 this.y = y.toFloat()
             }
-            
+
             return@registerIntAsRealFunction instance.id
         }
 

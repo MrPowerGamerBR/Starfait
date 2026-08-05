@@ -24,7 +24,7 @@ class StarfaitVM(
     var currentInstance: Instance? = null
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
-    var callFrameStack = ArrayDeque<CallFrame>()
+    val callFrameStack = ArrayDeque<CallFrame>()
     private var currentOrNullCallFrame: CallFrame? = null
     val currentCallFrame: CallFrame
         get() = currentOrNullCallFrame ?: error("No current call frame!")

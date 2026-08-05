@@ -64,6 +64,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("image_xscale", Instance::imageXScale)
         registerInstanceRealVariable("image_yscale", Instance::imageYScale)
         registerInstanceRealVariable("image_alpha", Instance::imageAlpha)
+        registerInstanceRealVariable("image_index", Instance::imageIndex)
         registerInstanceRealVariable("sprite_index", Instance::spriteIndex)
         repeat(16) {
             registerVariable(

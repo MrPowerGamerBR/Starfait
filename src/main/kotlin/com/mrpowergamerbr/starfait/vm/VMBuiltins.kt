@@ -54,8 +54,17 @@ class VMBuiltins(val vm: StarfaitVM) {
             { instance, result ->
                 result.setReal(instance.x.toDouble())
             },
+            { instance, source ->
+                instance.x = source.real.toFloat()
+            }
+        )
+        registerInstanceVariable(
+            "image_speed",
             { instance, result ->
-                instance.x = result.real.toFloat()
+                result.setReal(instance.imageSpeed.toDouble())
+            },
+            { instance, source ->
+                instance.imageSpeed = source.real.toFloat()
             }
         )
 

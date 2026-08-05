@@ -45,7 +45,6 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
         // Alarms are checked PER ALARM ID, not per instance!
         repeat(MAX_ALARMS) { alarmId ->
             forEachInstance {  instance ->
-                val gameObject = gameWAD.objt.objects[instance.objectIndex]
                 val alarmTick = instance.alarms[alarmId]
 
                 // >= because we also need to tick down from 0 to -1

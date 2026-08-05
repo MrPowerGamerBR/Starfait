@@ -200,7 +200,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val count = args[2].int
 
             val string = args[0].refAsString()
-            result.setString(string.substring(index, index + count).also { println(it) })
+            result.setString(string.substring(index, index + count))
         }
 
         registerFunction("event_inherited") { args, result ->

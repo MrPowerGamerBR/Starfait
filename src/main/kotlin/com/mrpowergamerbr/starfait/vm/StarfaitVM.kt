@@ -449,7 +449,7 @@ class StarfaitVM(
                 stack.push().setUndefined()
                 return
             }
-            
+
             stack.push().copyFrom(returnValue)
             return
         }

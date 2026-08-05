@@ -17,8 +17,10 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         for (action in createEvents.flatMap { it.actions }) {
             val code = runner.gameWAD.code.codes[action.codeId]
 
+            val previousInstance = runner.vm.currentInstance
             runner.vm.currentInstance = gameInstance
             runner.vm.executeCode(code, emptyArray())
+            runner.vm.currentInstance = previousInstance
         }
         return gameInstance
     }
@@ -32,8 +34,10 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         for (action in createEvents.flatMap { it.actions }) {
             val code = runner.gameWAD.code.codes[action.codeId]
 
+            val previousInstance = runner.vm.currentInstance
             runner.vm.currentInstance = gameInstance
             runner.vm.executeCode(code, emptyArray())
+            runner.vm.currentInstance = previousInstance
         }
         return gameInstance
     }

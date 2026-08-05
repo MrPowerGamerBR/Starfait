@@ -134,6 +134,7 @@ class StarfaitVM(
                 Op.SUB -> handleSub(reader, type1, type2)
                 Op.MUL -> handleMul(reader, type1, type2)
                 Op.NOT -> handleNot(reader, type1)
+                Op.NEG -> handleNeg(reader, type1)
                 Op.CALL -> handleCall(reader, extra)
                 Op.DUP -> handleDup(reader, type1, extra)
                 Op.BREAK -> handleBreak(reader)
@@ -531,6 +532,23 @@ class StarfaitVM(
             InstructionDataType.VARIABLE -> TODO()
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
+        }
+    }
+
+    private fun handleNeg(reader: StarfaitByteBuffer, type1: Int) {
+        val targetType = InstructionDataType.byId(type1)
+        val poppedValue = stack.pop().makeIndependent() // Create a copy so that the push below doesn't overwrite it
+        val pushedValue = stack.push()
+
+        when (targetType) {
+            InstructionDataType.DOUBLE -> pushedValue.setReal(-poppedValue.real)
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.INT32 -> pushedValue.setInt32(-poppedValue.int)
+            InstructionDataType.INT64 -> pushedValue.setInt64(-poppedValue.bits)
+            InstructionDataType.BOOLEAN -> TODO()
+            InstructionDataType.VARIABLE -> TODO()
+            InstructionDataType.STRING -> TODO()
+            InstructionDataType.INT16 -> pushedValue.setInt32(-poppedValue.int)
         }
     }
 

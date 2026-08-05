@@ -31,9 +31,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         val endStepEvents = stepEvents.filter { it.subtype == eventSubtype }.flatMap { it.actions }
         for (action in endStepEvents) {
             val code = this.runner.gameWAD.code.codes[action.codeId]
-
-            this.runner.vm.currentInstance = this
-            this.runner.vm.executeCode(code, emptyArray())
+            this.runner.vm.executeCode(code, this, emptyArray())
         }
     }
 }

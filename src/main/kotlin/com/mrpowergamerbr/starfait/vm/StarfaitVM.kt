@@ -22,18 +22,21 @@ class StarfaitVM(
     lateinit var runner: StarfaitRunner
     val stack = VMStack()
     val global = ObjectBase()
-    var currentInstance: Instance? = null
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     val callFrameStack = ArrayDeque<CallFrame>()
+
     private var currentOrNullCallFrame: CallFrame? = null
+
     val currentCallFrame: CallFrame
         get() = currentOrNullCallFrame ?: error("No current call frame!")
     val currentCallFrameCodeName: String
         get() = gameWAD.strg.getString(currentCallFrame.code.name)
+    val currentInstance: Instance
+        get() = currentOrNullCallFrame?.currentInstance ?: error("No current call frame, so we can't get the current instance!")
 
-    fun executeCode(code: Code, arguments: Array<RValue>): RValue? {
-        val callFrame = CallFrame(code, arguments, mutableMapOf(), stack.top)
+    fun executeCode(code: Code, currentInstance: Instance, arguments: Array<RValue>): RValue? {
+        val callFrame = CallFrame(code, currentInstance, arguments, mutableMapOf(), stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
 
@@ -421,7 +424,7 @@ class StarfaitVM(
         val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
-            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray())
+            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], currentInstance, arguments.toTypedArray())
             if (returnValue == null) {
                 // This happens when...
                 // * Op.EXIT is called

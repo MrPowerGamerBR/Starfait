@@ -26,14 +26,8 @@ class VMBuiltins(val vm: StarfaitVM) {
 
     fun registerInstanceVariable(name: String, readHandler: (Instance, RValue, Int?) -> (Unit), writeHandler: (Instance, RValue, Int?) -> (Unit)) {
         registeredVariables[name] = BuiltinVariable(
-            { source, arrayIndex ->
-                val instance = vm.currentInstance ?: error("No instance bound!")
-                readHandler(instance, source, arrayIndex)
-            },
-            { value, arrayIndex ->
-                val instance = vm.currentInstance ?: error("No instance bound!")
-                writeHandler(instance, value, arrayIndex)
-            }
+            { source, arrayIndex -> readHandler(vm.currentInstance, source, arrayIndex) },
+            { value, arrayIndex -> writeHandler(vm.currentInstance, value, arrayIndex) }
         )
     }
 
@@ -115,7 +109,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val script = vm.gameWAD.scpt.scripts[scriptId]
             val code = vm.gameWAD.code.codes[script.codeIndex]
             val arguments = args.drop(1).map { it.makeIndependent() }.toTypedArray()
-            val scriptResult = vm.executeCode(code, arguments)
+            val scriptResult = vm.executeCode(code, vm.currentInstance, arguments)
             if (scriptResult != null) {
                 result.copyFrom(scriptResult)
             } else {

@@ -460,7 +460,7 @@ class StarfaitVM(
             return
         }
 
-        println("VM: [${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+        println("VM: [${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! \"${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}(${arguments.joinToString { it.toStringTyped() }})\"")
 
         // As a fallback, we'll push undefined to the stack if the function does not exist
         val result = stack.push()

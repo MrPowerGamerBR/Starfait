@@ -243,8 +243,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerFunction("string_char_at") { args, result ->
             val string = args[0].refAsString()
 
+            // "with the index starting at 1 for the first character"
             // "however if the given index is equal to or smaller than 0, then the first character of the string is returned."
-            val index = args[1].int.coerceAtLeast(0)
+            val index = args[1].int.coerceAtLeast(1) - 1
             val char = string.getOrNull(index)
 
             // If no character is found or the string is shorter than the given index value, an empty string "" is returned,

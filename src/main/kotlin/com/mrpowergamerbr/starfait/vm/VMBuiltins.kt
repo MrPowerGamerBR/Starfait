@@ -14,10 +14,12 @@ class VMBuiltins(val vm: StarfaitVM) {
     val registeredVariables = mutableMapOf<String, BuiltinVariable>()
 
     fun registerFunction(name: String, handler: (List<RValue>, RValue) -> Unit) {
+        require(name !in registeredFunctions) { "Tried registering function $name, but it already exists!" }
         registeredFunctions[name] = handler
     }
 
     fun registerVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
+        require(name !in registeredVariables) { "Tried registering variable $name, but it already exists!" }
         registeredVariables[name] = BuiltinVariable(readHandler, writeHandler)
     }
 

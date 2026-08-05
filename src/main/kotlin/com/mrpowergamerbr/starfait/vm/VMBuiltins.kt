@@ -93,6 +93,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         // TODO: Add some stub warnings?
         registerFunction("steam_initialised") { args, result -> result.setBoolean(true) }
         registerFunction("steam_file_exists") { args, result -> result.setBoolean(false) }
+        registerFunction("file_exists") { args, result -> result.setBoolean(false) }
         registerFunction("os_get_language") { args, result -> result.setString("pt") }
         registerFunction("os_get_region") { args, result -> result.setString("BR") }
         registerFunction("string_upper") { args, result -> result.setString(args[0].toGMLString().uppercase()) }

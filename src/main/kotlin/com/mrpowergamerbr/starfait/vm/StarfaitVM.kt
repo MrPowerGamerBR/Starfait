@@ -433,6 +433,7 @@ class StarfaitVM(
         }
 
         // This may be a user script!
+        // TODO: This could be a O(1) by providing the script function index directly
         val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack

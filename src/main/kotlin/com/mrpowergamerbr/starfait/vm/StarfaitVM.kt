@@ -376,7 +376,7 @@ class StarfaitVM(
 
         println("Top of the stack is ${topOfTheStack.toStringTyped()}")
 
-        // no-op, this is only useful if some day we decide to go with tagged variables (that is, using two arrays, one for native values and another for RValues)
+        // no-op, this is only useful if some day we decide to go with non-tagged RValues (that is, using two arrays, one for native values and another for RValues)
         // Because in that case, we would need to convert the RValue to the native type
         if (destinationType == InstructionDataType.VARIABLE)
             return

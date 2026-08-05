@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.vm
 
+import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
@@ -192,6 +193,24 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             val string = args[0].refAsString()
             result.setString(string.substring(index, index + count).also { println(it) })
+        }
+
+        registerFunction("event_inherited") { args, result ->
+            // event_inherited is like a script_execute, but for parent events
+            val currentInstance = vm.currentInstance
+            println("My parent ID is ${currentInstance.gameObject.parentId}")
+            val parentGameObject = vm.gameWAD.objt.objects[currentInstance.gameObject.parentId]
+
+            // TODO: This is VERY hacky
+            val events = parentGameObject.events[EventType.CREATE]
+            val subtypeEvents = events.flatMap { it.actions }
+
+            for (action in subtypeEvents) {
+                val code = this.runner.gameWAD.code.codes[action.codeId]
+                this.runner.vm.executeCode(code, currentInstance, emptyArray())
+            }
+
+            result.setUndefined()
         }
     }
 

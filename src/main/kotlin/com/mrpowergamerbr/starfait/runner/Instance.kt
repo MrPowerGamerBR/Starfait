@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.wad.GameObject
 import kotlin.collections.filter
 
 class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : ObjectBase() {
@@ -14,8 +15,10 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var visible = true
     var destroyed = false
 
+    val gameObject: GameObject
+        get() = runner.gameWAD.objt.objects[this.objectIndex]
     val objectName: String
-        get() = runner.gameWAD.strg.getString(runner.gameWAD.objt.objects[this.objectIndex].name)
+        get() = runner.gameWAD.strg.getString(gameObject.name)
 
     fun setAlarm(alarm: Int, time: Int) {
         require(alarm in 0 until StarfaitRunner.MAX_ALARMS) { "Invalid alarm index!" }
@@ -27,10 +30,10 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
     fun dispatchEvent(eventType: Int, eventSubtype: Int) {
         val gameObject = this.runner.gameWAD.objt.objects[this.objectIndex]
-        val stepEvents = gameObject.events[eventType]
+        val events = gameObject.events[eventType]
 
-        val endStepEvents = stepEvents.filter { it.subtype == eventSubtype }.flatMap { it.actions }
-        for (action in endStepEvents) {
+        val subtypeEvents = events.filter { it.subtype == eventSubtype }.flatMap { it.actions }
+        for (action in subtypeEvents) {
             val code = this.runner.gameWAD.code.codes[action.codeId]
             this.runner.vm.executeCode(code, this, emptyArray())
         }

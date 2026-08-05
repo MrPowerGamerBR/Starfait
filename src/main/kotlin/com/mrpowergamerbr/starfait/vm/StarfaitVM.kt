@@ -381,22 +381,18 @@ class StarfaitVM(
 
         // println("Top of the stack is ${topOfTheStack.toStringTyped()}")
 
-        // no-op, this is only useful if some day we decide to go with non-tagged RValues (that is, using two arrays, one for native values and another for RValues)
-        // Because in that case, we would need to convert the RValue to the native type
-        if (destinationType == InstructionDataType.VARIABLE)
-            return
-
-        if (destinationType == InstructionDataType.INT32) {
-            topOfTheStack.setInt32(topOfTheStack.int)
-            return
+        when (destinationType) {
+            // no-op, this is only useful if some day we decide to go with non-tagged RValues (that is, using two arrays, one for native values and another for RValues)
+            // Because in that case, we would need to convert the RValue to the native type
+            InstructionDataType.VARIABLE -> return
+            InstructionDataType.DOUBLE -> topOfTheStack.setReal(topOfTheStack.real)
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.INT32 -> topOfTheStack.setInt32(topOfTheStack.int)
+            InstructionDataType.INT64 -> TODO()
+            InstructionDataType.BOOLEAN -> topOfTheStack.setBoolean(topOfTheStack.bool)
+            InstructionDataType.STRING -> TODO()
+            InstructionDataType.INT16 -> TODO()
         }
-
-        if (destinationType == InstructionDataType.BOOLEAN) {
-            topOfTheStack.setBoolean(topOfTheStack.bool)
-            return
-        }
-
-        TODO()
     }
 
     private fun handlePushImmediate(reader: StarfaitByteBuffer, extra: Int) {

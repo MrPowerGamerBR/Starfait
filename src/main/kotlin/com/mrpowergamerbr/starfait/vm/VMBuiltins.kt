@@ -239,6 +239,8 @@ class VMBuiltins(val vm: StarfaitVM) {
             val string = args[0].refAsString()
             result.setString(string[args[1].int].toString())
         }
+
+        registerFunction("random") { args, result -> result.setReal(0.0) }
     }
 
     fun show_debug_message(args: List<RValue>, result: RValue) {

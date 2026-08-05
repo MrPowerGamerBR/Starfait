@@ -49,19 +49,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
     }
 
     fun step() {
-        forEachInstance { instance ->
-            val gameObject = gameWAD.objt.objects[instance.objectIndex]
-
-            val stepEvents = gameObject.events[EventType.STEP]
-
-            val beginStepEvents = stepEvents.filter { it.subtype == EventType.StepSubType.BEGIN }.flatMap { it.actions }
-            for (action in beginStepEvents) {
-                val code = gameWAD.code.codes[action.codeId]
-
-                vm.currentInstance = instance
-                vm.executeCode(code, emptyArray())
-            }
-        }
+        dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.BEGIN)
 
         // Alarms are checked PER ALARM ID, not per instance!
         repeat(MAX_ALARMS) { alarmId ->
@@ -76,49 +64,26 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
 
                     if (newValue == 0) {
                         println("Runner: [${instance.objectName}] Alarm $alarmId triggered!")
-                        val alarmEvents = gameObject.events[EventType.ALARM].filter { it.subtype == alarmId }.flatMap { it.actions }
-
-                        for (action in alarmEvents) {
-                            val code = gameWAD.code.codes[action.codeId]
-                            vm.currentInstance = instance
-                            vm.executeCode(code, emptyArray())
-                        }
+                        instance.dispatchEvent(EventType.ALARM, alarmId)
                     }
                 }
             }
         }
 
-        forEachInstance { instance ->
-            val gameObject = gameWAD.objt.objects[instance.objectIndex]
-            val stepEvents = gameObject.events[EventType.STEP]
-
-            val normalStepEvents = stepEvents.filter { it.subtype == EventType.StepSubType.NORMAL }.flatMap { it.actions }
-            for (action in normalStepEvents) {
-                val code = gameWAD.code.codes[action.codeId]
-
-                vm.currentInstance = instance
-                vm.executeCode(code, emptyArray())
-            }
-        }
-
-        forEachInstance { instance ->
-            val gameObject = gameWAD.objt.objects[instance.objectIndex]
-            val stepEvents = gameObject.events[EventType.STEP]
-
-            val endStepEvents = stepEvents.filter { it.subtype == EventType.StepSubType.END }.flatMap { it.actions }
-            for (action in endStepEvents) {
-                val code = gameWAD.code.codes[action.codeId]
-
-                vm.currentInstance = instance
-                vm.executeCode(code, emptyArray())
-            }
-        }
+        dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
+        dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
 
         val pendingRoom = this.pendingRoom
         if (pendingRoom != null) {
             val runnerRoom = initializeRoom(pendingRoom.roomId, pendingRoom.room)
             this.currentRoom = runnerRoom
             this.pendingRoom = null
+        }
+    }
+
+    fun dispatchEventToAllInstances(eventType: Int, eventSubtype: Int) {
+        forEachInstance { instance ->
+            instance.dispatchEvent(eventType, eventSubtype)
         }
     }
 

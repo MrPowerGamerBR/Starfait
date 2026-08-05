@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.vm
 
 class BuiltinVariable(
-    val readHandler: (RValue) -> (Unit),
-    val writeHandler: (RValue) -> (Unit)
+    val readHandler: (source: RValue, arrayIndex: Int?) -> (Unit),
+    val writeHandler: (result: RValue) -> (Unit)
 )

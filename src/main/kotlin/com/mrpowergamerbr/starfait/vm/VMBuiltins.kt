@@ -14,19 +14,19 @@ class VMBuiltins(val vm: StarfaitVM) {
         registeredFunctions[name] = handler
     }
 
-    fun registerVariable(name: String, readHandler: (RValue) -> (Unit), writeHandler: (RValue) -> (Unit)) {
+    fun registerVariable(name: String, readHandler: (RValue, Int?) -> (Unit), writeHandler: (RValue) -> (Unit)) {
         registeredVariables[name] = BuiltinVariable(readHandler, writeHandler)
     }
 
-    fun registerReadOnlyVariable(name: String, readHandler: (RValue) -> (Unit)) {
+    fun registerReadOnlyVariable(name: String, readHandler: (RValue, Int?) -> (Unit)) {
         registerVariable(name, readHandler, { _ -> error("Cannot write to read-only variable $name!") })
     }
 
-    fun registerInstanceVariable(name: String, readHandler: (Instance, RValue) -> (Unit), writeHandler: (Instance, RValue) -> (Unit)) {
+    fun registerInstanceVariable(name: String, readHandler: (Instance, RValue, Int?) -> (Unit), writeHandler: (Instance, RValue) -> (Unit)) {
         registeredVariables[name] = BuiltinVariable(
-            {
+            { source, arrayIndex ->
                 val instance = vm.currentInstance ?: error("No instance bound!")
-                readHandler(instance, it)
+                readHandler(instance, source, arrayIndex)
             },
             {
                 val instance = vm.currentInstance ?: error("No instance bound!")
@@ -35,7 +35,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         )
     }
 
-    fun registerReadOnlyInstanceVariable(name: String, readHandler: (Instance, RValue) -> (Unit)) {
+    fun registerReadOnlyInstanceVariable(name: String, readHandler: (Instance, RValue, Int?) -> (Unit)) {
         registerInstanceVariable(
             name,
             readHandler,
@@ -47,11 +47,11 @@ class VMBuiltins(val vm: StarfaitVM) {
 
     init {
         // ===[ BUILTIN VARIABLES ]===
-        registerReadOnlyVariable("os_type") { result -> result.setReal(runner.operatingSystem.id.toDouble()) }
-        registerReadOnlyInstanceVariable("id") { instance, result -> result.setReal(instance.id.toDouble()) }
+        registerReadOnlyVariable("os_type") { result, arrayIndex -> result.setReal(runner.operatingSystem.id.toDouble()) }
+        registerReadOnlyInstanceVariable("id") { instance, result, arrayIndex -> result.setReal(instance.id.toDouble()) }
         registerInstanceVariable(
             "x",
-            { instance, result ->
+            { instance, result, arrayIndex ->
                 result.setReal(instance.x.toDouble())
             },
             { instance, source ->
@@ -60,7 +60,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         )
         registerInstanceVariable(
             "image_speed",
-            { instance, result ->
+            { instance, result, arrayIndex ->
                 result.setReal(instance.imageSpeed.toDouble())
             },
             { instance, source ->
@@ -70,13 +70,20 @@ class VMBuiltins(val vm: StarfaitVM) {
         repeat(16) {
             registerVariable(
                 "argument$it",
-                { result ->
+                { result, arrayIndex ->
                     result.copyFrom(vm.currentCallFrame.arguments[it])
                 },
                 { source ->
                     vm.currentCallFrame.arguments[it].copyFrom(source)
                 }
             )
+        }
+        // TODO: Pretty sure this is writeable
+        registerReadOnlyVariable("argument") { result, arrayIndex ->
+            result.copyFrom(vm.currentCallFrame.arguments[arrayIndex!!])
+        }
+        registerReadOnlyVariable("argument_count") { result, _ ->
+            result.setReal(vm.currentCallFrame.arguments.size.toDouble())
         }
 
         // ===[ BUILTIN FUNCTIONS ]===

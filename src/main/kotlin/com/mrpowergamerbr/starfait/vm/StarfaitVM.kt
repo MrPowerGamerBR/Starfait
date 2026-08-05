@@ -162,6 +162,7 @@ class StarfaitVM(
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
                 val varId = operand.variableIndex()
 
+                println("arrayIndex is $arrayIndex")
                 println("instanceId is $instanceId")
 
                 // TODO: Use correct instance here!
@@ -196,7 +197,7 @@ class StarfaitVM(
         val pushed = stack.push()
         val builtinVariable = builtinVariableHandlers[varId]
 
-        builtinVariable.readHandler.invoke(pushed)
+        builtinVariable.readHandler.invoke(pushed, null)
     }
 
     private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
@@ -271,7 +272,7 @@ class StarfaitVM(
             }
         } else {
             val builtinVariableHandler = builtinVariableHandlers[variableId]
-            builtinVariableHandler.readHandler.invoke(result)
+            builtinVariableHandler.readHandler.invoke(result, arrayIndex)
         }
     }
 
@@ -575,8 +576,8 @@ class StarfaitVM(
 
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
-                { error("Tried reading from unimplemented builtin variable \"$name\"!") },
-                { error("Tried writing to unimplemented builtin variable \"$name\"!") },
+                { _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
+                { _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
             )
         }
     }

@@ -37,29 +37,19 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
     }
 
     fun initializeRoom(roomId: Int, room: Room): RunnerRoom {
-        val currentRoom = RunnerRoom(roomId)
+        val currentRoom = RunnerRoom(this, roomId)
         currentRoom.width = room.width
         currentRoom.height = room.height
 
         for (instance in room.instances) {
-            val gameInstance = Instance(this, currentInstanceId++, instance.objectIndex)
-            currentRoom.instances.add(gameInstance)
-            val gameObject = getGameObjectFromInstance(gameInstance)
-
-            val createEvents = gameObject.events[EventType.CREATE]
-            for (action in createEvents.flatMap { it.actions }) {
-                val code = gameWAD.code.codes[action.codeId]
-
-                vm.currentInstance = gameInstance
-                vm.executeCode(code, emptyArray())
-            }
+            currentRoom.createAndSpawnInstance(instance)
         }
 
         return currentRoom
     }
 
     fun step() {
-        for (instance in currentRoom.instances) {
+        for (instance in currentRoom.instances.toList()) {
             val gameObject = gameWAD.objt.objects[instance.objectIndex]
 
             val stepEvents = gameObject.events[EventType.STEP]
@@ -75,7 +65,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
 
         // Alarms are checked PER ALARM ID, not per instance!
         repeat(MAX_ALARMS) { alarmId ->
-            for (instance in currentRoom.instances) {
+            for (instance in currentRoom.instances.toList()) {
                 val gameObject = gameWAD.objt.objects[instance.objectIndex]
                 val alarmTick = instance.alarms[alarmId]
 
@@ -98,7 +88,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
             }
         }
 
-        for (instance in currentRoom.instances) {
+        for (instance in currentRoom.instances.toList()) {
             val gameObject = gameWAD.objt.objects[instance.objectIndex]
             val stepEvents = gameObject.events[EventType.STEP]
 

@@ -147,6 +147,11 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerFunction("is_undefined") { args, result ->
             result.setBoolean(args[0].type == RValueDataType.UNDEFINED)
         }
+        registerFunction("instance_create") { args, result ->
+            val objectId = args[2].int
+            val instance = runner.currentRoom.createAndSpawnInstance(objectId)
+            result.setInt32(instance.id)
+        }
     }
     fun show_debug_message(args: List<RValue>, result: RValue) {
         println("Game: ${args[0].toGMLString()}")

@@ -222,6 +222,11 @@ class VMBuiltins(val vm: StarfaitVM) {
                 attempts++
             }
 
+            for (action in subtypeEvents) {
+                val code = this.runner.gameWAD.code.codes[action.codeId]
+                this.runner.vm.executeCode(code, currentInstance, emptyArray())
+            }
+
             result.setUndefined()
         }
     }

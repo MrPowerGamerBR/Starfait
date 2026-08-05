@@ -49,7 +49,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
     }
 
     fun step() {
-        for (instance in currentRoom.instances.toList()) {
+        forEachInstance { instance ->
             val gameObject = gameWAD.objt.objects[instance.objectIndex]
 
             val stepEvents = gameObject.events[EventType.STEP]
@@ -65,7 +65,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
 
         // Alarms are checked PER ALARM ID, not per instance!
         repeat(MAX_ALARMS) { alarmId ->
-            for (instance in currentRoom.instances.toList()) {
+            forEachInstance {  instance ->
                 val gameObject = gameWAD.objt.objects[instance.objectIndex]
                 val alarmTick = instance.alarms[alarmId]
 
@@ -88,7 +88,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
             }
         }
 
-        for (instance in currentRoom.instances.toList()) {
+        forEachInstance { instance ->
             val gameObject = gameWAD.objt.objects[instance.objectIndex]
             val stepEvents = gameObject.events[EventType.STEP]
 
@@ -99,6 +99,11 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 vm.currentInstance = instance
                 vm.executeCode(code, emptyArray())
             }
+        }
+
+        forEachInstance { instance ->
+            val gameObject = gameWAD.objt.objects[instance.objectIndex]
+            val stepEvents = gameObject.events[EventType.STEP]
 
             val endStepEvents = stepEvents.filter { it.subtype == EventType.StepSubType.END }.flatMap { it.actions }
             for (action in endStepEvents) {
@@ -114,6 +119,16 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
             val runnerRoom = initializeRoom(pendingRoom.roomId, pendingRoom.room)
             this.currentRoom = runnerRoom
             this.pendingRoom = null
+        }
+    }
+
+    inline fun forEachInstance(crossinline action: (Instance) -> Unit) {
+        // reversed creates a copy, so we don't need to worry about ConcurrentModificationException here
+        for (instance in this.currentRoom.instances.reversed()) {
+            if (instance.destroyed)
+                continue
+
+            action(instance)
         }
     }
 

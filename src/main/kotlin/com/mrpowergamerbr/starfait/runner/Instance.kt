@@ -9,6 +9,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var imageAlpha = 1.0f
     var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
     var visible = true
+    var destroyed = false
 
     val objectName: String
         get() = runner.gameWAD.strg.getString(runner.gameWAD.objt.objects[this.objectIndex].name)

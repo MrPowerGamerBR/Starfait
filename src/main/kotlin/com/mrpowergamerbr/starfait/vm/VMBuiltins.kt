@@ -35,6 +35,14 @@ class VMBuiltins(val vm: StarfaitVM) {
     fun registerIntAsRealFunction(name: String, parameterCount: Int?, handler: IntAsRealFunction) = registerRawFunction(name, parameterCount) { args, result -> result.setReal(handler.invoke(args).toDouble()) }
     fun registerFloatAsRealFunction(name: String, parameterCount: Int?, handler: FloatAsRealFunction) = registerRawFunction(name, parameterCount) { args, result -> result.setReal(handler.invoke(args).toDouble()) }
 
+    fun warnStub(name: String) {
+        println("VM: [${vm.currentCallFrameCodeName}] Stubbed function \"$name\"!")
+    }
+
+    fun registerBooleanStubFunction(name: String, parameterCount: Int?, value: Boolean) = registerBooleanFunction(name, parameterCount) { _ -> warnStub(name); value }
+    fun registerRealStubFunction(name: String, parameterCount: Int?, value: Double) = registerRealFunction(name, parameterCount) { _ -> warnStub(name); value }
+    fun registerStringStubFunction(name: String, parameterCount: Int?, value: String) = registerStringFunction(name, parameterCount) { _ -> warnStub(name); value }
+
     fun registerVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
         require(name !in registeredVariables) { "Tried registering variable $name, but it already exists!" }
         registeredVariables[name] = BuiltinVariable(readHandler, writeHandler)
@@ -151,11 +159,12 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerStringFunction("string", 1) { args -> args[0].toGMLString() }
 
         // TODO: Add some stub warnings?
-        registerBooleanFunction("steam_initialised", 0) { _ -> true }
-        registerBooleanFunction("steam_file_exists", 1) { _ -> false }
-        registerBooleanFunction("file_exists", 1) { _ -> false }
-        registerStringFunction("os_get_language", 0) { _ -> "pt" }
-        registerStringFunction("os_get_region", 0) { _ -> "BR" }
+        registerBooleanStubFunction("steam_initialised", 0, true)
+        registerBooleanStubFunction("steam_file_exists", 1, false)
+        registerBooleanStubFunction("file_exists", 1, false)
+        registerStringStubFunction("os_get_language", 0, "pt")
+        registerStringStubFunction("os_get_region", 0, "BR")
+
         registerStringFunction("string_upper", 1) { args -> args[0].toGMLString().uppercase() }
         registerBooleanFunction("variable_global_exists", null) { args ->
             val variableName = args[0].toGMLString()
@@ -175,7 +184,8 @@ class VMBuiltins(val vm: StarfaitVM) {
             val instance = runner.currentRoom.createAndSpawnInstance(objectId)
             return@registerIntAsRealFunction instance.id
         }
-        registerBooleanFunction("keyboard_check_pressed", null) { args -> false }
+
+        registerBooleanStubFunction("keyboard_check_pressed", null, false)
 
         registerIntAsRealFunction("ds_map_create", 0) { args ->
             val newIndex = vm.dsMapPool.size
@@ -265,6 +275,6 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerStringFunction char.toString()
         }
 
-        registerRealFunction("random", null) { args -> 0.0 }
+        registerRealStubFunction("random", 1, 0.0)
     }
 }

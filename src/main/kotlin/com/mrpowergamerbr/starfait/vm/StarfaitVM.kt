@@ -10,7 +10,10 @@ import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Variable
 import java.nio.ByteBuffer
 
-class StarfaitVM(val gameWAD: GameWAD) {
+class StarfaitVM(
+    val gameWAD: GameWAD,
+    val gmlScriptsOpcodesToBeTraced: Set<String>
+) {
     companion object {
         private const val REGULAR_VARIABLES_BASE = 100_000
     }
@@ -46,14 +49,18 @@ class StarfaitVM(val gameWAD: GameWAD) {
             val type2 = word.type2()
             val extra = word.extra()
 
-            println("opcode: ${opcode.toHexString()} (${Op.getOpcodeName(opcode)}), type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}")
+            val scriptName = gameWAD.strg.getString(currentCode.name)
+            if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName)) {
+                print("VM: [${gameWAD.strg.getString(currentCode.name)}] [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
 
-            print("stack[${stack.top}] = ")
-            for (i in 0 until stack.top) {
-                print(stack.stack[i].toStringTyped())
-                print(" ")
+                for (i in 0 until stack.top) {
+                    if (i != 0)
+                        print(", ")
+                    print(stack.stack[i].toStringTyped())
+                }
+                print("]]")
+                println()
             }
-            println()
 
             when (opcode) {
                 Op.PUSH -> handlePush(reader, type1, extra)
@@ -365,6 +372,13 @@ class StarfaitVM(val gameWAD: GameWAD) {
         if (functionHandler != null) {
             functionHandler.invoke(arguments, result)
         } else {
+            // This may be a user script!
+            val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
+            if (script != null) {
+                executeLoop(gameWAD.code.codes[script.codeIndex])
+                return
+            }
+
             println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
         }
     }

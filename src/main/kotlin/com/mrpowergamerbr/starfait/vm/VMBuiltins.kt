@@ -110,7 +110,19 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerReadOnlyVariable("room_height") { result, _ -> result.setInt32(runner.currentRoom.height) }
 
         // ===[ BUILTIN FUNCTIONS ]===
-        registerFunction("script_execute", ::script_execute)
+        registerFunction("script_execute") { args, result ->
+            val scriptId = args[0].int
+            val script = vm.gameWAD.scpt.scripts[scriptId]
+            val code = vm.gameWAD.code.codes[script.codeIndex]
+            val arguments = args.drop(1).map { it.makeIndependent() }.toTypedArray()
+            val scriptResult = vm.executeCode(code, arguments)
+            if (scriptResult != null) {
+                result.copyFrom(scriptResult)
+            } else {
+                result.setUndefined()
+            }
+        }
+
         registerFunction("show_debug_message", ::show_debug_message)
         registerFunction("string", ::string)
         // TODO: Add some stub warnings?
@@ -133,12 +145,6 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.pendingRoom = PendingRoom(newRoomIndex, room)
         }
     }
-
-    fun script_execute(args: List<RValue>, result: RValue) {
-        println("Called script_execute! :3 - Args are ${args.joinToString { it.toStringTyped() }}")
-        result.setString("howdy!!")
-    }
-
     fun show_debug_message(args: List<RValue>, result: RValue) {
         println("Game: ${args[0].toGMLString()}")
     }

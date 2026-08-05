@@ -1,5 +1,5 @@
 package com.mrpowergamerbr.starfait.runner
 
-class RunnerRoom {
+class RunnerRoom(val roomId: Int) {
     val instances = mutableListOf<Instance>()
 }

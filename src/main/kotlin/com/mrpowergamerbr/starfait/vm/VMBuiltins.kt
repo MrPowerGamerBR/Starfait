@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.runner.Instance
+import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 
 class VMBuiltins(val vm: StarfaitVM) {
@@ -103,6 +104,11 @@ class VMBuiltins(val vm: StarfaitVM) {
             val varId = vm.getVariableIndexFromVariableName(variableName)
             println("varId: $varId")
             result.setBoolean(vm.global.variables.containsKey(varId))
+        }
+        registerFunction("room_goto_next") { args, result ->
+            val newRoomIndex = vm.gameWAD.gen8.roomOrder.indexOf(runner.currentRoom.roomId) + 1
+            val room = vm.gameWAD.room.rooms[newRoomIndex]
+            runner.pendingRoom = PendingRoom(newRoomIndex, room)
         }
     }
 

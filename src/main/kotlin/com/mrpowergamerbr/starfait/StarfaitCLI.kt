@@ -107,6 +107,7 @@ class StarfaitCLI : CliktCommand() {
         vm.runner = runner
         runner.start()
         runner.step()
+        runner.step()
         // vm.executeLoop(gameWAD.code.codes.first { gameWAD.strg.getString(it.name) == "gml_Script_attention_hackerz_no_2" })
     }
 }

@@ -3,6 +3,7 @@ package com.mrpowergamerbr.starfait.runner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import com.mrpowergamerbr.starfait.wad.Room
 
 class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
     companion object {
@@ -13,12 +14,29 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
     lateinit var currentRoom: RunnerRoom
     val operatingSystem = YYOperatingSystem.WINDOWS
     var currentInstanceId = BASE_INSTANCE_ID
+    var pendingRoom: PendingRoom? = null
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]
 
-        val currentRoom = RunnerRoom()
+        val currentRoom = initializeRoom(firstRoomId, room)
+        this.currentRoom = currentRoom
+
+        for (instance in currentRoom.instances) {
+            val gameObject = getGameObjectFromInstance(instance)
+            val gameStartEvents = gameObject.events[EventType.OTHER]
+            for (action in gameStartEvents.filter { it.subtype == EventType.OtherSubType.GAME_START } .flatMap { it.actions }) {
+                val code = gameWAD.code.codes[action.codeId]
+
+                vm.currentInstance = instance
+                vm.executeCode(code, emptyArray())
+            }
+        }
+    }
+
+    fun initializeRoom(roomId: Int, room: Room): RunnerRoom {
+        val currentRoom = RunnerRoom(roomId)
 
         for (instance in room.instances) {
             val gameInstance = Instance(currentInstanceId++, instance.objectIndex)
@@ -34,18 +52,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
             }
         }
 
-        for (instance in currentRoom.instances) {
-            val gameObject = getGameObjectFromInstance(instance)
-            val gameStartEvents = gameObject.events[EventType.OTHER]
-            for (action in gameStartEvents.filter { it.subtype == EventType.OtherSubType.GAME_START } .flatMap { it.actions }) {
-                val code = gameWAD.code.codes[action.codeId]
-
-                vm.currentInstance = instance
-                vm.executeCode(code, emptyArray())
-            }
-        }
-
-        this.currentRoom = currentRoom
+        return currentRoom
     }
 
     fun step() {
@@ -77,6 +84,13 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 vm.currentInstance = instance
                 vm.executeCode(code, emptyArray())
             }
+        }
+
+        val pendingRoom = this.pendingRoom
+        if (pendingRoom != null) {
+            val runnerRoom = initializeRoom(pendingRoom.roomId, pendingRoom.room)
+            this.currentRoom = runnerRoom
+            this.pendingRoom = null
         }
     }
 

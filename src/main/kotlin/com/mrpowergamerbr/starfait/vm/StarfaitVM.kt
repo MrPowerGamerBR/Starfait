@@ -379,22 +379,24 @@ class StarfaitVM(
         val functionHandler = builtins.registeredFunctions[functionName]
 
         if (functionHandler != null) {
-            // For now we don't really care
             val result = stack.push()
-            result.setUndefined()
-
             functionHandler.invoke(arguments, result)
-        } else {
-            // This may be a user script!
-            val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
-            if (script != null) {
-                // The script result (if it is a script) will be on the top of the stack
-                executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray())
-                return
-            }
-
-            println("[${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+            return
         }
+
+        // This may be a user script!
+        val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
+        if (script != null) {
+            // The script result (if it is a script) will be on the top of the stack
+            executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray())
+            return
+        }
+
+        println("[${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+
+        // As a fallback, we'll push undefined to the stack if the function does not exist
+        val result = stack.push()
+        result.setUndefined()
     }
 
     private fun handleAdd(reader: StarfaitByteBuffer, type1: Int, type2: Int) {

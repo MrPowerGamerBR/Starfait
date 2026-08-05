@@ -180,8 +180,15 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
         registerBooleanFunction("is_undefined", 1) { args -> args[0].type == RValueDataType.UNDEFINED }
         registerIntAsRealFunction("instance_create", null) { args ->
+            val x = args[0].real
+            val y = args[1].real
             val objectId = args[2].int
-            val instance = runner.currentRoom.createAndSpawnInstance(objectId)
+
+            val instance = runner.currentRoom.createAndSpawnInstance(objectId) {
+                this.x = x.toFloat()
+                this.y = y.toFloat()
+            }
+            
             return@registerIntAsRealFunction instance.id
         }
 

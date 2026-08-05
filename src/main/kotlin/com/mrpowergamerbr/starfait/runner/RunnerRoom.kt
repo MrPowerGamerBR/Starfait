@@ -15,8 +15,9 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         return gameInstance
     }
 
-    fun createAndSpawnInstance(gameObjectIndex: Int): Instance {
+    fun createAndSpawnInstance(gameObjectIndex: Int, builder: Instance.() -> (Unit)): Instance {
         val gameInstance = Instance(runner, runner.currentInstanceId++, gameObjectIndex)
+        builder(gameInstance)
         this.instances.add(gameInstance)
         gameInstance.dispatchEvent(EventType.CREATE, 0)
         return gameInstance

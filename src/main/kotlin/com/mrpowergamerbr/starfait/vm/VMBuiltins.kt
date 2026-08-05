@@ -83,8 +83,19 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerFunction("script_execute", ::script_execute)
         registerFunction("show_debug_message", ::show_debug_message)
         registerFunction("string", ::string)
+        // TODO: Add some stub warnings?
         registerFunction("steam_initialised") { args, result -> result.setBoolean(true) }
         registerFunction("steam_file_exists") { args, result -> result.setBoolean(false) }
+        registerFunction("os_get_language") { args, result -> result.setString("pt") }
+        registerFunction("os_get_region") { args, result -> result.setString("BR") }
+        registerFunction("string_upper") { args, result -> result.setString(args[0].toGMLString().uppercase()) }
+        registerFunction("variable_global_exists") { args, result ->
+            val variableName = args[0].toGMLString()
+            // TODO: This is kinda nasty, I think it would be better to have a proper variable name -> varId lookup table
+            val varId = vm.getVariableIndexFromVariableName(variableName)
+            println("varId: $varId")
+            result.setBoolean(vm.global.variables.containsKey(varId))
+        }
     }
 
     fun script_execute(args: List<RValue>, result: RValue) {

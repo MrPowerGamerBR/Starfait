@@ -25,19 +25,22 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
             currentRoom.instances.add(gameInstance)
             val gameObject = getGameObjectFromInstance(gameInstance)
 
-            val gameStartEvents = gameObject.events[EventType.OTHER]
-            for (action in gameStartEvents.filter { it.subtype == EventType.OtherSubType.GAME_START } .flatMap { it.actions }) {
-                val code = gameWAD.code.codes[action.codeId]
-
-                vm.currentInstance = gameInstance
-                vm.executeCode(code, emptyArray())
-            }
-
             val createEvents = gameObject.events[EventType.CREATE]
             for (action in createEvents.flatMap { it.actions }) {
                 val code = gameWAD.code.codes[action.codeId]
 
                 vm.currentInstance = gameInstance
+                vm.executeCode(code, emptyArray())
+            }
+        }
+
+        for (instance in currentRoom.instances) {
+            val gameObject = getGameObjectFromInstance(instance)
+            val gameStartEvents = gameObject.events[EventType.OTHER]
+            for (action in gameStartEvents.filter { it.subtype == EventType.OtherSubType.GAME_START } .flatMap { it.actions }) {
+                val code = gameWAD.code.codes[action.codeId]
+
+                vm.currentInstance = instance
                 vm.executeCode(code, emptyArray())
             }
         }

@@ -133,6 +133,7 @@ class StarfaitVM(
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.SUB -> handleSub(reader, type1, type2)
                 Op.MUL -> handleMul(reader, type1, type2)
+                Op.DIV -> handleDiv(reader, type1, type2)
                 Op.NOT -> handleNot(reader, type1)
                 Op.NEG -> handleNeg(reader, type1)
                 Op.CALL -> handleCall(reader, extra)
@@ -497,6 +498,15 @@ class StarfaitVM(
         val pushed = stack.push()
 
         pushed.setReal(left.real * right.real)
+    }
+
+    private fun handleDiv(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
+        val right = stack.pop()
+        val left = stack.pop()
+
+        val pushed = stack.push()
+
+        pushed.setReal(left.real / right.real)
     }
 
     private fun handleDup(reader: StarfaitByteBuffer, type1: Int, extra: Int) {

@@ -105,13 +105,12 @@ class RValue {
     fun copyFrom(rvalue: RValue) {
         this.type = rvalue.type
         this.bits = rvalue.bits
-        this.ref = rvalue.ref
-        // GameMaker uses CoW for arrays, so we need to copy the ENTIRE array!
-        if (rvalue.ref is GMLArray) {
-            val oldGMLArray = rvalue.ref as GMLArray
-            val newGMLArray = GMLArray()
-            newGMLArray.entries.putAll(oldGMLArray.entries.mapValues { it.value.makeIndependent() })
-            rvalue.ref = newGMLArray
+        val ref = rvalue.ref
+        if (ref is GMLArray) {
+            // GameMaker uses CoW for arrays, so we need to copy the ENTIRE array!
+            this.ref = ref.copy()
+        } else {
+            this.ref = ref
         }
     }
 }

@@ -45,7 +45,11 @@ class StarfaitVM(
             code.length.toInt() - code.offset
         )
 
-        executeBytecodeInstructions(bytecodeInstructions)
+        try {
+            executeBytecodeInstructions(bytecodeInstructions)
+        } catch (e: Exception) {
+            throw RuntimeException("Exception while executing code $currentCallFrameCodeName!", e)
+        }
 
         check(callFrame.stackTopWhenTheCallFrameWasCreated == stack.top) { "Unbalanced stack! Stack top is ${stack.top} when it should've been ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString(" -> ") { gameWAD.strg.getString(it.code.name) }}"}
 

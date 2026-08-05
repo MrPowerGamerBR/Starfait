@@ -21,22 +21,22 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]
 
-        val currentRoom = initializeRoom(firstRoomId, room)
-        this.currentRoom = currentRoom
+        initializeRoom(firstRoomId, room)
 
         dispatchEventToAllInstances(EventType.OTHER, EventType.OtherSubType.GAME_START)
     }
 
-    fun initializeRoom(roomId: Int, room: Room): RunnerRoom {
+    fun initializeRoom(roomId: Int, room: Room) {
         val currentRoom = RunnerRoom(this, roomId)
         currentRoom.width = room.width
         currentRoom.height = room.height
 
+        // We need to set the currentRoom BEFORE we dispatch the create events
+        this.currentRoom = currentRoom
+
         for (instance in room.instances) {
             currentRoom.createAndSpawnInstance(instance)
         }
-
-        return currentRoom
     }
 
     fun step() {
@@ -66,8 +66,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
 
         val pendingRoom = this.pendingRoom
         if (pendingRoom != null) {
-            val runnerRoom = initializeRoom(pendingRoom.roomId, pendingRoom.room)
-            this.currentRoom = runnerRoom
+            initializeRoom(pendingRoom.roomId, pendingRoom.room)
             this.pendingRoom = null
         }
     }

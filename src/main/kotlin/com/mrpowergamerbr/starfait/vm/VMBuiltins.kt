@@ -251,7 +251,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 result.setUndefined()
                 return@registerFunction
             }
-            
+
             result.setString(char.toString())
         }
 

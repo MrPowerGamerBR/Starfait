@@ -229,6 +229,16 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             result.setUndefined()
         }
+
+        registerFunction("string_replace_all") { args, result ->
+            val string = args[0].refAsString()
+            result.setString(string.replace(args[1].refAsString(), args[2].refAsString()))
+        }
+
+        registerFunction("string_char_at") { args, result ->
+            val string = args[0].refAsString()
+            result.setString(string[args[1].int].toString())
+        }
     }
 
     fun show_debug_message(args: List<RValue>, result: RValue) {

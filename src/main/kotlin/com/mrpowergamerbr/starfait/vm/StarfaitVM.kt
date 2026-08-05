@@ -88,8 +88,16 @@ class StarfaitVM(
                 Op.CMP -> {
                     val right = stack.pop()
                     val left = stack.pop()
-                    val diff = left.real - right.real
+
                     val comparisonFunction = word.comparisonFunction()
+
+                    if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
+                        val isEqual = left.ref == right.ref
+                        stack.push().setBoolean(if (comparisonFunction == 1) isEqual else !isEqual)
+                        continue
+                    }
+
+                    val diff = left.real - right.real
                     val result = when (comparisonFunction) {
                         1 -> diff < -MathUtils.EPSILON
                         2 -> diff <= MathUtils.EPSILON

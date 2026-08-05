@@ -35,6 +35,8 @@ class StarfaitVM(
     val currentInstance: Instance
         get() = currentOrNullCallFrame?.currentInstance ?: error("No current call frame, so we can't get the current instance!")
 
+    val dsMapPool = mutableListOf<DSMap>()
+
     fun executeCode(code: Code, currentInstance: Instance, arguments: Array<RValue>): RValue? {
         val callFrame = CallFrame(code, currentInstance, arguments, mutableMapOf(), stack.top)
         this.callFrameStack.addLast(callFrame)
@@ -155,7 +157,7 @@ class StarfaitVM(
     private fun handlePush(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         val type1DataType = InstructionDataType.byId(type1)
 
-        println(type1DataType)
+        // println(type1DataType)
         when (type1DataType) {
             // While there's already PUSH_IMMEDIATE for INT16, it seems that GameMaker also does use handlePush with INT16 sometimes, in this case the value is the "extra" field
             InstructionDataType.INT16 -> stack.push().setInt32(extra)
@@ -171,8 +173,8 @@ class StarfaitVM(
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
                 val varId = operand.variableIndex()
 
-                println("arrayIndex is $arrayIndex")
-                println("instanceId is $instanceId")
+                // println("arrayIndex is $arrayIndex")
+                // println("instanceId is $instanceId")
 
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
@@ -192,7 +194,7 @@ class StarfaitVM(
                 )
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()].also {
-                println("Pushed string \"$it\" to the stack")
+                // println("Pushed string \"$it\" to the stack")
             })
         }
     }
@@ -212,7 +214,7 @@ class StarfaitVM(
     private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         val type1DataType = InstructionDataType.byId(type1)
 
-        println("push local $type1DataType")
+        // println("push local $type1DataType")
         when (type1DataType) {
             InstructionDataType.INT16 -> TODO()
             InstructionDataType.INT32 -> TODO()
@@ -226,13 +228,13 @@ class StarfaitVM(
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
-                println("array index? $arrayIndex")
-                println("instanceID? $instanceId")
+                // println("array index? $arrayIndex")
+                // println("instanceID? $instanceId")
 
                 val pushed = stack.push()
                 val localVariable = currentCallFrame.localVariables[operand.variableIndex()]
 
-                println("Local Variable with VarID ${operand.variableIndex()} is ${localVariable?.toStringTyped()}")
+                // println("Local Variable with VarID ${operand.variableIndex()} is ${localVariable?.toStringTyped()}")
 
                 if (localVariable != null) {
                     pushed.copyFrom(localVariable)
@@ -264,7 +266,7 @@ class StarfaitVM(
     }
 
     private fun pushVariableFromObject(objectBase: ObjectBase, operand: VariableReferenceOperand, arrayIndex: Int?) {
-        println("The VarID of the operand is ${operand.variableIndex()}")
+        // println("The VarID of the operand is ${operand.variableIndex()}")
         val variableId = operand.variableIndex()
         // println("The variable on ${objectBase} is ${variableId?.toStringTyped()} (VarID: ${operand.variableIndex()})")
 
@@ -300,8 +302,8 @@ class StarfaitVM(
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
-                println("array index? $arrayIndex")
-                println("instanceID? $instanceId")
+                // println("array index? $arrayIndex")
+                // println("instanceID? $instanceId")
 
                 // TODO: Use correct instance here!
                 val instance = when {
@@ -309,7 +311,7 @@ class StarfaitVM(
                     instanceId == SpecialObjectReferenceType.LOCAL -> {
                         // ewww this is a horrible hack
                         val popped = stack.pop()
-                        println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
+                        // println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
                         currentCallFrame.localVariables[varId] = popped.makeIndependent()
                         return
                     }
@@ -328,7 +330,7 @@ class StarfaitVM(
 
                             if (matched) {
                                 // Only the FIRST match receives the value
-                                instance.variables[varId] = poppedValue.makeIndependent().also { println("Setting variable $varId to ${it.toStringTyped()}") }
+                                instance.variables[varId] = poppedValue.makeIndependent() // .also { println("Setting variable $varId to ${it.toStringTyped()}") }
                             }
                         }
                         return
@@ -351,7 +353,7 @@ class StarfaitVM(
 
                         arrayRValue.setArray(gmlArray)
 
-                        println("GMLArray elements: ${gmlArray.entries}")
+                        // println("GMLArray elements: ${gmlArray.entries}")
 
                         // We don't need to make it independent because or it is a RValue that we already own, or it was the already existing RValue
                         instance.variables[varId] = arrayRValue
@@ -373,10 +375,10 @@ class StarfaitVM(
         // type1 is the source type, type2 is the destination type
         val sourceType = InstructionDataType.byId(type1)
         val destinationType = InstructionDataType.byId(type2)
-        println("Converting from $sourceType to $destinationType")
+        // println("Converting from $sourceType to $destinationType")
         val topOfTheStack = stack.peek()
 
-        println("Top of the stack is ${topOfTheStack.toStringTyped()}")
+        // println("Top of the stack is ${topOfTheStack.toStringTyped()}")
 
         // no-op, this is only useful if some day we decide to go with non-tagged RValues (that is, using two arrays, one for native values and another for RValues)
         // Because in that case, we would need to convert the RValue to the native type
@@ -447,7 +449,7 @@ class StarfaitVM(
         val type1DataType = InstructionDataType.byId(type1)
         val type2DataType = InstructionDataType.byId(type2)
 
-        println("ADD type1 is $type1DataType, type2 is $type2DataType")
+        // println("ADD type1 is $type1DataType, type2 is $type2DataType")
 
         // The YoYo Runner uses the type1/type2 data types to know how many bytes to read from the stack
         // Because we use tagged RValues, we don't need them for this
@@ -456,7 +458,7 @@ class StarfaitVM(
 
         val pushed = stack.push()
 
-        println("ADD left type is ${left.type}, right type is ${right.type}")
+        // println("ADD left type is ${left.type}, right type is ${right.type}")
         if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
             if (left.type != RValueDataType.STRING || right.type != RValueDataType.STRING)
                 error("DoAdd :: Execution Error")
@@ -528,7 +530,7 @@ class StarfaitVM(
 
     private fun handleBreak(reader: StarfaitByteBuffer) {
         // For *real* games, the BREAK opcode is only used to check the array size to avoid querying out of bounds
-        println("BREAK opcode called, it isn't implemented yet")
+        // println("BREAK opcode called, it isn't implemented yet")
     }
 
     private fun handleNot(reader: StarfaitByteBuffer, type1: Int) {

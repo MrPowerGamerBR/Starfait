@@ -9,6 +9,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var imageXScale = 1.0f
     var imageYScale = 1.0f
     var imageAlpha = 1.0f
+    var spriteIndex = 1.0f
     var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
     var visible = true
     var destroyed = false

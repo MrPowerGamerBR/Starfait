@@ -113,4 +113,10 @@ class RValue {
             this.ref = ref
         }
     }
+
+    fun refAsString() = ref as String
+
+    override fun toString(): String {
+        return toStringTyped()
+    }
 }

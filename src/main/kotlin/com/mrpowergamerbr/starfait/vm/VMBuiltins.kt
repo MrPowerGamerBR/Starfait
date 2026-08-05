@@ -63,6 +63,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("image_xscale", Instance::imageXScale)
         registerInstanceRealVariable("image_yscale", Instance::imageYScale)
         registerInstanceRealVariable("image_alpha", Instance::imageAlpha)
+        registerInstanceRealVariable("sprite_index", Instance::spriteIndex)
         repeat(16) {
             registerVariable(
                 "argument$it",
@@ -146,7 +147,54 @@ class VMBuiltins(val vm: StarfaitVM) {
             val instance = runner.currentRoom.createAndSpawnInstance(objectId)
             result.setInt32(instance.id)
         }
+        registerFunction("keyboard_check_pressed") { args, result -> result.setBoolean(false) }
+        registerFunction("ds_map_create") { args, result ->
+            val newIndex = vm.dsMapPool.size
+            vm.dsMapPool.add(DSMap())
+            result.setInt32(newIndex)
+        }
+
+        registerFunction("ds_map_add") { args, result ->
+            val dsMap = vm.dsMapPool[args[0].int]
+            dsMap.set(args[1], args[2])
+            result.setBoolean(true)
+        }
+
+        registerFunction("ds_map_find_value") { args, result ->
+            val dsMap = vm.dsMapPool[args[0].int]
+            val value = dsMap.get(args[1])
+            if (value == null) {
+                result.setUndefined()
+                return@registerFunction
+            }
+            result.copyFrom(value)
+        }
+
+        registerFunction("string_length") { args, result ->
+            if (args[0].type != RValueDataType.STRING) {
+                result.setInt32(0)
+                return@registerFunction
+            }
+
+            val string = args[0].refAsString()
+            result.setInt32(string.length)
+        }
+
+        registerFunction("string_copy") { args, result ->
+            if (args[0].type != RValueDataType.STRING) {
+                println("string_copy called with $result")
+                result.setString("")
+                return@registerFunction
+            }
+
+            val index = args[1].int - 1 // "The position of the first character in the string to copy from (numbered from 1)"
+            val count = args[2].int
+
+            val string = args[0].refAsString()
+            result.setString(string.substring(index, index + count).also { println(it) })
+        }
     }
+
     fun show_debug_message(args: List<RValue>, result: RValue) {
         println("Game: ${args[0].toGMLString()}")
     }

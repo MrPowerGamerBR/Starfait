@@ -134,6 +134,10 @@ class StarfaitVM(
                     return
                 }
                 Op.EXIT -> return
+                Op.NOT -> {
+                    val booleanValue = stack.pop().bool
+                    stack.push().setBoolean(!booleanValue)
+                }
                 else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(currentCallFrame.code.name)}\"")
             }
         }

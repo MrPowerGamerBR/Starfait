@@ -22,24 +22,34 @@ class StarfaitVM(
     val stack = VMStack()
     val global = ObjectBase()
     var currentInstance: Instance? = null
-    var localVariables = mutableMapOf<Int, RValue>()
-    lateinit var currentCode: Code
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
-    var currentCallFrame = CallFrame(Array<RValue>(0) { RValue() })
+    var callFrameStack = ArrayDeque<CallFrame>()
+    private var currentOrNullCallFrame: CallFrame? = null
+    val currentCallFrame: CallFrame
+        get() = currentOrNullCallFrame ?: error("No current call frame!")
 
-    fun executeLoop(code: Code) {
-        this.currentCode = code
+    fun executeCode(code: Code, arguments: Array<RValue>) {
+        val callFrame = CallFrame(code, arguments, mutableMapOf())
+        this.callFrameStack.addLast(callFrame)
+        this.currentOrNullCallFrame = callFrame
 
         // We need to remap the bytecode relative offset field position
-        val reader = StarfaitByteBuffer.fromByteBuffer(
-            ByteBuffer.wrap(
-                gameWAD.code.bytecode,
-                // We do + on the offset because the offset is negative
-                code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
-                code.length.toInt() - code.offset
-            )
+        val bytecodeInstructions = ByteBuffer.wrap(
+            gameWAD.code.bytecode,
+            // We do + on the offset because the offset is negative
+            code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
+            code.length.toInt() - code.offset
         )
+
+        executeBytecodeInstructions(bytecodeInstructions)
+
+        this.callFrameStack.removeLast()
+        this.currentOrNullCallFrame = this.callFrameStack.lastOrNull()
+    }
+
+    private fun executeBytecodeInstructions(bytecodeStream: ByteBuffer) {
+        val reader = StarfaitByteBuffer.fromByteBuffer(bytecodeStream)
 
         while (reader.hasRemaining()) {
             val start = reader.position
@@ -50,9 +60,9 @@ class StarfaitVM(
             val type2 = word.type2()
             val extra = word.extra()
 
-            val scriptName = gameWAD.strg.getString(currentCode.name)
+            val scriptName = gameWAD.strg.getString(currentCallFrame.code.name)
             if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName)) {
-                print("VM: [${gameWAD.strg.getString(currentCode.name)}] [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
+                print("VM: [${gameWAD.strg.getString(currentCallFrame.code.name)}] [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
 
                 for (i in 0 until stack.top) {
                     if (i != 0)
@@ -107,7 +117,9 @@ class StarfaitVM(
                 Op.CALL -> handleCall(reader, extra)
                 Op.DUP -> handleDup(reader, type1, extra)
                 Op.BREAK -> handleBreak(reader)
-                else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(code.name)}\"")
+                Op.RET -> return
+                Op.EXIT -> return
+                else -> error("Found unknown opcode (${opcode.toByte().toHexString()} / ${Op.getOpcodeName(opcode)}) while executing \"${gameWAD.strg.getString(currentCallFrame.code.name)}\"")
             }
         }
     }
@@ -139,7 +151,7 @@ class StarfaitVM(
                         instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
                         instanceId == SpecialObjectReferenceType.LOCAL -> {
                             // ewww this is a horrible hack
-                            stack.push().copyFrom(localVariables[varId]!!)
+                            stack.push().copyFrom(currentCallFrame.localVariables[varId]!!)
                             return
                         }
                         instanceId == SpecialObjectReferenceType.GLOBAL -> global
@@ -189,7 +201,7 @@ class StarfaitVM(
                 println("instanceID? $instanceId")
 
                 val pushed = stack.push()
-                val localVariable = localVariables[operand.variableIndex()]
+                val localVariable = currentCallFrame.localVariables[operand.variableIndex()]
 
                 println("Local Variable with VarID ${operand.variableIndex()} is ${localVariable?.toStringTyped()}")
 
@@ -269,7 +281,7 @@ class StarfaitVM(
                         // ewww this is a horrible hack
                         val popped = stack.pop()
                         println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
-                        localVariables[varId] = popped.makeIndependent()
+                        currentCallFrame.localVariables[varId] = popped.makeIndependent()
                         return
                     }
                     instanceId == SpecialObjectReferenceType.GLOBAL -> global
@@ -363,25 +375,25 @@ class StarfaitVM(
             arguments.add(stack.pop().makeIndependent())
         }
 
-        // For now we don't really care
-        val result = stack.push()
-        result.setUndefined()
-
         val functionName = gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)
         val functionHandler = builtins.registeredFunctions[functionName]
 
         if (functionHandler != null) {
+            // For now we don't really care
+            val result = stack.push()
+            result.setUndefined()
+
             functionHandler.invoke(arguments, result)
         } else {
             // This may be a user script!
             val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
             if (script != null) {
-                this.currentCallFrame = CallFrame(arguments.toTypedArray())
-                executeLoop(gameWAD.code.codes[script.codeIndex])
+                // The script result (if it is a script) will be on the top of the stack
+                executeCode(gameWAD.code.codes[script.codeIndex], arguments.toTypedArray())
                 return
             }
 
-            println("[${gameWAD.strg.getString(currentCode.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+            println("[${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
         }
     }
 

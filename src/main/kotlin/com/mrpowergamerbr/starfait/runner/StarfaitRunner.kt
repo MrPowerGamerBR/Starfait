@@ -30,7 +30,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 val code = gameWAD.code.codes[action.codeId]
 
                 vm.currentInstance = gameInstance
-                vm.executeLoop(code)
+                vm.executeCode(code, emptyArray())
             }
 
             val createEvents = gameObject.events[EventType.CREATE]
@@ -38,7 +38,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 val code = gameWAD.code.codes[action.codeId]
 
                 vm.currentInstance = gameInstance
-                vm.executeLoop(code)
+                vm.executeCode(code, emptyArray())
             }
         }
 
@@ -56,7 +56,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 val code = gameWAD.code.codes[action.codeId]
 
                 vm.currentInstance = instance
-                vm.executeLoop(code)
+                vm.executeCode(code, emptyArray())
             }
 
             val normalStepEvents = stepEvents.filter { it.subtype == EventType.StepSubType.NORMAL }.flatMap { it.actions }
@@ -64,7 +64,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 val code = gameWAD.code.codes[action.codeId]
 
                 vm.currentInstance = instance
-                vm.executeLoop(code)
+                vm.executeCode(code, emptyArray())
             }
 
             val endStepEvents = stepEvents.filter { it.subtype == EventType.StepSubType.END }.flatMap { it.actions }
@@ -72,7 +72,7 @@ class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
                 val code = gameWAD.code.codes[action.codeId]
 
                 vm.currentInstance = instance
-                vm.executeLoop(code)
+                vm.executeCode(code, emptyArray())
             }
         }
     }

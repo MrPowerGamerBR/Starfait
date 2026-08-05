@@ -13,6 +13,7 @@ import java.nio.ByteBuffer
 class StarfaitVM(
     val gameWAD: GameWAD,
     val gmlScriptsOpcodesToBeTraced: Set<String>,
+    val functionCallsToBeTraced: Set<String>,
     val alarmsToBeTraced: Set<String>
 ) {
     companion object {
@@ -416,11 +417,18 @@ class StarfaitVM(
         }
 
         val functionName = gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)
+        if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
+            println("VM: [$currentCallFrameCodeName] Calling function \"$functionName(${arguments.joinToString(", ")})\"")
+        }
+
         val functionHandler = builtins.registeredFunctions[functionName]
 
         if (functionHandler != null) {
             val result = stack.push()
             functionHandler.invoke(arguments, result)
+            if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
+                println("VM: [$currentCallFrameCodeName] Called built-in function \"$functionName(${arguments.joinToString(", ")})\"! Result: $result")
+            }
             return
         }
 
@@ -429,6 +437,11 @@ class StarfaitVM(
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
             val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], currentInstance, arguments.toTypedArray())
+
+            if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
+                println("VM: [$currentCallFrameCodeName] Called script function \"$functionName(${arguments.joinToString(", ")})\"! Result: ${returnValue ?: "undefined"}")
+            }
+
             if (returnValue == null) {
                 // This happens when...
                 // * Op.EXIT is called
@@ -436,11 +449,12 @@ class StarfaitVM(
                 stack.push().setUndefined()
                 return
             }
+            
             stack.push().copyFrom(returnValue)
             return
         }
 
-        println("[${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
+        println("VM: [${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! ${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}, parameters: ${arguments.joinToString { it.toStringTyped() }}")
 
         // As a fallback, we'll push undefined to the stack if the function does not exist
         val result = stack.push()

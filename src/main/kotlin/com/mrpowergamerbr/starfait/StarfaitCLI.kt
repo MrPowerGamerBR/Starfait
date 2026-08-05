@@ -17,7 +17,6 @@ import com.mrpowergamerbr.starfait.wad.Script
 import com.mrpowergamerbr.starfait.wad.Sound
 import com.mrpowergamerbr.starfait.wad.StringPointer
 import com.mrpowergamerbr.starfait.wad.Variable
-import com.mrpowergamerbr.starfait.wad.chunks.SCPT
 import java.io.File
 import kotlin.reflect.KProperty1
 
@@ -33,6 +32,7 @@ class StarfaitCLI : CliktCommand() {
     val printVariables by option()
     val printFunctions by option()
     val traceOpcodes by option()
+    val traceFunctionCalls by option()
     val traceAlarms by option()
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>, match: String) {
@@ -101,6 +101,7 @@ class StarfaitCLI : CliktCommand() {
         val vm = StarfaitVM(
             gameWAD,
             gmlScriptsOpcodesToBeTraced = traceOpcodes?.split(",")?.toSet().orEmpty(),
+            functionCallsToBeTraced = traceFunctionCalls?.split(",")?.toSet().orEmpty(),
             alarmsToBeTraced = traceAlarms?.split(",")?.toSet().orEmpty(),
         )
         vm.remapReferences()

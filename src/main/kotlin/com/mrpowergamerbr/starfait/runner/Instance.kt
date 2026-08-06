@@ -12,10 +12,13 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var imageAlpha = 1.0f
     var imageIndex = 0.0f
     var spriteIndex = 0.0f
+    var speed = 0.0f
     var depth = 0.0f
     var direction = 0.0f
     var imageBlend = -1.0f
     var imageAngle = 0.0f
+    var pathSpeed = 0.0f
+    var pathPosition = 0.0f
     var persistent = false
     var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
     var visible = true

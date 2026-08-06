@@ -122,6 +122,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("direction", Instance::direction)
         registerInstanceRealVariable("image_blend", Instance::imageBlend)
         registerInstanceRealVariable("image_angle", Instance::imageAngle)
+        registerInstanceRealVariable("path_speed", Instance::pathSpeed)
+        registerInstanceRealVariable("path_position", Instance::pathPosition)
+        registerInstanceRealVariable("speed", Instance::speed)
         repeat(16) {
             registerVariable(
                 "argument$it",
@@ -445,5 +448,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealStubbedFunction("collision_rectangle", 7, SpecialObjectReferenceType.NOONE.toDouble())
 
         registerRealFunction("abs", 1) { args -> args[0].real.absoluteValue }
+
+        registerBooleanStubbedFunction("audio_is_playing", 1, false)
     }
 }

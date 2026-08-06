@@ -61,7 +61,7 @@ class StarfaitWindow(val vm: StarfaitVM) {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
 
-        val window = SDL_CreateWindow("Starfait", 640, 480, SDL_WINDOW_OPENGL)
+        val window = SDL_CreateWindow("Starfait", vm.gameWAD.gen8.initialApplicationWidth, vm.gameWAD.gen8.initialApplicationHeight, SDL_WINDOW_OPENGL)
         check(window != MemoryUtil.NULL) { "SDL_CreateWindow failed: ${SDL_GetError()}" }
 
         val context = SDL_GL_CreateContext(window)

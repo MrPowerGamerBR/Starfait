@@ -52,9 +52,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
     }
 
-    fun registerBooleanStubFunction(name: String, parameterCount: Int?, value: Boolean) = registerBooleanFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
-    fun registerRealStubFunction(name: String, parameterCount: Int?, value: Double) = registerRealFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
-    fun registerStringStubFunction(name: String, parameterCount: Int?, value: String) = registerStringFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
+    fun registerBooleanStubbedFunction(name: String, parameterCount: Int?, value: Boolean) = registerBooleanFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
+    fun registerRealStubbedFunction(name: String, parameterCount: Int?, value: Double) = registerRealFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
+    fun registerStringStubbedFunction(name: String, parameterCount: Int?, value: String) = registerStringFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }
 
     fun registerVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
         require(name !in registeredVariables) { "Tried registering variable $name, but it already exists!" }
@@ -176,11 +176,11 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealFunction("real", 1) { args -> args[0].real }
 
         // TODO: Add some stub warnings?
-        registerBooleanStubFunction("steam_initialised", 0, true)
-        registerBooleanStubFunction("steam_file_exists", 1, false)
-        registerBooleanStubFunction("file_exists", 1, false)
-        registerStringStubFunction("os_get_language", 0, "pt")
-        registerStringStubFunction("os_get_region", 0, "BR")
+        registerBooleanStubbedFunction("steam_initialised", 0, true)
+        registerBooleanStubbedFunction("steam_file_exists", 1, false)
+        registerBooleanStubbedFunction("file_exists", 1, false)
+        registerStringStubbedFunction("os_get_language", 0, "pt")
+        registerStringStubbedFunction("os_get_region", 0, "BR")
 
         registerStringFunction("string_upper", 1) { args -> args[0].toGMLString().uppercase() }
         registerBooleanFunction("variable_global_exists", null) { args ->
@@ -217,7 +217,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             vm.currentInstance.destroyed = true
         }
 
-        registerBooleanStubFunction("keyboard_check_pressed", null, false)
+        registerBooleanStubbedFunction("keyboard_check_pressed", null, false)
 
         registerIntAsRealFunction("ds_map_create", 0) { args ->
             val newIndex = vm.dsMapPool.size
@@ -307,7 +307,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerStringFunction char.toString()
         }
 
-        registerRealStubFunction("random", 1, 0.0)
+        registerRealStubbedFunction("random", 1, 0.0)
 
         registerBooleanFunction("instance_exists", 1) { args ->
             // "This function does not take into account those instances that have been deactivated using the instance deactivate functions."
@@ -344,8 +344,8 @@ class VMBuiltins(val vm: StarfaitVM) {
             round(args[0].real)
         }
 
-        registerRealStubFunction("surface_get_width", 1, 320.0)
-        registerRealStubFunction("surface_get_height", 1, 240.0)
+        registerRealStubbedFunction("surface_get_width", 1, 320.0)
+        registerRealStubbedFunction("surface_get_height", 1, 240.0)
 
         registerRealStubbedVariable("sprite_height", 240.0)
         registerRealStubbedVariable("sprite_width", 240.0)

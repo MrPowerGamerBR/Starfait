@@ -413,7 +413,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVoidFunction("draw_text_transformed", 6) { args ->
             val x = args[0].real
             val y = args[1].real
-            val string = args[2].refAsString()
+            val string = args[2].toGMLString()
 
             runner.renderer.drawText(runner.gameWAD.font.fonts[2], x.toFloat(), y.toFloat(), string)
         }
@@ -421,7 +421,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVoidFunction("draw_text", 3) { args ->
             val x = args[0].real
             val y = args[1].real
-            val string = args[2].refAsString()
+            val string = args[2].toGMLString()
 
             runner.renderer.drawText(runner.gameWAD.font.fonts[2], x.toFloat(), y.toFloat(), string)
         }

@@ -144,7 +144,7 @@ class StarfaitVM(
                     reader.position = start + word.branchOffset()
                 }
                 Op.PUSH_ENV -> handlePushEnv(reader, reader.position, word.branchOffset())
-                Op.POP_ENV -> handlePopEnv(reader)
+                Op.POP_ENV -> handlePopEnv(reader, word)
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.SUB -> handleSub(reader, type1, type2)
                 Op.MUL -> handleMul(reader, type1, type2)
@@ -627,13 +627,14 @@ class StarfaitVM(
         updateCallFrameInstancesToMatchEnvFrame(currentCallFrame, envFrame)
     }
 
-    private fun handlePopEnv(reader: StarfaitByteBuffer) {
+    private fun handlePopEnv(reader: StarfaitByteBuffer, word: OpWord) {
         val callFrame = this.currentCallFrame
 
         val pushEnvFrame = callFrame.environmentFrameStack.last()
         pushEnvFrame.cursor++
 
-        if (pushEnvFrame.cursor >= pushEnvFrame.instances.size) {
+        // The 0xBBF00000 word is used when an "exit" is called within a "with" statement
+        if (pushEnvFrame.cursor >= pushEnvFrame.instances.size || word.value == 0xBBF00000.toInt()) {
             callFrame.environmentFrameStack.removeLastOrNull()
             val activeEnvFrame = callFrame.environmentFrameStack.lastOrNull()
             if (activeEnvFrame != null) {

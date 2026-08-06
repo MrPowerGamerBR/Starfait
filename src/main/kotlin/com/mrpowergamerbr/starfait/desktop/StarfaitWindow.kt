@@ -1,45 +1,80 @@
 package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.runner.PendingRoom
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DELETE
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DIVIDE
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DOWN
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_END
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ENTER
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_F1
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_HOME
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_INSERT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_LALT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_LCONTROL
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_LEFT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_LSHIFT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_MULTIPLY
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_NUMPAD0
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_PAGEDOWN
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_PAGEUP
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_PAUSE
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_PRINTSCREEN
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_RALT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_RCONTROL
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_RIGHT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_RSHIFT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_SUBTRACT
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_UP
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
-import net.perfectdreams.harmony.gl.shaders.bind
-import org.joml.Matrix4f
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
-import org.lwjgl.opengl.GL11.GL_FALSE
-import org.lwjgl.opengl.GL11.GL_FLOAT
-import org.lwjgl.opengl.GL11.GL_NEAREST
-import org.lwjgl.opengl.GL11.GL_TRIANGLES
-import org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP
-import org.lwjgl.opengl.GL11.GL_UNSIGNED_INT
-import org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY
 import org.lwjgl.opengl.GL11.glClear
 import org.lwjgl.opengl.GL11.glClearColor
-import org.lwjgl.opengl.GL11.glDrawArrays
-import org.lwjgl.opengl.GL11.glDrawElements
-import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
-import org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW
-import org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER
-import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
-import org.lwjgl.opengl.GL15.glBindBuffer
-import org.lwjgl.opengl.GL15.glBufferData
-import org.lwjgl.opengl.GL15.glBufferSubData
-import org.lwjgl.opengl.GL15.glGenBuffers
-import org.lwjgl.opengl.GL20.glEnableVertexAttribArray
-import org.lwjgl.opengl.GL20.glVertexAttribPointer
-import org.lwjgl.opengl.GL30.glBindVertexArray
-import org.lwjgl.opengl.GL30.glGenVertexArrays
 import org.lwjgl.sdl.SDLError.SDL_GetError
+import org.lwjgl.sdl.SDLEvents.SDL_EVENT_KEY_DOWN
 import org.lwjgl.sdl.SDLEvents.SDL_EVENT_KEY_UP
 import org.lwjgl.sdl.SDLEvents.SDL_EVENT_QUIT
 import org.lwjgl.sdl.SDLEvents.SDL_PollEvent
 import org.lwjgl.sdl.SDLInit.SDL_INIT_VIDEO
 import org.lwjgl.sdl.SDLInit.SDL_Init
 import org.lwjgl.sdl.SDLInit.SDL_Quit
+import org.lwjgl.sdl.SDLKeycode.SDLK_BACKSPACE
+import org.lwjgl.sdl.SDLKeycode.SDLK_DELETE
+import org.lwjgl.sdl.SDLKeycode.SDLK_DOWN
+import org.lwjgl.sdl.SDLKeycode.SDLK_END
 import org.lwjgl.sdl.SDLKeycode.SDLK_ESCAPE
+import org.lwjgl.sdl.SDLKeycode.SDLK_F1
+import org.lwjgl.sdl.SDLKeycode.SDLK_F12
+import org.lwjgl.sdl.SDLKeycode.SDLK_HOME
+import org.lwjgl.sdl.SDLKeycode.SDLK_INSERT
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_0
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_1
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_9
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_DIVIDE
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_ENTER
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_MINUS
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_MULTIPLY
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_PERIOD
+import org.lwjgl.sdl.SDLKeycode.SDLK_KP_PLUS
+import org.lwjgl.sdl.SDLKeycode.SDLK_LALT
+import org.lwjgl.sdl.SDLKeycode.SDLK_LCTRL
+import org.lwjgl.sdl.SDLKeycode.SDLK_LEFT
+import org.lwjgl.sdl.SDLKeycode.SDLK_LSHIFT
 import org.lwjgl.sdl.SDLKeycode.SDLK_PAGEDOWN
 import org.lwjgl.sdl.SDLKeycode.SDLK_PAGEUP
+import org.lwjgl.sdl.SDLKeycode.SDLK_PAUSE
+import org.lwjgl.sdl.SDLKeycode.SDLK_PRINTSCREEN
+import org.lwjgl.sdl.SDLKeycode.SDLK_RALT
+import org.lwjgl.sdl.SDLKeycode.SDLK_RCTRL
+import org.lwjgl.sdl.SDLKeycode.SDLK_RETURN
+import org.lwjgl.sdl.SDLKeycode.SDLK_RIGHT
+import org.lwjgl.sdl.SDLKeycode.SDLK_RSHIFT
+import org.lwjgl.sdl.SDLKeycode.SDLK_SPACE
+import org.lwjgl.sdl.SDLKeycode.SDLK_TAB
+import org.lwjgl.sdl.SDLKeycode.SDLK_UP
 import org.lwjgl.sdl.SDLVideo.SDL_CreateWindow
 import org.lwjgl.sdl.SDLVideo.SDL_DestroyWindow
 import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_MAJOR_VERSION
@@ -91,6 +126,10 @@ class StarfaitWindow(val vm: StarfaitVM) {
                     if (event.type() == SDL_EVENT_QUIT)
                         running = false
 
+                    if (event.type() == SDL_EVENT_KEY_DOWN) {
+                        runner.keyboard.onKeyDown(convertSDLKeycodeToGMLVK(event.key().key()))
+                    }
+
                     if (event.type() == SDL_EVENT_KEY_UP) {
                         if (event.key().key() == SDLK_PAGEDOWN) {
                             runner.pendingRoom = PendingRoom(
@@ -98,6 +137,8 @@ class StarfaitWindow(val vm: StarfaitVM) {
                                 vm.gameWAD.room.rooms[runner.currentRoom.roomId + 1]
                             )
                         }
+
+                        runner.keyboard.onKeyUp(convertSDLKeycodeToGMLVK(event.key().key()))
                     }
                 }
 
@@ -114,5 +155,39 @@ class StarfaitWindow(val vm: StarfaitVM) {
         SDL_GL_DestroyContext(context)
         SDL_DestroyWindow(window)
         SDL_Quit()
+    }
+
+    fun convertSDLKeycodeToGMLVK(key: Int): Int = when (key) {
+        in 'a'.code..'z'.code -> key - 32 // 'a' -> VK_A
+        in '0'.code..'9'.code -> key // identity
+        SDLK_BACKSPACE, SDLK_TAB, SDLK_RETURN, SDLK_ESCAPE, SDLK_SPACE -> key
+        SDLK_LEFT -> VK_LEFT
+        SDLK_RIGHT -> VK_RIGHT
+        SDLK_UP -> VK_UP
+        SDLK_DOWN -> VK_DOWN
+        SDLK_LSHIFT -> VK_LSHIFT
+        SDLK_RSHIFT -> VK_RSHIFT
+        SDLK_LCTRL -> VK_LCONTROL
+        SDLK_RCTRL -> VK_RCONTROL
+        SDLK_LALT -> VK_LALT
+        SDLK_RALT -> VK_RALT
+        SDLK_HOME -> VK_HOME
+        SDLK_END -> VK_END
+        SDLK_INSERT -> VK_INSERT
+        SDLK_DELETE -> VK_DELETE
+        SDLK_PAGEUP -> VK_PAGEUP
+        SDLK_PAGEDOWN -> VK_PAGEDOWN
+        SDLK_PAUSE -> VK_PAUSE
+        SDLK_PRINTSCREEN -> VK_PRINTSCREEN
+        in SDLK_F1..SDLK_F12 -> VK_F1 + (key - SDLK_F1)
+        in SDLK_KP_1..SDLK_KP_9 -> VK_NUMPAD0 + 1 + (key - SDLK_KP_1) // SDL orders 1-9 then 0
+        SDLK_KP_0 -> VK_NUMPAD0
+        SDLK_KP_MULTIPLY -> VK_MULTIPLY
+        SDLK_KP_PLUS -> VK_ADD
+        SDLK_KP_MINUS -> VK_SUBTRACT
+        SDLK_KP_PERIOD -> VK_DECIMAL
+        SDLK_KP_DIVIDE -> VK_DIVIDE
+        SDLK_KP_ENTER -> VK_ENTER
+        else -> -1 // unmapped, ignore
     }
 }

@@ -221,9 +221,21 @@ class VMBuiltins(val vm: StarfaitVM) {
             vm.currentSelfInstance.destroyed = true
         }
 
-        registerBooleanStubbedFunction("keyboard_check", 1, true)
-        registerBooleanStubbedFunction("keyboard_check_pressed", 1, true)
-        registerBooleanStubbedFunction("keyboard_check_released", 1, false)
+        registerBooleanFunction("keyboard_check", 1) { args ->
+            val keyId = args[0].int
+            return@registerBooleanFunction runner.keyboard.keyHeld[keyId]
+        }
+
+        registerBooleanFunction("keyboard_check_pressed", 1) { args ->
+            val keyId = args[0].int
+            return@registerBooleanFunction runner.keyboard.keyPressed[keyId]
+        }
+
+        registerBooleanFunction("keyboard_check_released", 1) { args ->
+            val keyId = args[0].int
+            return@registerBooleanFunction runner.keyboard.keyReleased[keyId]
+        }
+
         registerBooleanStubbedFunction("joystick_exists", 1, false)
         registerBooleanStubbedFunction("keyboard_check_direct", 1, false)
 

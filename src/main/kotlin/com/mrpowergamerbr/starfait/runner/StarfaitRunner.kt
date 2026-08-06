@@ -22,6 +22,7 @@ class StarfaitRunner(
     var currentInstanceId = BASE_INSTANCE_ID
     var pendingRoom: PendingRoom? = null
     val startedAt = System.currentTimeMillis()
+    val keyboard = RunnerKeyboard()
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
@@ -71,6 +72,8 @@ class StarfaitRunner(
     }
 
     fun step() {
+        this.keyboard.tick()
+
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.BEGIN)
 
         // Alarms are checked PER ALARM ID, not per instance!

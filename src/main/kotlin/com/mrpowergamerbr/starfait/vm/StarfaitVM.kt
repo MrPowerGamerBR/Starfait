@@ -321,7 +321,47 @@ class StarfaitVM(
         when (type1DataType) {
             InstructionDataType.DOUBLE -> TODO()
             InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> TODO()
+            InstructionDataType.INT32 -> {
+                // Seems to be used for global array writes, for example: "global.flag[70] += 1;"
+                // It is similar to the VARIABLE path, with the change that the value comes BEFORE, not AFTER
+                val operand = VariableReferenceOperand(reader.readInt())
+
+                val varId = operand.variableIndex()
+                val value = stack.pop().makeIndependent()
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+
+                when (instanceId) {
+                    SpecialObjectReferenceType.GLOBAL -> {
+                        val instance = global
+
+                        if (varId >= REGULAR_VARIABLES_BASE) {
+                            if (arrayIndex != null) {
+                                // Arrays a bit trickier...
+                                // In this case, we want to WRITE to a specific slot in the array
+                                val arrayRValue = instance.variables[varId] ?: RValue().apply { this.setUndefined() }
+                                val gmlArray = if (arrayRValue.type == RValueDataType.ARRAY) {
+                                    arrayRValue.ref as GMLArray
+                                } else {
+                                    GMLArray()
+                                }
+
+                                gmlArray.entries[arrayIndex] = value
+
+                                arrayRValue.setArray(gmlArray)
+
+                                // println("GMLArray elements: ${gmlArray.entries}")
+
+                                // We don't need to make it independent because or it is a RValue that we already own, or it was the already existing RValue
+                                instance.variables[varId] = arrayRValue
+                            } else {
+                                instance.variables[varId] = value
+                            }
+                        } else error("Tried writing a global built-in variable from the INT32 pop path!")
+                    }
+                    else -> TODO("Unsupported instance ID $instanceId!")
+                }
+            }
             InstructionDataType.INT64 -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {

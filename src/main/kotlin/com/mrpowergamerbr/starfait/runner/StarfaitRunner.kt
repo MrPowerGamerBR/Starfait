@@ -72,8 +72,6 @@ class StarfaitRunner(
     }
 
     fun step() {
-        this.keyboard.tick()
-
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.BEGIN)
 
         // Alarms are checked PER ALARM ID, not per instance!
@@ -112,6 +110,8 @@ class StarfaitRunner(
             initializeRoom(pendingRoom.roomId, pendingRoom.room)
             this.pendingRoom = null
         }
+
+        this.keyboard.tick()
     }
 
     fun dispatchEventToAllInstances(eventType: Int, eventSubtype: Int) {

@@ -1,5 +1,7 @@
 package com.mrpowergamerbr.starfait.wad
 
+import com.mrpowergamerbr.starfait.GMLColor
+
 class Room(
     val name: StringPointer,
     val caption: StringPointer,
@@ -7,7 +9,7 @@ class Room(
     val height: Int,
     val speed: Int,
     val persistent: Boolean,
-    val backgroundColor: Int,
+    val backgroundColor: GMLColor,
     val drawBackgroundColor: Boolean,
     // -1 when the room has no creation code
     val creationCodeId: Int,

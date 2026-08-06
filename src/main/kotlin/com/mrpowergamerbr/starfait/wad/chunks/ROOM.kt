@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
@@ -174,7 +175,7 @@ class ROOM(val rooms: List<Room>) {
                         height = height,
                         speed = speed,
                         persistent = persistent,
-                        backgroundColor = backgroundColor,
+                        backgroundColor = GMLColor(backgroundColor),
                         drawBackgroundColor = drawBackgroundColor,
                         creationCodeId = creationCodeId,
                         flags = RoomFlags(flags),

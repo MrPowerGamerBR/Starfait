@@ -11,4 +11,5 @@ interface Renderer {
     fun drawBackground(texturePageEntry: TexturePageEntry, width: Float, height: Float)
     fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile)
     fun drawText(font: Font, x: Float, y: Float, text: String)
+    fun frame(block: () -> (Unit))
 }

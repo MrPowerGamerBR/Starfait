@@ -15,6 +15,7 @@ import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11.GL_BLEND
+import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
 import org.lwjgl.opengl.GL11.GL_DEPTH_TEST
 import org.lwjgl.opengl.GL11.GL_FLOAT
 import org.lwjgl.opengl.GL11.GL_NEAREST
@@ -22,6 +23,8 @@ import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
 import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
 import org.lwjgl.opengl.GL11.GL_TRIANGLES
 import org.lwjgl.opengl.GL11.glBlendFunc
+import org.lwjgl.opengl.GL11.glClear
+import org.lwjgl.opengl.GL11.glClearColor
 import org.lwjgl.opengl.GL11.glDisable
 import org.lwjgl.opengl.GL11.glDrawArrays
 import org.lwjgl.opengl.GL11.glEnable
@@ -173,6 +176,16 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                 x += glyph.width.toFloat()
             }
         }
+    }
+
+    override fun frame(block: () -> Unit) {
+        // TODO: Respect the room's drawBackgroundColor
+        val color = runner.currentRoom.backgroundColor
+        glClearColor(color.red / 1.0f, color.green / 1.0f, color.blue / 1.0f, 1.0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        block()
+        flush(runner)
     }
 
     fun flushIfNeeded(texture: Texture) {

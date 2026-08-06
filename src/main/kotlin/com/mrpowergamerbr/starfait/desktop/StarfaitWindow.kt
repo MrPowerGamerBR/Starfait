@@ -142,11 +142,9 @@ class StarfaitWindow(val vm: StarfaitVM) {
                     }
                 }
 
-                glClear(GL_COLOR_BUFFER_BIT)
-
-                runner.step()
-
-                renderer.flush(runner)
+                renderer.frame {
+                    runner.step()
+                }
 
                 SDL_GL_SwapWindow(window)
             }

@@ -59,6 +59,8 @@ class StarfaitRunner(
             }
         }
 
+        newRoom.backgroundColor = room.backgroundColor
+
         for (background in room.backgrounds) {
             newRoom.backgrounds.add(
                 RunnerRoom.RunnerBackground(

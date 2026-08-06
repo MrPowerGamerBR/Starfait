@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
@@ -7,6 +8,7 @@ import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
 class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
     var width = 0
     var height = 0
+    var backgroundColor = GMLColor(0)
     val instances = mutableListOf<Instance>()
     val views = mutableListOf<RunnerView>()
     val backgrounds = mutableListOf<RunnerBackground>()

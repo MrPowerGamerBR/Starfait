@@ -12,7 +12,7 @@ class CODE(val codes: List<Code>, val postAddressPosition: Int, val bytecode: By
             val codes = ArrayList<Code>(addresses.size)
 
             // This may happen if it is a YYC game OR if it is just a game without any code
-            if (codes.isEmpty())
+            if (addresses.isEmpty())
                 return CODE(codes, postAddressPosition, byteArrayOf())
 
             val minAddressTarget = addresses.min()

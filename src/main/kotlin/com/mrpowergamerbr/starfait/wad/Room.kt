@@ -11,7 +11,7 @@ class Room(
     val drawBackgroundColor: Boolean,
     // -1 when the room has no creation code
     val creationCodeId: Int,
-    val flags: Int,
+    val flags: RoomFlags,
     val physicsWorld: Boolean,
     val physicsWorldTop: Int,
     val physicsWorldLeft: Int,

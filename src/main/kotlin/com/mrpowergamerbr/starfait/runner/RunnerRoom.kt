@@ -7,6 +7,7 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
     var width = 0
     var height = 0
     val instances = mutableListOf<Instance>()
+    val views = mutableListOf<RunnerView>()
 
     fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
         this.x = instance.x.toFloat()
@@ -27,4 +28,16 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         gameInstance.dispatchEvent(EventType.CREATE, 0)
         return gameInstance
     }
+
+    class RunnerView(
+        var viewX: Int,
+        var viewY: Int,
+        var viewWidth: Int,
+        var viewHeight: Int,
+        var portX: Int,
+        var portY: Int,
+        var portWidth: Int,
+        var portHeight: Int,
+        var visible: Boolean
+    )
 }

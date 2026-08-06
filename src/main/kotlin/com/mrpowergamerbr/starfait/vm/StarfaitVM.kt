@@ -27,7 +27,7 @@ class StarfaitVM(
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     lateinit var regularVariableNames: Array<String>
     val callFrameStack = ArrayDeque<CallFrame>()
-    
+
     // "codeName#functionName"
     val loggedUnknownFunctions = mutableSetOf<String>()
     val loggedStubbedFunctions = mutableSetOf<String>()

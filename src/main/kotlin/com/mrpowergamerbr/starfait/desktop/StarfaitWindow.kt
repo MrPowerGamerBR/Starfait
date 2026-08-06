@@ -72,6 +72,7 @@ class StarfaitWindow(val vm: StarfaitVM) {
 
         val renderer = OpenGLRenderer()
         val runner = StarfaitRunner(vm.gameWAD, vm, renderer)
+        renderer.runner = runner
         vm.runner = runner
         runner.start()
 
@@ -118,7 +119,7 @@ class StarfaitWindow(val vm: StarfaitVM) {
                     }
                 }
 
-                renderer.flush()
+                renderer.flush(runner)
 
                 SDL_GL_SwapWindow(window)
             }

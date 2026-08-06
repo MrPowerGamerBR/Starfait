@@ -5,6 +5,7 @@ import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
+import com.mrpowergamerbr.starfait.wad.RoomFlags
 
 class StarfaitRunner(
     val gameWAD: GameWAD,
@@ -35,6 +36,24 @@ class StarfaitRunner(
         val currentRoom = RunnerRoom(this, roomId)
         currentRoom.width = room.width
         currentRoom.height = room.height
+
+        if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {
+            for (view in room.views) {
+                currentRoom.views.add(
+                    RunnerRoom.RunnerView(
+                        view.viewX,
+                        view.viewY,
+                        view.viewWidth,
+                        view.viewHeight,
+                        view.portX,
+                        view.portY,
+                        view.portWidth,
+                        view.portHeight,
+                        view.visible
+                    )
+                )
+            }
+        }
 
         // We need to set the currentRoom BEFORE we dispatch the create events
         this.currentRoom = currentRoom

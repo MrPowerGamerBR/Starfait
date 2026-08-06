@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.desktop.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.Renderer
+import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
@@ -23,6 +24,7 @@ import org.lwjgl.opengl.GL30.glBindVertexArray
 import org.lwjgl.opengl.GL30.glGenVertexArrays
 
 class OpenGLRenderer : Renderer {
+    lateinit var runner: StarfaitRunner
     val textureManager = TextureManager()
     val shaderManager = ShaderManager()
     val minimalShader: MinimalShader = shaderManager.loadShader(
@@ -53,7 +55,7 @@ class OpenGLRenderer : Renderer {
 
     fun drawQuad(x: Float, y: Float, u1: Float, v1: Float, u2: Float, v2: Float, width: Float, height: Float, texture: Texture) {
         if (this.activeBatchTexture != texture)
-            flush()
+            flush(runner)
 
         // top-left
         batch[currentIndex++] = x; batch[currentIndex++] = y;
@@ -82,11 +84,18 @@ class OpenGLRenderer : Renderer {
         this.activeBatchTexture = texture
     }
 
-    fun flush() {
+    fun flush(runner: StarfaitRunner) {
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glBufferSubData(GL_ARRAY_BUFFER, 0, batch)
 
-        minimalShader.uProjection.set(Matrix4f().ortho(0.0f, 640.0f, 480.0f, 0.0f, 1.0f, -1.0f).get(FloatArray(16)))
+        // This is wrong
+        val firstVisibleView = runner.currentRoom.views.firstOrNull { it.visible }
+
+        if (firstVisibleView != null)
+            minimalShader.uProjection.set(Matrix4f().ortho(firstVisibleView.viewX.toFloat(), firstVisibleView.viewWidth.toFloat(), firstVisibleView.viewHeight.toFloat(), firstVisibleView.viewY.toFloat(), 1.0f, -1.0f).get(FloatArray(16)))
+        else
+            minimalShader.uProjection.set(Matrix4f().ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f).get(FloatArray(16)))
+
         val activeBatchTexture = this.activeBatchTexture
         if (activeBatchTexture != null)
             minimalShader.uTexture.set(0, activeBatchTexture)

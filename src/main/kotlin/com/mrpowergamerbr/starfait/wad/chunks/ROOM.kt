@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait.wad.chunks
 
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Room
+import com.mrpowergamerbr.starfait.wad.RoomFlags
 
 class ROOM(val rooms: List<Room>) {
     companion object {
@@ -21,7 +22,7 @@ class ROOM(val rooms: List<Room>) {
                 val backgroundColor = reader.readInt()
                 val drawBackgroundColor = reader.readIntBoolean()
                 val creationCodeId = reader.readInt()
-                val flags = reader.readInt()
+                val flags = reader.readUInt()
 
                 val backgroundsAddress = reader.readInt()
                 val viewsAddress = reader.readInt()
@@ -176,7 +177,7 @@ class ROOM(val rooms: List<Room>) {
                         backgroundColor = backgroundColor,
                         drawBackgroundColor = drawBackgroundColor,
                         creationCodeId = creationCodeId,
-                        flags = flags,
+                        flags = RoomFlags(flags),
                         physicsWorld = physicsWorld,
                         physicsWorldTop = physicsWorldTop,
                         physicsWorldLeft = physicsWorldLeft,

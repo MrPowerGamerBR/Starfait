@@ -30,6 +30,18 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         return gameInstance
     }
 
+    fun updateViews() {
+        for (view in views) {
+            if (view.visible) {
+                // TODO: Pretty sure that this can also be a instanceId
+                val followingObjectId = view.objectId
+                val followingObject = instances.firstOrNull { it.objectIndex == followingObjectId }
+
+                // TODO: Actually do something useful with it
+            }
+        }
+    }
+
     class RunnerView(
         var viewX: Int,
         var viewY: Int,
@@ -39,6 +51,7 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         var portY: Int,
         var portWidth: Int,
         var portHeight: Int,
-        var visible: Boolean
+        var visible: Boolean,
+        var objectId: Int,
     )
 }

@@ -35,11 +35,13 @@ class StarfaitRunner(
 
     fun initializeRoom(roomId: Int, room: Room) {
         val newRoom = RunnerRoom(this, roomId)
+        println("Runner: Initializing room $roomId (${gameWAD.strg.getString(room.name)})")
         newRoom.width = room.width
         newRoom.height = room.height
 
         if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {
             for (view in room.views) {
+                println("Visible? ${view.visible} - View BorderX is ${view.borderX}, View BorderY is ${view.borderY}, objectId is ${view.objectId}")
                 newRoom.views.add(
                     RunnerRoom.RunnerView(
                         view.viewX,
@@ -50,7 +52,8 @@ class StarfaitRunner(
                         view.portY,
                         view.portWidth,
                         view.portHeight,
-                        view.visible
+                        view.visible,
+                        view.objectId
                     )
                 )
             }
@@ -94,6 +97,8 @@ class StarfaitRunner(
 
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
+
+        currentRoom.updateViews()
 
         forEachInstanceByDepth { instance ->
             val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW)

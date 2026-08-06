@@ -182,8 +182,24 @@ class VMBuiltins(val vm: StarfaitVM) {
                 runner.currentRoom.views[arrayIndex!!].viewY = value.real.toInt()
             }
         )
-        registerRealStubbedVariable("view_wview", 640.0)
-        registerRealStubbedVariable("view_hview", 480.0)
+        registerVariable(
+            "view_wview",
+            { _, result, arrayIndex ->
+                result.setReal(runner.currentRoom.views[arrayIndex!!].viewWidth.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.views[arrayIndex!!].viewWidth = value.real.toInt()
+            }
+        )
+        registerVariable(
+            "view_hview",
+            { _, result, arrayIndex ->
+                result.setReal(runner.currentRoom.views[arrayIndex!!].viewHeight.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.views[arrayIndex!!].viewHeight = value.real.toInt()
+            }
+        )
         registerRealStubbedVariable("application_surface", -1.0)
 
         registerReadOnlyVariable("current_time") { _, result, _ -> result.setReal((System.currentTimeMillis() - runner.startedAt).toDouble()) }

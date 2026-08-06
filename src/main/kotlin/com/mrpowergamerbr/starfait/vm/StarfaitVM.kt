@@ -26,12 +26,13 @@ class StarfaitVM(
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     lateinit var regularVariableNames: Array<String>
-    val callFrameStack = ArrayDeque<CallFrame>()
 
     // "codeName#functionName"
     val loggedUnknownFunctions = mutableSetOf<String>()
     val loggedStubbedFunctions = mutableSetOf<String>()
     val loggedStubbedVariables = mutableSetOf<String>()
+
+    val callFrameStack = ArrayDeque<CallFrame>()
 
     private var currentOrNullCallFrame: CallFrame? = null
 
@@ -39,13 +40,13 @@ class StarfaitVM(
         get() = currentOrNullCallFrame ?: error("No current call frame!")
     val currentCallFrameCodeName: String
         get() = gameWAD.strg.getString(currentCallFrame.code.name)
-    val currentInstance: Instance
-        get() = currentOrNullCallFrame?.currentInstance ?: error("No current call frame, so we can't get the current instance!")
+    val currentSelfInstance: Instance
+        get() = currentOrNullCallFrame?.self ?: error("No current call frame, so we can't get the current instance!")
 
     val dsMapPool = mutableListOf<DSMap>()
 
     fun executeCode(code: Code, currentInstance: Instance, arguments: Array<RValue>): RValue? {
-        val callFrame = CallFrame(code, currentInstance, arguments, mutableMapOf(), stack.top)
+        val callFrame = CallFrame(code, currentInstance, null, arguments, mutableMapOf(), stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
 
@@ -85,7 +86,7 @@ class StarfaitVM(
 
             val scriptName = gameWAD.strg.getString(currentCallFrame.code.name)
             if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName)) {
-                print("VM: [$currentCallFrameCodeName] [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
+                print("VM: [$currentCallFrameCodeName] ($start) [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
 
                 for (i in 0 until stack.top) {
                     if (i != 0)
@@ -142,6 +143,8 @@ class StarfaitVM(
                 Op.B -> {
                     reader.position = start + word.branchOffset()
                 }
+                Op.PUSH_ENV -> handlePushEnv(reader, reader.position, word.branchOffset())
+                Op.POP_ENV -> handlePopEnv(reader)
                 Op.ADD -> handleAdd(reader, type1, type2)
                 Op.SUB -> handleSub(reader, type1, type2)
                 Op.MUL -> handleMul(reader, type1, type2)
@@ -186,12 +189,13 @@ class StarfaitVM(
                 // TODO: Use correct instance here!
                 pushVariableFromObject(
                     when {
-                        instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                        instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentSelfInstance)
                         instanceId == SpecialObjectReferenceType.LOCAL -> {
                             // ewww this is a horrible hack
                             stack.push().copyFrom(currentCallFrame.localVariables[varId]!!)
                             return
                         }
+                        instanceId == SpecialObjectReferenceType.OTHER -> currentCallFrame.other!!
                         instanceId == SpecialObjectReferenceType.GLOBAL -> global
                         instanceId >= 0 -> runner.currentRoom.instances.first { it.objectIndex == instanceId }
                         else -> error("Unsupported instance ID $instanceId!")
@@ -314,7 +318,7 @@ class StarfaitVM(
 
                 // TODO: Use correct instance here!
                 val instance = when {
-                    instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentInstance)
+                    instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentSelfInstance)
                     instanceId == SpecialObjectReferenceType.LOCAL -> {
                         // ewww this is a horrible hack
                         val popped = stack.pop()
@@ -447,7 +451,7 @@ class StarfaitVM(
         val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
-            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], currentInstance, arguments.toTypedArray())
+            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], currentSelfInstance, arguments.toTypedArray())
 
             if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
                 println("VM: [$currentCallFrameCodeName] Called script function \"$functionName(${arguments.joinToString(", ")})\"! Result: ${returnValue ?: "undefined"}")
@@ -596,6 +600,60 @@ class StarfaitVM(
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> pushedValue.setInt32(-poppedValue.int)
         }
+    }
+
+    private fun handlePushEnv(reader: StarfaitByteBuffer, ip: Int, branchOffset: Int) {
+        val objectId = stack.pop().int
+
+        val instances = runner.currentRoom.instances.filter { it.objectIndex == objectId }
+
+        if (instances.isEmpty()) {
+            // The branchOffset jumps to the PopEnv IN RELATION to the beginning of the PushEnv
+            // But for this case, we can just jump directly AFTER the PushEnv (we are already +4 because we read the word)
+            // So we don't need to care about handling a "trying to pop a frame that doesn't exist"
+            reader.position += branchOffset
+            return
+        }
+
+        val callFrame = this.currentCallFrame
+
+        val envFrame = EnvironmentFrame(
+            callFrame.self,
+            instances,
+            ip
+        )
+
+        callFrame.environmentFrameStack.add(envFrame)
+        updateCallFrameInstancesToMatchEnvFrame(currentCallFrame, envFrame)
+    }
+
+    private fun handlePopEnv(reader: StarfaitByteBuffer) {
+        val callFrame = this.currentCallFrame
+
+        val pushEnvFrame = callFrame.environmentFrameStack.last()
+        pushEnvFrame.cursor++
+
+        if (pushEnvFrame.cursor >= pushEnvFrame.instances.size) {
+            callFrame.environmentFrameStack.removeLastOrNull()
+            val activeEnvFrame = callFrame.environmentFrameStack.lastOrNull()
+            if (activeEnvFrame != null) {
+                // If we have an active environment frame...
+                updateCallFrameInstancesToMatchEnvFrame(callFrame, activeEnvFrame)
+            } else {
+                callFrame.self = callFrame.initialSelf
+                callFrame.other = callFrame.initialOther
+            }
+            return
+        }
+
+        reader.position = pushEnvFrame.startIp
+
+        updateCallFrameInstancesToMatchEnvFrame(callFrame, pushEnvFrame)
+    }
+
+    private fun updateCallFrameInstancesToMatchEnvFrame(callFrame: CallFrame, environmentFrame: EnvironmentFrame) {
+        callFrame.other = environmentFrame.savedSelf
+        callFrame.self = environmentFrame.instances[environmentFrame.cursor]
     }
 
     /**

@@ -165,7 +165,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val script = vm.gameWAD.scpt.scripts[scriptId]
             val code = vm.gameWAD.code.codes[script.codeIndex]
             val arguments = args.drop(1).map { it.makeIndependent() }.toTypedArray()
-            val scriptResult = vm.executeCode(code, vm.currentInstance, arguments)
+            val scriptResult = vm.executeCode(code, vm.currentSelfInstance, arguments)
             if (scriptResult != null) {
                 return@registerRawFunction result.copyFrom(scriptResult)
             } else {
@@ -216,7 +216,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerIntAsRealFunction instance.id
         }
         registerVoidFunction("instance_destroy", null) { args ->
-            vm.currentInstance.destroyed = true
+            vm.currentSelfInstance.destroyed = true
         }
 
         registerBooleanStubbedFunction("keyboard_check", 1, false)
@@ -267,7 +267,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("event_inherited", 0) { args ->
             // event_inherited is like a script_execute, but for parent events
-            val currentInstance = vm.currentInstance
+            val currentInstance = vm.currentSelfInstance
             println("My parent ID is ${currentInstance.gameObject.parentId}")
             var gameObject = this.runner.gameWAD.objt.objects[currentInstance.gameObject.parentId]
             val events = gameObject.events[EventType.CREATE]

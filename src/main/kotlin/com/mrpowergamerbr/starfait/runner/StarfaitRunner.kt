@@ -86,7 +86,16 @@ class StarfaitRunner(
 
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
-        dispatchEventToAllInstances(EventType.DRAW, EventType.DrawSubType.DRAW)
+
+        forEachInstance { instance ->
+            val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW)
+
+            if (!instanceHasDrawEvent) {
+                // Draw the instance manually
+                println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
+                renderer.drawInstance(instance)
+            }
+        }
 
         val pendingRoom = this.pendingRoom
         if (pendingRoom != null) {

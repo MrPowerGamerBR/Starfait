@@ -1,14 +1,17 @@
 package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.desktop.shaders.MinimalShader
+import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.Renderer
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import com.mrpowergamerbr.starfait.wad.GameWAD
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11.GL_FLOAT
+import org.lwjgl.opengl.GL11.GL_NEAREST
 import org.lwjgl.opengl.GL11.GL_TRIANGLES
 import org.lwjgl.opengl.GL11.glDrawArrays
 import org.lwjgl.opengl.GL13.GL_TEXTURE0
@@ -23,7 +26,7 @@ import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.glBindVertexArray
 import org.lwjgl.opengl.GL30.glGenVertexArrays
 
-class OpenGLRenderer : Renderer {
+class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     lateinit var runner: StarfaitRunner
     val textureManager = TextureManager()
     val shaderManager = ShaderManager()
@@ -37,6 +40,7 @@ class OpenGLRenderer : Renderer {
     var currentIndex = 0
     val vao = glGenVertexArrays()
     val vbo = glGenBuffers()
+    val textures = gameWAD.txtr.textures.map { this.textureManager.loadTexture(it.blob, GL_NEAREST) }
 
     init {
         glBindVertexArray(vao)
@@ -51,6 +55,32 @@ class OpenGLRenderer : Renderer {
         // aTexCoord
         glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
         glEnableVertexAttribArray(1)
+    }
+
+    override fun drawInstance(instance: Instance) {
+        // Only attempt to render instances that DO have a sprite index
+        if (instance.spriteIndex >= 0) {
+            val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
+            val framePointer = sprite.frames[instance.imageIndex.toInt()]
+            val tpag = runner.gameWAD.tpag.entries[framePointer]!!
+
+            println("I ${instance.objectName} want to draw with texture ${tpag.textureIndex} at ${instance.x}, ${instance.y}")
+
+            val texture = textures[tpag.textureIndex.toInt()]
+            drawQuad(
+                instance.x + tpag.targetX.toFloat(),
+                instance.y + tpag.targetY.toFloat(),
+                tpag.sourceX.toFloat() / texture.width,
+                tpag.sourceY.toFloat() / texture.height,
+                (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
+                (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
+                sprite.width.toFloat() - tpag.targetX.toFloat(),
+                sprite.height.toFloat() - tpag.targetY.toFloat(),
+                textures[tpag.textureIndex.toInt()]
+            )
+        } else {
+            println("Instance ${instance.objectName} has no sprite index!")
+        }
     }
 
     fun drawQuad(x: Float, y: Float, u1: Float, v1: Float, u2: Float, v2: Float, width: Float, height: Float, texture: Texture) {

@@ -30,7 +30,12 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         this.alarms[alarm] = time
     }
 
-    fun dispatchEvent(eventType: Int, eventSubtype: Int) {
+    /**
+     * Dispatches an event to this instance
+     *
+     * @return true if the instance had a event liostener for it
+     */
+    fun dispatchEvent(eventType: Int, eventSubtype: Int): Boolean {
         var gameObject = this.runner.gameWAD.objt.objects[this.objectIndex]
         val events = gameObject.events[eventType]
 
@@ -55,5 +60,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
             val code = this.runner.gameWAD.code.codes[action.codeId]
             this.runner.vm.executeCode(code, this, emptyArray())
         }
+
+        return subtypeEvents.isNotEmpty()
     }
 }

@@ -70,15 +70,13 @@ class StarfaitWindow(val vm: StarfaitVM) {
         GL.createCapabilities() // required before any GL call
         SDL_GL_SetSwapInterval(1) // vsync
 
-        val renderer = OpenGLRenderer()
+        val renderer = OpenGLRenderer(vm.gameWAD)
         val runner = StarfaitRunner(vm.gameWAD, vm, renderer)
         renderer.runner = runner
         vm.runner = runner
         runner.start()
 
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
-
-        val textures = vm.gameWAD.txtr.textures.map { renderer.textureManager.loadTexture(it.blob, GL_NEAREST) }
 
         MemoryStack.stackPush().use { stack ->
             val event = SDL_Event.malloc(stack)
@@ -92,32 +90,6 @@ class StarfaitWindow(val vm: StarfaitVM) {
                 runner.step()
 
                 glClear(GL_COLOR_BUFFER_BIT)
-
-                for (instance in runner.currentRoom.instances) {
-                    // Only attempt to render instances that DO have a sprite index
-                    if (instance.spriteIndex >= 0) {
-                        val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
-                        val framePointer = sprite.frames[instance.imageIndex.toInt()]
-                        val tpag = runner.gameWAD.tpag.entries[framePointer]!!
-
-                        println("I ${instance.objectName} want to draw with texture ${tpag.textureIndex} at ${instance.x}, ${instance.y}")
-
-                        val texture = textures[tpag.textureIndex.toInt()]
-                        renderer.drawQuad(
-                            instance.x + tpag.targetX.toFloat(),
-                            instance.y + tpag.targetY.toFloat(),
-                            tpag.sourceX.toFloat() / texture.width,
-                            tpag.sourceY.toFloat() / texture.height,
-                            (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
-                            (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-                            sprite.width.toFloat() - tpag.targetX.toFloat(),
-                            sprite.height.toFloat() - tpag.targetY.toFloat(),
-                            textures[tpag.textureIndex.toInt()]
-                        )
-                    } else {
-                        println("Instance ${instance.objectName} has no sprite index!")
-                    }
-                }
 
                 renderer.flush(runner)
 

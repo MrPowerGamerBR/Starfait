@@ -14,7 +14,7 @@ class Font(
     val glyphs: List<Glyph>
 ) {
     class Glyph(
-        val character: UShort,
+        val character: Char,
         // Relative to the font's texture page entry, not to the texture page itself
         val x: UShort,
         val y: UShort,

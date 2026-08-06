@@ -4,16 +4,22 @@ import com.mrpowergamerbr.starfait.desktop.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.Renderer
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
 import org.joml.Matrix4f
+import org.lwjgl.opengl.GL11.GL_BLEND
 import org.lwjgl.opengl.GL11.GL_FLOAT
 import org.lwjgl.opengl.GL11.GL_NEAREST
+import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
 import org.lwjgl.opengl.GL11.GL_TRIANGLES
+import org.lwjgl.opengl.GL11.glBlendFunc
 import org.lwjgl.opengl.GL11.glDrawArrays
+import org.lwjgl.opengl.GL11.glEnable
 import org.lwjgl.opengl.GL13.GL_TEXTURE0
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW
@@ -43,6 +49,10 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     val textures = gameWAD.txtr.textures.map { this.textureManager.loadTexture(it.blob, GL_NEAREST) }
 
     init {
+        // For transparency in sprites
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
         glBindVertexArray(vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
 
@@ -80,6 +90,35 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             )
         } else {
             println("Instance ${instance.objectName} has no sprite index!")
+        }
+    }
+
+    override fun drawText(font: Font, x: Float, y: Float, text: String) {
+        val tpag = requireNotNull(gameWAD.tpag.entries[font.texturePageEntryPointer])
+        val texture = textures[tpag.textureIndex.toInt()]
+
+        var x = x
+        var y = y
+
+        for (char in text) {
+            // TODO: HashMap lookup for the glyphs would be pretty swell
+            val glyph = font.glyphs.firstOrNull { it.character == char }
+
+            if (glyph != null && tpag != null) {
+                drawQuad(
+                    x,
+                    y,
+                    (tpag.sourceX.toFloat() + glyph.x.toFloat()) / texture.width,
+                    (tpag.sourceY.toFloat() + glyph.y.toFloat()) / texture.height,
+                    (tpag.sourceX.toFloat() + glyph.x.toFloat() + glyph.width.toFloat()) / texture.width,
+                    (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
+                    glyph.width.toFloat(),
+                    glyph.height.toFloat(),
+                    texture
+                )
+
+                x += glyph.width.toFloat()
+            }
         }
     }
 

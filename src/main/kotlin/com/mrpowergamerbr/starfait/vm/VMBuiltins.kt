@@ -4,6 +4,7 @@ import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import kotlin.math.round
 import kotlin.reflect.KMutableProperty1
 
 class VMBuiltins(val vm: StarfaitVM) {
@@ -313,5 +314,21 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             return@registerBooleanFunction false
         }
+
+        registerVoidFunction("draw_text_transformed", 6) { args ->
+            val x = args[0].real
+            val y = args[1].real
+            val string = args[2].refAsString()
+
+            runner.renderer.drawText(runner.gameWAD.font.fonts[2], x.toFloat(), y.toFloat(), string)
+        }
+
+        registerRealFunction("round", 1) { args ->
+            // TODO: delphi round! (bankers rounding)
+            round(args[0].real)
+        }
+
+        registerRealStubFunction("surface_get_width", 1, 320.0)
+        registerRealStubFunction("surface_get_height", 1, 240.0)
     }
 }

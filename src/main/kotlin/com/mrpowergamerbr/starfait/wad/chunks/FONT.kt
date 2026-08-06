@@ -39,7 +39,7 @@ class FONT(
                 for (glyphAddress in glyphAddresses) {
                     reader.position = glyphAddress
 
-                    val character = reader.readUShort()
+                    val character = Char(reader.readUShort())
                     val x = reader.readUShort()
                     val y = reader.readUShort()
                     val width = reader.readUShort()

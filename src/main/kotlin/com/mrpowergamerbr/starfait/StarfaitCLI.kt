@@ -20,7 +20,10 @@ import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.StringPointer
 import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import com.mrpowergamerbr.starfait.wad.Variable
+import java.awt.BasicStroke
+import java.awt.Color
 import java.io.File
+import javax.imageio.ImageIO
 import kotlin.reflect.KProperty1
 
 class StarfaitCLI : CliktCommand() {
@@ -36,6 +39,7 @@ class StarfaitCLI : CliktCommand() {
     val printFunctions by option()
     val printTexturePages by option()
     val printSprites by option()
+    val dumpTiles by option()
     val traceOpcodes by option()
     val traceFunctionCalls by option()
     val traceAlarms by option()
@@ -110,6 +114,46 @@ class StarfaitCLI : CliktCommand() {
 
         if (printSprites != null) {
             dump(gameWAD, "Sprite", gameWAD.sprt.sprites, Sprite::name, printSprites!!)
+            return
+        }
+
+        if (dumpTiles != null) {
+            val outputFolder = File(dumpTiles!!)
+            outputFolder.mkdirs()
+
+            // TODO: Allow customizing this somehow?
+            val room = gameWAD.room.rooms.first { gameWAD.strg.getString(it.name) == "room_area1" }
+
+            for (tile in room.tiles) {
+                val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
+                val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+                val txtr = gameWAD.txtr.textures[tpag.textureIndex.toInt()]
+                // TODO: We could reuse the blob
+                val txtrBlob = ImageIO.read(txtr.blob.inputStream())
+
+                try {
+                    println(tile.sourceX.toString() + ", " + tile.sourceY)
+                    // val graphics2d = txtrBlob.createGraphics()
+
+                    val entryX = tpag.sourceX.toInt() + tile.sourceX
+                    val entryY = tpag.sourceY.toInt() + tile.sourceY
+                    val entryWidth = tile.width
+                    val entryHeight = tile.height
+
+                    // graphics2d.color = Color.RED
+                    // graphics2d.stroke = BasicStroke(3f)
+                    // graphics2d.drawRect(entryX, entryY, entryWidth, entryHeight)
+
+                    val tileImage = txtrBlob.getSubimage(
+                        entryX,
+                        entryY,
+                        entryWidth,
+                        entryHeight
+                    )
+
+                    ImageIO.write(tileImage, "png", File(outputFolder, "${gameWAD.strg.getString(room.name)}_${tile.x}_${tile.y}.png"))
+                } catch (e: Exception) {}
+            }
             return
         }
 

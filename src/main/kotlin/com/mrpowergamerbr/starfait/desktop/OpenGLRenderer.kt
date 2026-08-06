@@ -3,6 +3,7 @@ package com.mrpowergamerbr.starfait.desktop
 import com.mrpowergamerbr.starfait.desktop.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.Renderer
+import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.GameWAD
@@ -118,6 +119,29 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
             width - tpag.targetX.toFloat(),
             height - tpag.targetY.toFloat(),
+            textures[tpag.textureIndex.toInt()]
+        )
+    }
+
+    override fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile) {
+        val texture = textures[texturePageEntry.textureIndex.toInt()]
+
+        val tpag = texturePageEntry
+
+        val entryX = tpag.sourceX.toInt() + tile.sourceX
+        val entryY = tpag.sourceY.toInt() + tile.sourceY
+        val entryWidth = tile.width
+        val entryHeight = tile.height
+
+        drawQuad(
+            tile.x + tpag.targetX.toFloat(),
+            tile.y + tpag.targetY.toFloat(),
+            entryX.toFloat() / texture.width,
+            entryY.toFloat() / texture.height,
+            (entryX + entryWidth.toFloat()) / texture.width,
+            (entryY + entryHeight.toFloat()) / texture.height,
+            tile.width.toFloat(),
+            tile.height.toFloat(),
             textures[tpag.textureIndex.toInt()]
         )
     }

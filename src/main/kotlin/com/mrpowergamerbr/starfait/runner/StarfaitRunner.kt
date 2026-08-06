@@ -70,6 +70,23 @@ class StarfaitRunner(
             )
         }
 
+        for (tile in room.tiles) {
+            newRoom.tiles.add(
+                RunnerRoom.RunnerTile(
+                    tile.x,
+                    tile.y,
+                    tile.backgroundIndex,
+                    tile.sourceX,
+                    tile.sourceY,
+                    tile.width,
+                    tile.height,
+                    tile.depth,
+                    tile.id,
+                    tile.scaleX
+                )
+            )
+        }
+
         // TODO: This sucks, maybe make it nullable?
         if (this::currentRoom.isInitialized) {
             val previousRoom = this.currentRoom
@@ -123,6 +140,15 @@ class StarfaitRunner(
                 currentRoom.width.toFloat(),
                 currentRoom.height.toFloat()
             )
+        }
+
+        // TODO: I'm pretty sure we need to interleave instances and tiles based on the depth
+        //  But for now, let's just render all tiles behind instances and hope for the best
+        for (tile in currentRoom.tiles) {
+            val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
+            val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+
+            renderer.drawTile(tpag, tile)
         }
 
         forEachInstanceByDepth { instance ->

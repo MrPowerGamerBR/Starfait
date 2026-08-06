@@ -10,6 +10,7 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
     val instances = mutableListOf<Instance>()
     val views = mutableListOf<RunnerView>()
     val backgrounds = mutableListOf<RunnerBackground>()
+    val tiles = mutableListOf<RunnerTile>()
 
     fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
         this.x = instance.x.toFloat()
@@ -62,5 +63,18 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         var x: Int,
         var y: Int,
         var backgroundIndex: Int
+    )
+
+    class RunnerTile(
+        var x: Int,
+        var y: Int,
+        var backgroundIndex: Int,
+        var sourceX: Int,
+        var sourceY: Int,
+        var width: Int,
+        var height: Int,
+        var depth: Int,
+        var id: Int,
+        var scaleX: Float,
     )
 }

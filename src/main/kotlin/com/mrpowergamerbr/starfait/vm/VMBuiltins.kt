@@ -180,6 +180,12 @@ class VMBuiltins(val vm: StarfaitVM) {
                 instance.visible = value.bool
             }
         )
+        registerReadOnlyInstanceVariable(
+            "object_index",
+            { instance, source, _ ->
+                source.setReal(instance.objectIndex.toDouble())
+            }
+        )
 
         // TODO: Those should be writeable
         registerReadOnlyVariable("room_width") { _, result, _ -> result.setInt32(runner.currentRoom.width) }

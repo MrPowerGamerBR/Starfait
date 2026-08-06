@@ -36,11 +36,19 @@ class VMBuiltins(val vm: StarfaitVM) {
     fun registerFloatAsRealFunction(name: String, parameterCount: Int?, handler: FloatAsRealFunction) = registerRawFunction(name, parameterCount) { args, result -> result.setReal(handler.invoke(args).toDouble()) }
 
     fun warnFunctionStub(name: String) {
-        println("VM: [${vm.currentCallFrameCodeName}] Stubbed function \"$name\"!")
+        val dedupKey = "${vm.currentCallFrameCodeName}#${name}"
+        if (dedupKey !in vm.loggedStubbedFunctions) {
+            println("VM: [${vm.currentCallFrameCodeName}] Stubbed function \"$name\"!")
+            vm.loggedStubbedFunctions.add(dedupKey)
+        }
     }
 
     fun warnVariableStub(name: String) {
-        println("VM: [${vm.currentCallFrameCodeName}] Stubbed built-in variable \"$name\"!")
+        val dedupKey = "${vm.currentCallFrameCodeName}#${name}"
+        if (dedupKey !in vm.loggedStubbedVariables) {
+            println("VM: [${vm.currentCallFrameCodeName}] Stubbed built-in variable \"$name\"!")
+            vm.loggedStubbedVariables.add(dedupKey)
+        }
     }
 
     fun registerBooleanStubFunction(name: String, parameterCount: Int?, value: Boolean) = registerBooleanFunction(name, parameterCount) { _ -> warnFunctionStub(name); value }

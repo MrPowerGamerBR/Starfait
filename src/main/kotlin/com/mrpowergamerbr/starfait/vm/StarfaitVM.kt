@@ -27,6 +27,11 @@ class StarfaitVM(
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     lateinit var regularVariableNames: Array<String>
     val callFrameStack = ArrayDeque<CallFrame>()
+    
+    // "codeName#functionName"
+    val loggedUnknownFunctions = mutableSetOf<String>()
+    val loggedStubbedFunctions = mutableSetOf<String>()
+    val loggedStubbedVariables = mutableSetOf<String>()
 
     private var currentOrNullCallFrame: CallFrame? = null
 
@@ -460,7 +465,11 @@ class StarfaitVM(
             return
         }
 
-        println("VM: [${gameWAD.strg.getString(currentCallFrame.code.name)}] Unknown function! \"${gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)}(${arguments.joinToString { it.toStringTyped() }})\"")
+        val dedupKey = "$currentCallFrameCodeName#$functionName"
+        if (dedupKey !in loggedUnknownFunctions) {
+            println("VM: [$currentCallFrameCodeName] Unknown function! \"$functionName(${arguments.joinToString { it.toStringTyped() }})\"")
+            loggedUnknownFunctions.add(dedupKey)
+        }
 
         // As a fallback, we'll push undefined to the stack if the function does not exist
         val result = stack.push()

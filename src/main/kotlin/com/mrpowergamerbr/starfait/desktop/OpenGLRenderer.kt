@@ -133,9 +133,20 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         }
     }
 
-    fun drawQuad(x: Float, y: Float, u1: Float, v1: Float, u2: Float, v2: Float, width: Float, height: Float, texture: Texture) {
-        if (this.activeBatchTexture != texture)
+    fun flushIfNeeded(texture: Texture) {
+        if (this.activeBatchTexture != texture) {
             flush(runner)
+            return
+        }
+
+        if (this.currentIndex == batch.size) {
+            flush(runner)
+            return
+        }
+    }
+
+    fun drawQuad(x: Float, y: Float, u1: Float, v1: Float, u2: Float, v2: Float, width: Float, height: Float, texture: Texture) {
+        flushIfNeeded(texture)
 
         // top-left
         batch[currentIndex++] = x; batch[currentIndex++] = y;

@@ -20,6 +20,7 @@ class Room(
     val physicsWorldGravityX: Float,
     val physicsWorldGravityY: Float,
     val physicsWorldPixelsToMeters: Float,
+    @DumpNested
     val backgrounds: List<Background>,
     @DumpNested
     val views: List<View>,

@@ -2,12 +2,14 @@ package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.Room
+import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
 
 class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
     var width = 0
     var height = 0
     val instances = mutableListOf<Instance>()
     val views = mutableListOf<RunnerView>()
+    val backgrounds = mutableListOf<RunnerBackground>()
 
     fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
         this.x = instance.x.toFloat()
@@ -53,5 +55,12 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         var portHeight: Int,
         var visible: Boolean,
         var objectId: Int,
+    )
+
+    class RunnerBackground(
+        var enabled: Boolean,
+        var x: Int,
+        var y: Int,
+        var backgroundIndex: Int
     )
 }

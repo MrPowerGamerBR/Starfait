@@ -59,6 +59,17 @@ class StarfaitRunner(
             }
         }
 
+        for (background in room.backgrounds) {
+            newRoom.backgrounds.add(
+                RunnerRoom.RunnerBackground(
+                    background.enabled,
+                    background.x,
+                    background.y,
+                    background.backgroundIndex
+                )
+            )
+        }
+
         // TODO: This sucks, maybe make it nullable?
         if (this::currentRoom.isInitialized) {
             val previousRoom = this.currentRoom
@@ -99,6 +110,20 @@ class StarfaitRunner(
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
 
         currentRoom.updateViews()
+
+        for (background in currentRoom.backgrounds) {
+            if (!background.enabled)
+                continue
+
+            val background = gameWAD.bgnd.backgrounds[background.backgroundIndex]
+            val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+
+            renderer.drawBackground(
+                tpag,
+                currentRoom.width.toFloat(),
+                currentRoom.height.toFloat()
+            )
+        }
 
         forEachInstanceByDepth { instance ->
             val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW)

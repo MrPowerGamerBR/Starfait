@@ -7,6 +7,7 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Sprite
+import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
@@ -100,6 +101,23 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
             sprite.width.toFloat() - tpag.targetX.toFloat(),
             sprite.height.toFloat() - tpag.targetY.toFloat(),
+            textures[tpag.textureIndex.toInt()]
+        )
+    }
+
+    override fun drawBackground(texturePageEntry: TexturePageEntry, width: Float, height: Float) {
+        val texture = textures[texturePageEntry.textureIndex.toInt()]
+
+        val tpag = texturePageEntry
+        drawQuad(
+            tpag.targetX.toFloat(),
+            tpag.targetY.toFloat(),
+            tpag.sourceX.toFloat() / texture.width,
+            tpag.sourceY.toFloat() / texture.height,
+            (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
+            (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
+            width - tpag.targetX.toFloat(),
+            height - tpag.targetY.toFloat(),
             textures[tpag.textureIndex.toInt()]
         )
     }

@@ -145,8 +145,8 @@ class VMBuiltins(val vm: StarfaitVM) {
                 instance.visible = value.bool
             }
         )
-        // TODO: Those should be writeable
 
+        // TODO: Those should be writeable
         registerReadOnlyVariable("room_width") { _, result, _ -> result.setInt32(runner.currentRoom.width) }
         registerReadOnlyVariable("room_height") { _, result, _ -> result.setInt32(runner.currentRoom.height) }
 
@@ -158,6 +158,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealStubbedVariable("application_surface", -1.0)
 
         registerReadOnlyVariable("current_time") { _, result, _ -> result.setReal((System.currentTimeMillis() - runner.startedAt).toDouble()) }
+
+        registerRealStubbedVariable("sprite_height", 240.0)
+        registerRealStubbedVariable("sprite_width", 240.0)
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerRawFunction("script_execute", null) { args, result ->
@@ -177,7 +180,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerStringFunction("string", 1) { args -> args[0].toGMLString() }
         registerRealFunction("real", 1) { args -> args[0].real }
 
-        // TODO: Add some stub warnings?
         registerBooleanStubbedFunction("steam_initialised", 0, true)
         registerBooleanStubbedFunction("steam_file_exists", 1, false)
         registerBooleanStubbedFunction("file_exists", 1, false)
@@ -219,8 +221,8 @@ class VMBuiltins(val vm: StarfaitVM) {
             vm.currentSelfInstance.destroyed = true
         }
 
-        registerBooleanStubbedFunction("keyboard_check", 1, false)
-        registerBooleanStubbedFunction("keyboard_check_pressed", 1, false)
+        registerBooleanStubbedFunction("keyboard_check", 1, true)
+        registerBooleanStubbedFunction("keyboard_check_pressed", 1, true)
         registerBooleanStubbedFunction("keyboard_check_released", 1, false)
         registerBooleanStubbedFunction("joystick_exists", 1, false)
         registerBooleanStubbedFunction("keyboard_check_direct", 1, false)
@@ -352,9 +354,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRealStubbedFunction("surface_get_width", 1, 320.0)
         registerRealStubbedFunction("surface_get_height", 1, 240.0)
-
-        registerRealStubbedVariable("sprite_height", 240.0)
-        registerRealStubbedVariable("sprite_width", 240.0)
+        registerBooleanStubbedFunction("window_get_fullscreen", 0, false)
 
         registerVoidFunction("draw_sprite", 4) { args ->
             runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())

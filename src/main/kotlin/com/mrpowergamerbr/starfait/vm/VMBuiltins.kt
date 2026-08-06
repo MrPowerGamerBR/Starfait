@@ -4,6 +4,7 @@ import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
+import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import kotlin.math.absoluteValue
 import kotlin.math.ceil
@@ -121,6 +122,32 @@ class VMBuiltins(val vm: StarfaitVM) {
         )
     }
 
+    fun registerViewVariable(name: String, readHandler: (Instance?, RunnerRoom.RunnerView, RValue, Int?) -> (Unit), writeHandler: (Instance?, RunnerRoom.RunnerView, RValue, Int?) -> (Unit)) {
+        registerVariable(
+            name,
+            { instance, source, arrayIndex ->
+                val view = runner.currentRoom.views[arrayIndex!!]
+                readHandler(instance, view, source, arrayIndex)
+            },
+            { instance, value, arrayIndex ->
+                val view = runner.currentRoom.views[arrayIndex!!]
+                writeHandler(instance, view, value, arrayIndex)
+            }
+        )
+    }
+
+    fun registerViewIntVariable(name: String, property: KMutableProperty1<RunnerRoom.RunnerView, Int>) {
+        registerViewVariable(
+            name,
+            { _, view, source, _ ->
+                source.setReal(property.get(view).toDouble())
+            },
+            { _, view, value, _ ->
+                property.set(view, value.real.toInt())
+            }
+        )
+    }
+
     init {
         // ===[ BUILTIN VARIABLES ]===
         registerReadOnlyVariable("os_type") { _, result, arrayIndex -> result.setReal(runner.operatingSystem.id.toDouble()) }
@@ -192,51 +219,13 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerReadOnlyVariable("room_height") { _, result, _ -> result.setInt32(runner.currentRoom.height) }
 
         registerRealStubbedVariable("view_current", 0.0) // Should be 0 outside of draw events
-        registerVariable(
-            "view_xview",
-            { _, result, arrayIndex ->
-                result.setReal(runner.currentRoom.views[arrayIndex!!].viewX.toDouble())
-            },
-            { _, value, arrayIndex ->
-                runner.currentRoom.views[arrayIndex!!].viewX = value.real.toInt()
-            }
-        )
-        registerVariable(
-            "view_yview",
-            { _, result, arrayIndex ->
-                result.setReal(runner.currentRoom.views[arrayIndex!!].viewY.toDouble())
-            },
-            { _, value, arrayIndex ->
-                runner.currentRoom.views[arrayIndex!!].viewY = value.real.toInt()
-            }
-        )
-        registerVariable(
-            "view_wview",
-            { _, result, arrayIndex ->
-                result.setReal(runner.currentRoom.views[arrayIndex!!].viewWidth.toDouble())
-            },
-            { _, value, arrayIndex ->
-                runner.currentRoom.views[arrayIndex!!].viewWidth = value.real.toInt()
-            }
-        )
-        registerVariable(
-            "view_hview",
-            { _, result, arrayIndex ->
-                result.setReal(runner.currentRoom.views[arrayIndex!!].viewHeight.toDouble())
-            },
-            { _, value, arrayIndex ->
-                runner.currentRoom.views[arrayIndex!!].viewHeight = value.real.toInt()
-            }
-        )
-        registerVariable(
-            "view_object",
-            { _, result, arrayIndex ->
-                result.setReal(runner.currentRoom.views[arrayIndex!!].objectId.toDouble())
-            },
-            { _, value, arrayIndex ->
-                runner.currentRoom.views[arrayIndex!!].objectId = value.real.toInt()
-            }
-        )
+
+        registerViewIntVariable("view_xview", RunnerRoom.RunnerView::viewX)
+        registerViewIntVariable("view_yview", RunnerRoom.RunnerView::viewY)
+        registerViewIntVariable("view_wview", RunnerRoom.RunnerView::viewWidth)
+        registerViewIntVariable("view_hview", RunnerRoom.RunnerView::viewHeight)
+        registerViewIntVariable("view_object", RunnerRoom.RunnerView::objectId)
+
         registerRealStubbedVariable("application_surface", -1.0)
 
         registerReadOnlyVariable("current_time") { _, result, _ -> result.setReal((System.currentTimeMillis() - runner.startedAt).toDouble()) }

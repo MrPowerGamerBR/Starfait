@@ -275,8 +275,12 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerBooleanFunction runner.keyboard.keyReleased[keyId]
         }
 
+        registerBooleanFunction("keyboard_check_direct", 1) { args ->
+            val keyId = args[0].int
+            return@registerBooleanFunction runner.keyboard.keyHeld[keyId]
+        }
+
         registerBooleanStubbedFunction("joystick_exists", 1, false)
-        registerBooleanStubbedFunction("keyboard_check_direct", 1, false)
 
         registerIntAsRealFunction("ds_map_create", 0) { args ->
             val newIndex = vm.dsMapPool.size

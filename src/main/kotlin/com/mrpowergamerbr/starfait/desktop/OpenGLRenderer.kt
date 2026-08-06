@@ -81,7 +81,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                 instance.y
             )
         } else {
-            println("Instance ${instance.objectName} has no sprite index!")
+            // println("Instance ${instance.objectName} has no sprite index!")
         }
     }
 

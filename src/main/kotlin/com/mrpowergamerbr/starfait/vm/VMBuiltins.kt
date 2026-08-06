@@ -4,6 +4,7 @@ import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import kotlin.math.absoluteValue
 import kotlin.math.round
 import kotlin.reflect.KMutableProperty1
 
@@ -40,6 +41,14 @@ class VMBuiltins(val vm: StarfaitVM) {
         val dedupKey = "${vm.currentCallFrameCodeName}#${name}"
         if (dedupKey !in vm.loggedStubbedFunctions) {
             println("VM: [${vm.currentCallFrameCodeName}] Stubbed function \"$name\"!")
+            vm.loggedStubbedFunctions.add(dedupKey)
+        }
+    }
+
+    fun warnFunctionSemiStub(name: String) {
+        val dedupKey = "${vm.currentCallFrameCodeName}#${name}"
+        if (dedupKey !in vm.loggedStubbedFunctions) {
+            println("VM: [${vm.currentCallFrameCodeName}] Semi-Stubbed function \"$name\"!")
             vm.loggedStubbedFunctions.add(dedupKey)
         }
     }
@@ -403,10 +412,17 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())
         }
 
+        registerVoidFunction("draw_sprite_ext", 9) { args ->
+            warnFunctionSemiStub("draw_sprite_ext")
+            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())
+        }
+
         registerStringFunction("chr", 1) { args -> args[0].int.toChar().toString() }
         registerIntAsRealFunction("ord", 1) { args -> args[0].refAsString()[0].code }
 
         registerRealStubbedFunction("collision_point", 5, SpecialObjectReferenceType.NOONE.toDouble())
         registerRealStubbedFunction("collision_rectangle", 7, SpecialObjectReferenceType.NOONE.toDouble())
+
+        registerRealFunction("abs", 1) { args -> args[0].real.absoluteValue }
     }
 }

@@ -100,7 +100,7 @@ class StarfaitRunner(
 
             if (!instanceHasDrawEvent) {
                 // Draw the instance manually
-                println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
+                // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
                 renderer.drawInstance(instance)
             }
         }

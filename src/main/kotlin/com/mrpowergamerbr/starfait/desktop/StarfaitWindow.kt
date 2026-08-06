@@ -96,7 +96,7 @@ class StarfaitWindow(val vm: StarfaitVM) {
                     // Only attempt to render instances that DO have a sprite index
                     if (instance.spriteIndex >= 0) {
                         val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
-                        val framePointer = sprite.frames.first()
+                        val framePointer = sprite.frames[instance.imageIndex.toInt()]
                         val tpag = runner.gameWAD.tpag.entries[framePointer]!!
 
                         println("I ${instance.objectName} want to draw with texture ${tpag.textureIndex} at ${instance.x}, ${instance.y}")

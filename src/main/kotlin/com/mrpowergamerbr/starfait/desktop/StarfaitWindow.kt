@@ -87,9 +87,9 @@ class StarfaitWindow(val vm: StarfaitVM) {
                         running = false
                 }
 
-                runner.step()
-
                 glClear(GL_COLOR_BUFFER_BIT)
+
+                runner.step()
 
                 renderer.flush(runner)
 

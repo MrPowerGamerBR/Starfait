@@ -12,12 +12,14 @@ import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11.GL_BLEND
+import org.lwjgl.opengl.GL11.GL_DEPTH_TEST
 import org.lwjgl.opengl.GL11.GL_FLOAT
 import org.lwjgl.opengl.GL11.GL_NEAREST
 import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
 import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
 import org.lwjgl.opengl.GL11.GL_TRIANGLES
 import org.lwjgl.opengl.GL11.glBlendFunc
+import org.lwjgl.opengl.GL11.glDisable
 import org.lwjgl.opengl.GL11.glDrawArrays
 import org.lwjgl.opengl.GL11.glEnable
 import org.lwjgl.opengl.GL13.GL_TEXTURE0
@@ -104,7 +106,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             // TODO: HashMap lookup for the glyphs would be pretty swell
             val glyph = font.glyphs.firstOrNull { it.character == char }
 
-            if (glyph != null && tpag != null) {
+            if (glyph != null) {
                 drawQuad(
                     x,
                     y,
@@ -157,7 +159,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glBufferSubData(GL_ARRAY_BUFFER, 0, batch)
 
-        // This is wrong
+        // This is wrong, we should run ALL the draw events for EACH view
         val firstVisibleView = runner.currentRoom.views.firstOrNull { it.visible }
 
         if (firstVisibleView != null)

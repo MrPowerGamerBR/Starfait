@@ -87,13 +87,13 @@ class StarfaitRunner(
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
 
-        forEachInstance { instance ->
+        forEachInstanceByDepth { instance ->
             val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW)
 
             if (!instanceHasDrawEvent) {
                 // Draw the instance manually
                 println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
-                // renderer.drawInstance(instance)
+                renderer.drawInstance(instance)
             }
         }
 
@@ -113,6 +113,23 @@ class StarfaitRunner(
     inline fun forEachInstance(crossinline action: (Instance) -> Unit) {
         // reversed creates a copy, so we don't need to worry about ConcurrentModificationException here
         for (instance in this.currentRoom.instances.reversed()) {
+            if (instance.destroyed)
+                continue
+
+            action(instance)
+        }
+    }
+
+    inline fun forEachInstanceByDepth(crossinline action: (Instance) -> Unit) {
+        // sortedBy creates a copy, so we don't need to worry about ConcurrentModificationException here
+        //
+        // "In GameMaker the lower the depth value for an instance, the "closer to the camera" that instance will be drawn,
+        // while a higher depth value means that the instance will be drawn "further away from the camera",
+        // i.e.: -1000 is drawn on top of -100, which is drawn on top of 0, and so on."
+        //
+        // TODO: Technically a instance CAN BE INSERTED and it WILL BE PROCESSED HERE as long as it has a higher depth (that is, negative depth)
+        // TODO: What happens with instances of the same depth? When testing it in GameMaker, it seems that it is based on the instance creation order (older instances on top?)
+        for (instance in this.currentRoom.instances.sortedByDescending { it.depth }) {
             if (instance.destroyed)
                 continue
 

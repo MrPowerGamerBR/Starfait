@@ -21,6 +21,7 @@ class StarfaitRunner(
     val operatingSystem = YYOperatingSystem.WINDOWS
     var currentInstanceId = BASE_INSTANCE_ID
     var pendingRoom: PendingRoom? = null
+    val startedAt = System.currentTimeMillis()
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()

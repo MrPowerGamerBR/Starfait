@@ -157,6 +157,8 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealStubbedVariable("view_hview", 480.0)
         registerRealStubbedVariable("application_surface", -1.0)
 
+        registerReadOnlyVariable("current_time") { _, result, _ -> result.setReal((System.currentTimeMillis() - runner.startedAt).toDouble()) }
+
         // ===[ BUILTIN FUNCTIONS ]===
         registerRawFunction("script_execute", null) { args, result ->
             val scriptId = args[0].int
@@ -217,7 +219,10 @@ class VMBuiltins(val vm: StarfaitVM) {
             vm.currentInstance.destroyed = true
         }
 
-        registerBooleanStubbedFunction("keyboard_check_pressed", null, false)
+        registerBooleanStubbedFunction("keyboard_check", 1, false)
+        registerBooleanStubbedFunction("keyboard_check_pressed", 1, false)
+        registerBooleanStubbedFunction("keyboard_check_released", 1, false)
+        registerBooleanStubbedFunction("joystick_exists", 1, false)
 
         registerIntAsRealFunction("ds_map_create", 0) { args ->
             val newIndex = vm.dsMapPool.size

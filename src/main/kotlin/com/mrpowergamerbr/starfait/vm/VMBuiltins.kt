@@ -208,6 +208,9 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             return@registerIntAsRealFunction instance.id
         }
+        registerVoidFunction("instance_destroy", null) { args ->
+            vm.currentInstance.destroyed = true
+        }
 
         registerBooleanStubFunction("keyboard_check_pressed", null, false)
 
@@ -323,6 +326,14 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.renderer.drawText(runner.gameWAD.font.fonts[2], x.toFloat(), y.toFloat(), string)
         }
 
+        registerVoidFunction("draw_text", 3) { args ->
+            val x = args[0].real
+            val y = args[1].real
+            val string = args[2].refAsString()
+
+            runner.renderer.drawText(runner.gameWAD.font.fonts[2], x.toFloat(), y.toFloat(), string)
+        }
+
         registerRealFunction("round", 1) { args ->
             // TODO: delphi round! (bankers rounding)
             round(args[0].real)
@@ -330,5 +341,12 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRealStubFunction("surface_get_width", 1, 320.0)
         registerRealStubFunction("surface_get_height", 1, 240.0)
+
+        registerRealStubbedVariable("sprite_height", 240.0)
+        registerRealStubbedVariable("sprite_width", 240.0)
+
+        registerVoidFunction("draw_sprite", 4) { args ->
+            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.mrpowergamerbr.starfait.runner.Renderer
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import com.mrpowergamerbr.starfait.wad.Sprite
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
@@ -73,26 +74,34 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         // Only attempt to render instances that DO have a sprite index
         if (instance.spriteIndex >= 0) {
             val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
-            val framePointer = sprite.frames[instance.imageIndex.toInt()]
-            val tpag = runner.gameWAD.tpag.entries[framePointer]!!
-
-            println("I ${instance.objectName} want to draw with texture ${tpag.textureIndex} at ${instance.x}, ${instance.y}")
-
-            val texture = textures[tpag.textureIndex.toInt()]
-            drawQuad(
-                instance.x + tpag.targetX.toFloat(),
-                instance.y + tpag.targetY.toFloat(),
-                tpag.sourceX.toFloat() / texture.width,
-                tpag.sourceY.toFloat() / texture.height,
-                (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
-                (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-                sprite.width.toFloat() - tpag.targetX.toFloat(),
-                sprite.height.toFloat() - tpag.targetY.toFloat(),
-                textures[tpag.textureIndex.toInt()]
+            drawSprite(
+                sprite,
+                instance.imageIndex.toInt(),
+                instance.x,
+                instance.y
             )
         } else {
             println("Instance ${instance.objectName} has no sprite index!")
         }
+    }
+
+    override fun drawSprite(sprite: Sprite, subimg: Int, x: Float, y: Float) {
+        // Only attempt to render instances that DO have a sprite index
+        val framePointer = sprite.frames[subimg]
+        val tpag = runner.gameWAD.tpag.entries[framePointer]!!
+
+        val texture = textures[tpag.textureIndex.toInt()]
+        drawQuad(
+            x + tpag.targetX.toFloat(),
+            y + tpag.targetY.toFloat(),
+            tpag.sourceX.toFloat() / texture.width,
+            tpag.sourceY.toFloat() / texture.height,
+            (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
+            (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
+            sprite.width.toFloat() - tpag.targetX.toFloat(),
+            sprite.height.toFloat() - tpag.targetY.toFloat(),
+            textures[tpag.textureIndex.toInt()]
+        )
     }
 
     override fun drawText(font: Font, x: Float, y: Float, text: String) {

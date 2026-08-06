@@ -1,11 +1,16 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.desktop.OpenGLRenderer
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 
-class StarfaitRunner(val gameWAD: GameWAD, val vm: StarfaitVM) {
+class StarfaitRunner(
+    val gameWAD: GameWAD,
+    val vm: StarfaitVM,
+    val renderer: Renderer
+) {
     companion object {
         // You can check that by creating a room with a single instance where the instance's code is just "show_debug_message(id)"
         const val BASE_INSTANCE_ID = 100_000

@@ -109,6 +109,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("image_alpha", Instance::imageAlpha)
         registerInstanceRealVariable("image_index", Instance::imageIndex)
         registerInstanceRealVariable("sprite_index", Instance::spriteIndex)
+        registerInstanceRealVariable("depth", Instance::depth)
         repeat(16) {
             registerVariable(
                 "argument$it",

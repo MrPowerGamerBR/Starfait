@@ -373,5 +373,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVoidFunction("draw_sprite", 4) { args ->
             runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())
         }
+
+        registerStringFunction("chr", 1) { args -> args[0].int.toChar().toString() }
     }
 }

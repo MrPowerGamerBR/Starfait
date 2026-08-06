@@ -375,5 +375,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerStringFunction("chr", 1) { args -> args[0].int.toChar().toString() }
+        registerIntAsRealFunction("ord", 1) { args -> args[0].refAsString()[0].code }
     }
 }

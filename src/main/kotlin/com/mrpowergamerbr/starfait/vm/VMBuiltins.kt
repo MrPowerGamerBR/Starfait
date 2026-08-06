@@ -367,6 +367,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealStubbedFunction("surface_get_width", 1, 320.0)
         registerRealStubbedFunction("surface_get_height", 1, 240.0)
         registerBooleanStubbedFunction("window_get_fullscreen", 0, false)
+        registerBooleanStubbedFunction("ini_section_exists", 1, false)
 
         registerVoidFunction("draw_sprite", 4) { args ->
             runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())

@@ -21,6 +21,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var pathPosition = 0.0f
     var hspeed = 0.0f
     var vspeed = 0.0f
+    var friction = 0.0f
     var persistent = false
     var solid = false
     var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }

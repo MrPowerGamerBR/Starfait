@@ -65,7 +65,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
         for (action in subtypeEvents) {
             val code = this.runner.gameWAD.code.codes[action.codeId]
-            this.runner.vm.executeCode(code, this, emptyArray())
+            this.runner.vm.executeCode(code, this, gameObject, eventType, eventSubtype, emptyArray())
         }
 
         return subtypeEvents.isNotEmpty()

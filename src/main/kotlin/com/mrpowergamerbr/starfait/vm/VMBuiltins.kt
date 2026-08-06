@@ -222,11 +222,12 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerRawFunction("script_execute", null) { args, result ->
+            val callFrame = vm.currentCallFrame
             val scriptId = args[0].int
             val script = vm.gameWAD.scpt.scripts[scriptId]
             val code = vm.gameWAD.code.codes[script.codeIndex]
             val arguments = args.drop(1).map { it.makeIndependent() }.toTypedArray()
-            val scriptResult = vm.executeCode(code, vm.currentSelfInstance, arguments)
+            val scriptResult = vm.executeCode(code, vm.currentSelfInstance, callFrame.eventObject, callFrame.eventType, callFrame.eventSubtype, arguments)
             if (scriptResult != null) {
                 return@registerRawFunction result.copyFrom(scriptResult)
             } else {
@@ -346,12 +347,13 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVoidFunction("event_inherited", 0) { args ->
             // event_inherited is like a script_execute, but for parent events
             val currentInstance = vm.currentSelfInstance
-            println("My parent ID is ${currentInstance.gameObject.parentId}")
-            var gameObject = this.runner.gameWAD.objt.objects[currentInstance.gameObject.parentId]
-            val events = gameObject.events[EventType.CREATE]
+            val callFrame = vm.currentCallFrame
 
+            var gameObject = this.runner.gameWAD.objt.objects[callFrame.eventObject.parentId]
+
+            val events = gameObject.events[callFrame.eventType]
             var subtypeEvents = events
-                .filter { it.subtype == 0 }
+                .filter { it.subtype == callFrame.eventSubtype }
                 .flatMap { it.actions }
 
             // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
@@ -361,15 +363,16 @@ class VMBuiltins(val vm: StarfaitVM) {
                     break
 
                 gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
-                subtypeEvents = gameObject.events[EventType.CREATE]
-                    .filter { it.subtype == 0 }
+                subtypeEvents = gameObject.events[callFrame.eventType]
+                    .filter { it.subtype == callFrame.eventSubtype }
                     .flatMap { it.actions }
                 attempts++
             }
 
             for (action in subtypeEvents) {
                 val code = this.runner.gameWAD.code.codes[action.codeId]
-                this.runner.vm.executeCode(code, currentInstance, emptyArray())
+                println("Executing code ${this.runner.gameWAD.strg.getString(code.name)}")
+                this.runner.vm.executeCode(code, currentInstance, gameObject, callFrame.eventType, callFrame.eventSubtype, emptyArray())
             }
         }
 

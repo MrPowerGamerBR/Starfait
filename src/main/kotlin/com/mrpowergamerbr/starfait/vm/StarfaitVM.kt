@@ -6,6 +6,7 @@ import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.ObjectBase
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Code
+import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Variable
 import java.nio.ByteBuffer
@@ -45,8 +46,15 @@ class StarfaitVM(
 
     val dsMapPool = mutableListOf<DSMap>()
 
-    fun executeCode(code: Code, currentInstance: Instance, arguments: Array<RValue>): RValue? {
-        val callFrame = CallFrame(code, currentInstance, null, arguments, mutableMapOf(), stack.top)
+    fun executeCode(
+        code: Code,
+        currentInstance: Instance,
+        eventObject: GameObject,
+        eventType: Int,
+        eventSubtype: Int,
+        arguments: Array<RValue>
+    ): RValue? {
+        val callFrame = CallFrame(code, currentInstance, null, eventObject, eventType, eventSubtype, arguments, mutableMapOf(), stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
 
@@ -198,7 +206,16 @@ class StarfaitVM(
                         }
                         instanceId == SpecialObjectReferenceType.OTHER -> currentCallFrame.other!!
                         instanceId == SpecialObjectReferenceType.GLOBAL -> global
-                        instanceId >= 0 -> runner.currentRoom.instances.first { it.objectIndex == instanceId }
+                        instanceId >= 0 -> {
+                            val instance = runner.currentRoom.instances.firstOrNull { it.objectIndex == instanceId }
+
+                            if (instance == null) {
+                                stack.push().setUndefined()
+                                return
+                            }
+
+                            instance
+                        }
                         else -> error("Unsupported instance ID $instanceId!")
                     },
                     operand,
@@ -452,7 +469,16 @@ class StarfaitVM(
         val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
-            val returnValue = executeCode(gameWAD.code.codes[script.codeIndex], currentSelfInstance, arguments.toTypedArray())
+            val callFrame = this.currentCallFrame
+
+            val returnValue = executeCode(
+                gameWAD.code.codes[script.codeIndex],
+                callFrame.self,
+                callFrame.eventObject,
+                callFrame.eventType,
+                callFrame.eventSubtype,
+                arguments.toTypedArray()
+            )
 
             if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
                 println("VM: [$currentCallFrameCodeName] Called script function \"$functionName(${arguments.joinToString(", ")})\"! Result: ${returnValue ?: "undefined"}")

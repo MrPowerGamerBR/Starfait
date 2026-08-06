@@ -131,28 +131,26 @@ class StarfaitCLI : CliktCommand() {
                 // TODO: We could reuse the blob
                 val txtrBlob = ImageIO.read(txtr.blob.inputStream())
 
-                try {
-                    println(tile.sourceX.toString() + ", " + tile.sourceY)
-                    // val graphics2d = txtrBlob.createGraphics()
+                println(tile.sourceX.toString() + ", " + tile.sourceY)
+                // val graphics2d = txtrBlob.createGraphics()
 
-                    val entryX = tpag.sourceX.toInt() + tile.sourceX
-                    val entryY = tpag.sourceY.toInt() + tile.sourceY
-                    val entryWidth = tile.width
-                    val entryHeight = tile.height
+                val entryX = tpag.sourceX.toInt() + tile.sourceX
+                val entryY = tpag.sourceY.toInt() + tile.sourceY
+                val entryWidth = tile.width
+                val entryHeight = tile.height
 
-                    // graphics2d.color = Color.RED
-                    // graphics2d.stroke = BasicStroke(3f)
-                    // graphics2d.drawRect(entryX, entryY, entryWidth, entryHeight)
+                // graphics2d.color = Color.RED
+                // graphics2d.stroke = BasicStroke(3f)
+                // graphics2d.drawRect(entryX, entryY, entryWidth, entryHeight)
 
-                    val tileImage = txtrBlob.getSubimage(
-                        entryX,
-                        entryY,
-                        entryWidth,
-                        entryHeight
-                    )
+                val tileImage = txtrBlob.getSubimage(
+                    entryX,
+                    entryY,
+                    entryWidth,
+                    entryHeight
+                )
 
-                    ImageIO.write(tileImage, "png", File(outputFolder, "${gameWAD.strg.getString(room.name)}_${tile.x}_${tile.y}.png"))
-                } catch (e: Exception) {}
+                ImageIO.write(tileImage, "png", File(outputFolder, "${gameWAD.strg.getString(room.name)}_${tile.x}_${tile.y}.png"))
             }
             return
         }

@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
@@ -23,6 +24,7 @@ class StarfaitRunner(
     var pendingRoom: PendingRoom? = null
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
+    var drawSetColor = GMLColor(0xFFFFFF)
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
@@ -31,6 +33,9 @@ class StarfaitRunner(
         initializeRoom(firstRoomId, room)
 
         dispatchEventToAllInstances(EventType.OTHER, EventType.OtherSubType.GAME_START)
+
+        // TODO: Kinda hacky isn't it?
+        renderer.setDrawColor(drawSetColor)
     }
 
     fun initializeRoom(roomId: Int, room: Room) {

@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.vm
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
@@ -450,5 +451,11 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealFunction("abs", 1) { args -> args[0].real.absoluteValue }
 
         registerBooleanStubbedFunction("audio_is_playing", 1, false)
+
+        // TODO: set_colour too? maybe we need to make a way to do aliases?
+        registerVoidFunction("draw_set_color", 1) { args ->
+            runner.drawSetColor = GMLColor(args[0].int)
+            runner.renderer.setDrawColor(runner.drawSetColor)
+        }
     }
 }

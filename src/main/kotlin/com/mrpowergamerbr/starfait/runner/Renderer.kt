@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.Sprite
@@ -12,4 +13,5 @@ interface Renderer {
     fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile)
     fun drawText(font: Font, x: Float, y: Float, text: String)
     fun frame(block: () -> (Unit))
+    fun setDrawColor(color: GMLColor)
 }

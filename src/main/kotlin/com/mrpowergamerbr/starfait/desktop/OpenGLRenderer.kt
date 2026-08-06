@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.desktop
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.desktop.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.Renderer
@@ -41,6 +42,12 @@ import org.lwjgl.opengl.GL30.glBindVertexArray
 import org.lwjgl.opengl.GL30.glGenVertexArrays
 
 class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
+    companion object {
+        private const val MAX_BATCH_ELEMENTS = 512
+        private const val FIELDS_PER_ELEMENT = 42
+        private const val TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT = 7
+    }
+
     lateinit var runner: StarfaitRunner
     val textureManager = TextureManager()
     val shaderManager = ShaderManager()
@@ -49,7 +56,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         StarfaitWindow::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
         ::MinimalShader
     )
-    val batch = FloatArray(24 * 128)
+    val batch = FloatArray(FIELDS_PER_ELEMENT * MAX_BATCH_ELEMENTS)
     var activeBatchTexture: Texture? = null
     var currentIndex = 0
     val vao = glGenVertexArrays()
@@ -64,15 +71,20 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         glBindVertexArray(vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
 
-        glBufferData(GL_ARRAY_BUFFER, Float.SIZE_BYTES * 24L * 128L, GL_DYNAMIC_DRAW)
+        glBufferData(GL_ARRAY_BUFFER, Float.SIZE_BYTES * FIELDS_PER_ELEMENT.toLong() * MAX_BATCH_ELEMENTS, GL_DYNAMIC_DRAW)
 
         // aPosition
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * Float.SIZE_BYTES, 0L)
+        // stride is from the START of the current "section"!
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, 7 * Float.SIZE_BYTES, 0L)
         glEnableVertexAttribArray(0)
 
         // aTexCoord
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, 7 * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
         glEnableVertexAttribArray(1)
+
+        // aBlendColor
+        glVertexAttribPointer(2, 3, GL_FLOAT, false, 7 * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
+        glEnableVertexAttribArray(2)
     }
 
     override fun drawInstance(instance: Instance) {
@@ -105,7 +117,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
             sprite.width.toFloat() - tpag.targetX.toFloat(),
             sprite.height.toFloat() - tpag.targetY.toFloat(),
-            textures[tpag.textureIndex.toInt()]
+            textures[tpag.textureIndex.toInt()],
+            GMLColor(0xFFFFFF)
         )
     }
 
@@ -122,7 +135,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
             width - tpag.targetX.toFloat(),
             height - tpag.targetY.toFloat(),
-            textures[tpag.textureIndex.toInt()]
+            textures[tpag.textureIndex.toInt()],
+            GMLColor(0xFFFFFF)
         )
     }
 
@@ -145,7 +159,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             (entryY + entryHeight.toFloat()) / texture.height,
             tile.width.toFloat(),
             tile.height.toFloat(),
-            textures[tpag.textureIndex.toInt()]
+            textures[tpag.textureIndex.toInt()],
+            GMLColor(0xFFFFFF)
         )
     }
 
@@ -155,6 +170,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
 
         var x = x
         var y = y
+
+        flushIfNeeded(texture)
 
         for (char in text) {
             // TODO: HashMap lookup for the glyphs would be pretty swell
@@ -170,7 +187,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                     (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
                     glyph.width.toFloat(),
                     glyph.height.toFloat(),
-                    texture
+                    texture,
+                    runner.drawSetColor
                 )
 
                 x += glyph.width.toFloat()
@@ -181,10 +199,15 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     override fun frame(block: () -> Unit) {
         // TODO: Respect the room's drawBackgroundColor
         val color = runner.currentRoom.backgroundColor
-        glClearColor(color.red / 1.0f, color.green / 1.0f, color.blue / 1.0f, 1.0f)
+        glClearColor(color.redF, color.greenF, color.blueF, 1.0f)
         glClear(GL_COLOR_BUFFER_BIT)
 
         block()
+        flush(runner)
+    }
+
+    override fun setDrawColor(color: GMLColor) {
+        // TODO: Remove this
         flush(runner)
     }
 
@@ -200,32 +223,67 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         }
     }
 
-    fun drawQuad(x: Float, y: Float, u1: Float, v1: Float, u2: Float, v2: Float, width: Float, height: Float, texture: Texture) {
+    fun drawQuad(
+        x: Float,
+        y: Float,
+        u1: Float,
+        v1: Float,
+        u2: Float,
+        v2: Float,
+        width: Float,
+        height: Float,
+        texture: Texture,
+        blend: GMLColor
+    ) {
         flushIfNeeded(texture)
 
         // top-left
         batch[currentIndex++] = x; batch[currentIndex++] = y;
         batch[currentIndex++] = u1; batch[currentIndex++] = v1;
 
+        batch[currentIndex++] = blend.redF
+        batch[currentIndex++] = blend.greenF
+        batch[currentIndex++] = blend.blueF
+
         // bottom-right
         batch[currentIndex++] = x + width; batch[currentIndex++] = y + height;
         batch[currentIndex++] = u2; batch[currentIndex++] = v2;
+
+        batch[currentIndex++] = blend.redF
+        batch[currentIndex++] = blend.greenF
+        batch[currentIndex++] = blend.blueF
 
         // bottom-left
         batch[currentIndex++] = x; batch[currentIndex++] = y + height;
         batch[currentIndex++] = u1; batch[currentIndex++] = v2;
 
+        batch[currentIndex++] = blend.redF
+        batch[currentIndex++] = blend.greenF
+        batch[currentIndex++] = blend.blueF
+
         // top-left
         batch[currentIndex++] = x; batch[currentIndex++] = y;
         batch[currentIndex++] = u1; batch[currentIndex++] = v1;
+
+        batch[currentIndex++] = blend.redF
+        batch[currentIndex++] = blend.greenF
+        batch[currentIndex++] = blend.blueF
 
         // top-right
         batch[currentIndex++] = x + width; batch[currentIndex++] = y;
         batch[currentIndex++] = u2; batch[currentIndex++] = v1;
 
+        batch[currentIndex++] = blend.redF
+        batch[currentIndex++] = blend.greenF
+        batch[currentIndex++] = blend.blueF
+
         // bottom-right
         batch[currentIndex++] = x + width; batch[currentIndex++] = y + height;
         batch[currentIndex++] = u2; batch[currentIndex++] = v2;
+
+        batch[currentIndex++] = blend.redF
+        batch[currentIndex++] = blend.greenF
+        batch[currentIndex++] = blend.blueF
 
         this.activeBatchTexture = texture
     }
@@ -248,7 +306,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
 
         minimalShader.bind {
             glBindVertexArray(vao)
-            glDrawArrays(GL_TRIANGLES, 0, currentIndex / 4)
+            glDrawArrays(GL_TRIANGLES, 0, currentIndex / TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT)
         }
 
         this.currentIndex = 0

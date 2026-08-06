@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.desktop
 
+import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import net.perfectdreams.harmony.gl.shaders.bind
@@ -30,11 +31,15 @@ import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.glBindVertexArray
 import org.lwjgl.opengl.GL30.glGenVertexArrays
 import org.lwjgl.sdl.SDLError.SDL_GetError
+import org.lwjgl.sdl.SDLEvents.SDL_EVENT_KEY_UP
 import org.lwjgl.sdl.SDLEvents.SDL_EVENT_QUIT
 import org.lwjgl.sdl.SDLEvents.SDL_PollEvent
 import org.lwjgl.sdl.SDLInit.SDL_INIT_VIDEO
 import org.lwjgl.sdl.SDLInit.SDL_Init
 import org.lwjgl.sdl.SDLInit.SDL_Quit
+import org.lwjgl.sdl.SDLKeycode.SDLK_ESCAPE
+import org.lwjgl.sdl.SDLKeycode.SDLK_PAGEDOWN
+import org.lwjgl.sdl.SDLKeycode.SDLK_PAGEUP
 import org.lwjgl.sdl.SDLVideo.SDL_CreateWindow
 import org.lwjgl.sdl.SDLVideo.SDL_DestroyWindow
 import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_MAJOR_VERSION
@@ -85,6 +90,15 @@ class StarfaitWindow(val vm: StarfaitVM) {
                 while (SDL_PollEvent(event)) {
                     if (event.type() == SDL_EVENT_QUIT)
                         running = false
+
+                    if (event.type() == SDL_EVENT_KEY_UP) {
+                        if (event.key().key() == SDLK_PAGEDOWN) {
+                            runner.pendingRoom = PendingRoom(
+                                runner.currentRoom.roomId + 1,
+                                vm.gameWAD.room.rooms[runner.currentRoom.roomId + 1]
+                            )
+                        }
+                    }
                 }
 
                 glClear(GL_COLOR_BUFFER_BIT)

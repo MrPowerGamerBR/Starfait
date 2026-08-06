@@ -12,6 +12,7 @@ class RValue {
         get() = when (type) {
             RValueDataType.REAL -> Double.fromBits(bits)
             RValueDataType.BOOLEAN, RValueDataType.INT32, RValueDataType.INT64 -> bits.toDouble()
+            RValueDataType.STRING -> (ref as String).toDouble()
             RValueDataType.UNDEFINED -> 0.0
             else -> error("Cannot read $type as a real!")
         }

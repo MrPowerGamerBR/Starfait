@@ -164,6 +164,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("show_debug_message", null) { args -> println("Game: ${args[0].toGMLString()}") }
         registerStringFunction("string", 1) { args -> args[0].toGMLString() }
+        registerRealFunction("real", 1) { args -> args[0].real }
 
         // TODO: Add some stub warnings?
         registerBooleanStubFunction("steam_initialised", 0, true)
@@ -290,5 +291,19 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerRealStubFunction("random", 1, 0.0)
+
+        registerBooleanFunction("instance_exists", 1) { args ->
+            // "This function does not take into account those instances that have been deactivated using the instance deactivate functions."
+            // TODO: Inheritance
+            for (instance in runner.currentRoom.instances) {
+                if (instance.destroyed)
+                    continue
+
+                if (instance.objectIndex == args[0].int)
+                    return@registerBooleanFunction true
+            }
+
+            return@registerBooleanFunction false
+        }
     }
 }

@@ -195,6 +195,11 @@ class VMBuiltins(val vm: StarfaitVM) {
             val room = vm.gameWAD.room.rooms[newRoomIndex]
             runner.pendingRoom = PendingRoom(newRoomIndex, room)
         }
+        registerVoidFunction("room_goto_previous", 0) { args ->
+            val newRoomIndex = vm.gameWAD.gen8.roomOrder.indexOf(runner.currentRoom.roomId) - 1
+            val room = vm.gameWAD.room.rooms[newRoomIndex]
+            runner.pendingRoom = PendingRoom(newRoomIndex, room)
+        }
         registerBooleanFunction("is_undefined", 1) { args -> args[0].type == RValueDataType.UNDEFINED }
         registerIntAsRealFunction("instance_create", 3) { args ->
             val x = args[0].real

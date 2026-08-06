@@ -15,6 +15,13 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
 
     fun createAndSpawnInstance(gameObjectIndex: Int, builder: Instance.() -> (Unit)): Instance {
         val gameInstance = Instance(runner, runner.currentInstanceId++, gameObjectIndex)
+        val gameObject = gameInstance.gameObject
+
+        // Initialize with the object's default values
+        gameInstance.visible = gameObject.visible
+        gameInstance.spriteIndex = gameObject.spriteIndex.toFloat()
+        gameInstance.depth = gameObject.depth.toFloat()
+
         builder(gameInstance)
         this.instances.add(gameInstance)
         gameInstance.dispatchEvent(EventType.CREATE, 0)

@@ -6,17 +6,24 @@ import net.perfectdreams.harmony.gl.shaders.bind
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
+import org.lwjgl.opengl.GL11.GL_FALSE
 import org.lwjgl.opengl.GL11.GL_FLOAT
+import org.lwjgl.opengl.GL11.GL_NEAREST
 import org.lwjgl.opengl.GL11.GL_TRIANGLES
+import org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP
 import org.lwjgl.opengl.GL11.GL_UNSIGNED_INT
+import org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY
 import org.lwjgl.opengl.GL11.glClear
 import org.lwjgl.opengl.GL11.glClearColor
+import org.lwjgl.opengl.GL11.glDrawArrays
 import org.lwjgl.opengl.GL11.glDrawElements
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
+import org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW
 import org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
 import org.lwjgl.opengl.GL15.glBindBuffer
 import org.lwjgl.opengl.GL15.glBufferData
+import org.lwjgl.opengl.GL15.glBufferSubData
 import org.lwjgl.opengl.GL15.glGenBuffers
 import org.lwjgl.opengl.GL20.glEnableVertexAttribArray
 import org.lwjgl.opengl.GL20.glVertexAttribPointer
@@ -70,36 +77,7 @@ class StarfaitWindow(val vm: StarfaitVM) {
 
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
 
-        val vao = glGenVertexArrays()
-        val vbo = glGenBuffers()
-        val ebo = glGenBuffers()
-
-        glBindVertexArray(vao)
-
-        // four vertices: x, y, u, v, r, g, b, a
-        val vertices = floatArrayOf(
-            //   x       y     u    v     r    g    b    a
-            0f,     0f,   0f,  0f,   1f,  1f,  1f,  1f,   // top-left
-            100f,     0f,   1f,  0f,   1f,  1f,  1f,  1f,   // top-right
-            100f,   100f,   1f,  1f,   1f,  1f,  1f,  1f,   // bottom-right
-            0f,   100f,   0f,  1f,   1f,  1f,  1f,  1f,   // bottom-left
-        )
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
-
-        // two triangles sharing the 0-2 edge
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, intArrayOf(0, 1, 2, 2, 3, 0), GL_STATIC_DRAW)
-
-        val stride = 8 * Float.SIZE_BYTES // 32
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, stride, 0L)                        // aPosition
-        glEnableVertexAttribArray(0)
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, (2 * Float.SIZE_BYTES).toLong()) // aTexCoord
-        glEnableVertexAttribArray(1)
-        glVertexAttribPointer(2, 4, GL_FLOAT, false, stride, (4 * Float.SIZE_BYTES).toLong()) // aColor
-        glEnableVertexAttribArray(2)
-
-        glBindVertexArray(0)
+        val textures = vm.gameWAD.txtr.textures.map { renderer.textureManager.loadTexture(it.blob, GL_NEAREST) }
 
         MemoryStack.stackPush().use { stack ->
             val event = SDL_Event.malloc(stack)
@@ -114,12 +92,28 @@ class StarfaitWindow(val vm: StarfaitVM) {
 
                 glClear(GL_COLOR_BUFFER_BIT)
 
-                renderer.minimalShader.uProjection.set(Matrix4f().ortho(0.0f, 640.0f, 0.0f, 480.0f, 1.0f, -1.0f).get(FloatArray(16)))
+                for (instance in runner.currentRoom.instances) {
+                    val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
+                    val framePointer = sprite.frames.first()
+                    val tpag = runner.gameWAD.tpag.entries[framePointer]!!
 
-                renderer.minimalShader.bind {
-                    glBindVertexArray(vao)
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0L)
+                    println("I want to draw with texture ${tpag.textureIndex} at ${instance.x}, ${instance.y}")
+
+                    val texture = textures[tpag.textureIndex.toInt()]
+                    renderer.drawQuad(
+                        instance.x + tpag.targetX.toFloat(),
+                        instance.y + tpag.targetY.toFloat(),
+                        tpag.sourceX.toFloat() / texture.width,
+                        tpag.sourceY.toFloat() / texture.height,
+                        (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
+                        (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
+                        sprite.width.toFloat() - tpag.targetX.toFloat(),
+                        sprite.height.toFloat() - tpag.targetY.toFloat(),
+                        textures[tpag.textureIndex.toInt()]
+                    )
                 }
+
+                renderer.flush()
 
                 SDL_GL_SwapWindow(window)
             }

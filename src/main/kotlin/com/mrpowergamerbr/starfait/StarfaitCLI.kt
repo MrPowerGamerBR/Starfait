@@ -16,6 +16,7 @@ import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.Script
 import com.mrpowergamerbr.starfait.wad.Sound
+import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.StringPointer
 import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import com.mrpowergamerbr.starfait.wad.Variable
@@ -34,6 +35,7 @@ class StarfaitCLI : CliktCommand() {
     val printVariables by option()
     val printFunctions by option()
     val printTexturePages by option()
+    val printSprites by option()
     val traceOpcodes by option()
     val traceFunctionCalls by option()
     val traceAlarms by option()
@@ -103,6 +105,11 @@ class StarfaitCLI : CliktCommand() {
 
         if (printTexturePages != null) {
             dump(gameWAD, "Texture Page Entry", gameWAD.tpag.entries.values.toList(), null, printTexturePages!!)
+            return
+        }
+
+        if (printSprites != null) {
+            dump(gameWAD, "Sprite", gameWAD.sprt.sprites, Sprite::name, printSprites!!)
             return
         }
 

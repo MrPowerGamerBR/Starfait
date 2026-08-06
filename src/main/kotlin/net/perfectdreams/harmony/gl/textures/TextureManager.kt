@@ -7,49 +7,14 @@ import org.lwjgl.stb.STBImage.stbi_set_flip_vertically_on_load
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
-import java.nio.channels.Channels
-import java.nio.file.Files
-import java.nio.file.Paths
-import kotlin.use
 
 class TextureManager {
-    fun loadTexture(
-        filePath: String,
-        textureInterpolationType: Int
-    ): Texture {
-        stbi_set_flip_vertically_on_load(true)
+    fun loadTexture(data: ByteArray, textureInterpolationType: Int): Texture {
+        stbi_set_flip_vertically_on_load(false)
 
-        var imageBuffer: ByteBuffer?
-        // Load image file into a ByteBuffer
-        val path = Paths.get(filePath)
-        if (Files.exists(path)) {
-            Files.newByteChannel(path).use { fc ->
-                imageBuffer = MemoryUtil.memAlloc(fc.size().toInt() + 1)
-                while (fc.read(imageBuffer) != -1) {
-                    // Loop until end of file
-                }
-            }
-        } else {
-            // Fallback for resources inside a JAR
-            Texture::class.java.getResourceAsStream("/" + filePath).use { source ->
-                Channels.newChannel(source).use { rbc ->
-                    imageBuffer = MemoryUtil.memAlloc(8192) // 8KB initial buffer
-                    while (true) {
-                        val bytes = rbc.read(imageBuffer)
-                        if (bytes == -1) {
-                            break
-                        }
-                        if (imageBuffer!!.remaining() == 0) {
-                            imageBuffer = MemoryUtil.memRealloc(
-                                imageBuffer,
-                                imageBuffer!!.capacity() * 2
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        imageBuffer!!.flip()
+        val imageBuffer = MemoryUtil.memAlloc(data.size)
+        imageBuffer.put(data)
+        imageBuffer.flip()
 
         MemoryStack.stackPush().use { stack ->
             val w = stack.mallocInt(1)
@@ -65,9 +30,7 @@ class TextureManager {
                 4 // Force 4 channels (RGBA)
             )
             if (decodedImage == null) {
-                throw kotlin.RuntimeException(
-                    "Failed to load image: " + STBImage.stbi_failure_reason()
-                )
+                throw RuntimeException("Failed to load image: " + STBImage.stbi_failure_reason())
             }
 
             val width = w.get()

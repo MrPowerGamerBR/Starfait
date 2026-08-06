@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "2.3.10"
     application
@@ -34,6 +36,8 @@ dependencies {
 
 kotlin {
     jvmToolchain(21)
+
+    compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
 }
 
 tasks.test {

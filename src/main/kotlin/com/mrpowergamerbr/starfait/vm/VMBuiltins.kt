@@ -140,6 +140,8 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("path_speed", Instance::pathSpeed)
         registerInstanceRealVariable("path_position", Instance::pathPosition)
         registerInstanceRealVariable("speed", Instance::speed)
+        registerInstanceRealVariable("hspeed", Instance::hspeed)
+        registerInstanceRealVariable("vspeed", Instance::vspeed)
         registerInstanceBooleanVariable("solid", Instance::solid)
         repeat(16) {
             registerVariable(

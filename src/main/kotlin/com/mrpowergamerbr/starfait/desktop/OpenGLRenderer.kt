@@ -183,7 +183,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         val firstVisibleView = runner.currentRoom.views.firstOrNull { it.visible }
 
         if (firstVisibleView != null)
-            minimalShader.uProjection.set(Matrix4f().ortho(firstVisibleView.viewX.toFloat(), firstVisibleView.viewWidth.toFloat(), firstVisibleView.viewHeight.toFloat(), firstVisibleView.viewY.toFloat(), 1.0f, -1.0f).get(FloatArray(16)))
+            minimalShader.uProjection.set(Matrix4f().ortho(firstVisibleView.viewX.toFloat(), firstVisibleView.viewX.toFloat() + firstVisibleView.viewWidth.toFloat(), firstVisibleView.viewY.toFloat() + firstVisibleView.viewHeight.toFloat(), firstVisibleView.viewY.toFloat(), 1.0f, -1.0f).get(FloatArray(16)))
         else
             minimalShader.uProjection.set(Matrix4f().ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f).get(FloatArray(16)))
 

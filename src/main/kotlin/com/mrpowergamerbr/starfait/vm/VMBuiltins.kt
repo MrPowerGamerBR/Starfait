@@ -97,6 +97,18 @@ class VMBuiltins(val vm: StarfaitVM) {
         )
     }
 
+    fun registerInstanceBooleanVariable(name: String, property: KMutableProperty1<Instance, Boolean>) {
+        registerInstanceVariable(
+            name,
+            { instance, source, _ ->
+                source.setBoolean(property.get(instance))
+            },
+            { instance, result, _ ->
+                property.set(instance, result.bool)
+            }
+        )
+    }
+
     fun registerReadOnlyInstanceVariable(name: String, readHandler: (Instance, RValue, Int?) -> (Unit)) {
         registerInstanceVariable(
             name,
@@ -126,6 +138,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("path_speed", Instance::pathSpeed)
         registerInstanceRealVariable("path_position", Instance::pathPosition)
         registerInstanceRealVariable("speed", Instance::speed)
+        registerInstanceBooleanVariable("solid", Instance::solid)
         repeat(16) {
             registerVariable(
                 "argument$it",

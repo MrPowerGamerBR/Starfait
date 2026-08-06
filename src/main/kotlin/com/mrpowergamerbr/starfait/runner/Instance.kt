@@ -20,6 +20,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var pathSpeed = 0.0f
     var pathPosition = 0.0f
     var persistent = false
+    var solid = false
     var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
     var visible = true
     var destroyed = false

@@ -110,6 +110,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("image_index", Instance::imageIndex)
         registerInstanceRealVariable("sprite_index", Instance::spriteIndex)
         registerInstanceRealVariable("depth", Instance::depth)
+        registerInstanceRealVariable("direction", Instance::direction)
+        registerInstanceRealVariable("image_blend", Instance::imageBlend)
+        registerInstanceRealVariable("image_angle", Instance::imageAngle)
         repeat(16) {
             registerVariable(
                 "argument$it",
@@ -152,8 +155,24 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerReadOnlyVariable("room_height") { _, result, _ -> result.setInt32(runner.currentRoom.height) }
 
         registerRealStubbedVariable("view_current", 0.0) // Should be 0 outside of draw events
-        registerRealStubbedVariable("view_xview", 0.0)
-        registerRealStubbedVariable("view_yview", 0.0)
+        registerVariable(
+            "view_xview",
+            { _, result, arrayIndex ->
+                result.setReal(runner.currentRoom.views[arrayIndex!!].viewX.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.views[arrayIndex!!].viewX = value.real.toInt()
+            }
+        )
+        registerVariable(
+            "view_yview",
+            { _, result, arrayIndex ->
+                result.setReal(runner.currentRoom.views[arrayIndex!!].viewY.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.views[arrayIndex!!].viewY = value.real.toInt()
+            }
+        )
         registerRealStubbedVariable("view_wview", 640.0)
         registerRealStubbedVariable("view_hview", 480.0)
         registerRealStubbedVariable("application_surface", -1.0)
@@ -162,6 +181,15 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRealStubbedVariable("sprite_height", 240.0)
         registerRealStubbedVariable("sprite_width", 240.0)
+
+        // TODO: This should be writeable
+        registerReadOnlyVariable("room") { _, result, _ -> result.setInt32(runner.currentRoom.roomId) }
+        registerReadOnlyInstanceVariable("bbox_top") { _, result, _ -> result.setReal(32.0) }
+        registerReadOnlyInstanceVariable("bbox_left") { _, result, _ -> result.setReal(32.0) }
+        registerReadOnlyInstanceVariable("bbox_right") { _, result, _ -> result.setReal(32.0) }
+        registerReadOnlyInstanceVariable("bbox_bottom") { _, result, _ -> result.setReal(32.0) }
+        registerReadOnlyInstanceVariable("xprevious") { instance, result, _ -> result.setReal(instance.x.toDouble()) }
+        registerReadOnlyInstanceVariable("yprevious") { instance, result, _ -> result.setReal(instance.y.toDouble()) }
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerRawFunction("script_execute", null) { args, result ->
@@ -377,5 +405,8 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerStringFunction("chr", 1) { args -> args[0].int.toChar().toString() }
         registerIntAsRealFunction("ord", 1) { args -> args[0].refAsString()[0].code }
+
+        registerRealStubbedFunction("collision_point", 5, SpecialObjectReferenceType.NOONE.toDouble())
+        registerRealStubbedFunction("collision_rectangle", 7, SpecialObjectReferenceType.NOONE.toDouble())
     }
 }

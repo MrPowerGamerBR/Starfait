@@ -6,6 +6,8 @@ import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import kotlin.math.absoluteValue
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.round
 import kotlin.reflect.KMutableProperty1
 
@@ -473,5 +475,8 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.drawSetColor = GMLColor(args[0].int)
             runner.renderer.setDrawColor(runner.drawSetColor)
         }
+
+        registerRealFunction("floor", 1) { args -> floor(args[0].real) }
+        registerRealFunction("ceil", 1) { args -> ceil(args[0].real) }
     }
 }

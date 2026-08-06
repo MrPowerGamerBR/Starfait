@@ -17,6 +17,7 @@ import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.Script
 import com.mrpowergamerbr.starfait.wad.Sound
 import com.mrpowergamerbr.starfait.wad.StringPointer
+import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import com.mrpowergamerbr.starfait.wad.Variable
 import java.io.File
 import kotlin.reflect.KProperty1
@@ -32,13 +33,14 @@ class StarfaitCLI : CliktCommand() {
     val printCodes by option()
     val printVariables by option()
     val printFunctions by option()
+    val printTexturePages by option()
     val traceOpcodes by option()
     val traceFunctionCalls by option()
     val traceAlarms by option()
 
-    fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>, match: String) {
+    fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
         for ((index, element) in list.withIndex()) {
-            val name = gameWAD.strg.getString(nameSource.invoke(element))
+            val name = nameSource?.invoke(element)?.let { gameWAD.strg.getString(it) }
 
             if (match == name || match == "*") {
                 println("$type #$index:")
@@ -96,6 +98,11 @@ class StarfaitCLI : CliktCommand() {
 
         if (printFunctions != null) {
             dump(gameWAD, "Function", gameWAD.func.functions, Function::name, printFunctions!!)
+            return
+        }
+
+        if (printTexturePages != null) {
+            dump(gameWAD, "Texture Page Entry", gameWAD.tpag.entries.values.toList(), null, printTexturePages!!)
             return
         }
 

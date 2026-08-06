@@ -22,6 +22,7 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         gameInstance.visible = gameObject.visible
         gameInstance.spriteIndex = gameObject.spriteIndex.toFloat()
         gameInstance.depth = gameObject.depth.toFloat()
+        gameInstance.persistent = gameObject.persistent
 
         builder(gameInstance)
         this.instances.add(gameInstance)

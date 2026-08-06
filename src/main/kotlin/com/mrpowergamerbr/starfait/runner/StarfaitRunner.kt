@@ -1,6 +1,5 @@
 package com.mrpowergamerbr.starfait.runner
 
-import com.mrpowergamerbr.starfait.desktop.OpenGLRenderer
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
@@ -33,13 +32,13 @@ class StarfaitRunner(
     }
 
     fun initializeRoom(roomId: Int, room: Room) {
-        val currentRoom = RunnerRoom(this, roomId)
-        currentRoom.width = room.width
-        currentRoom.height = room.height
+        val newRoom = RunnerRoom(this, roomId)
+        newRoom.width = room.width
+        newRoom.height = room.height
 
         if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {
             for (view in room.views) {
-                currentRoom.views.add(
+                newRoom.views.add(
                     RunnerRoom.RunnerView(
                         view.viewX,
                         view.viewY,
@@ -55,11 +54,18 @@ class StarfaitRunner(
             }
         }
 
+        // TODO: This sucks, maybe make it nullable?
+        if (this::currentRoom.isInitialized) {
+            val previousRoom = this.currentRoom
+            val persistentInstances = previousRoom.instances.filter { it.persistent }
+            newRoom.instances.addAll(persistentInstances)
+        }
+
         // We need to set the currentRoom BEFORE we dispatch the create events
-        this.currentRoom = currentRoom
+        this.currentRoom = newRoom
 
         for (instance in room.instances) {
-            currentRoom.createAndSpawnInstance(instance)
+            newRoom.createAndSpawnInstance(instance)
         }
     }
 

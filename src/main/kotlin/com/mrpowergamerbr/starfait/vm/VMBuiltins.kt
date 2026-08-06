@@ -282,6 +282,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerBooleanStubbedFunction("joystick_exists", 1, false)
 
+
         registerIntAsRealFunction("ds_map_create", 0) { args ->
             val newIndex = vm.dsMapPool.size
             vm.dsMapPool.add(DSMap())

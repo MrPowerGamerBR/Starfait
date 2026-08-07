@@ -27,6 +27,7 @@ class StarfaitRunner(
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
     var drawSetColor = GMLColor(0xFFFFFF)
+    var activeDrawFont = gameWAD.font.fonts.firstOrNull()
     val random = Random(seed)
 
     fun start() {

@@ -503,16 +503,18 @@ class VMBuiltins(val vm: StarfaitVM) {
             val x = args[0].real
             val y = args[1].real
             val string = args[2].toGMLString()
+            val font = requireNotNull(runner.activeDrawFont)
 
-            runner.renderer.drawText(runner.gameWAD.font.fonts[2], x.toFloat(), y.toFloat(), string)
+            runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
         }
 
         registerVoidFunction("draw_text", 3) { args ->
             val x = args[0].real
             val y = args[1].real
             val string = args[2].toGMLString()
+            val font = requireNotNull(runner.activeDrawFont)
 
-            runner.renderer.drawText(runner.gameWAD.font.fonts[2], x.toFloat(), y.toFloat(), string)
+            runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
         }
 
         registerRealFunction("round", 1) { args ->
@@ -548,6 +550,10 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVoidFunction("draw_set_color", 1) { args ->
             runner.drawSetColor = GMLColor(args[0].int)
             runner.renderer.setDrawColor(runner.drawSetColor)
+        }
+
+        registerVoidFunction("draw_set_font", 1) { args ->
+            runner.activeDrawFont = runner.gameWAD.font.fonts[args[0].int]
         }
 
         registerRealFunction("floor", 1) { args -> floor(args[0].real) }

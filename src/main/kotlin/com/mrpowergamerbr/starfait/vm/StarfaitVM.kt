@@ -93,9 +93,9 @@ class StarfaitVM(
             val type2 = word.type2()
             val extra = word.extra()
 
-            val scriptName = gameWAD.strg.getString(currentCallFrame.code.name)
+            val scriptName = this.currentCallFrameCodeName
             if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName)) {
-                print("VM: [$currentCallFrameCodeName] ($start) [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
+                print("VM: [$scriptName] ($start) [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
 
                 for (i in 0 until stack.top) {
                     if (i != 0)

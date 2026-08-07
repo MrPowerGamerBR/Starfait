@@ -97,6 +97,11 @@ class StarfaitRunner(
         // TODO: This sucks, maybe make it nullable?
         if (this::currentRoom.isInitialized) {
             val previousRoom = this.currentRoom
+
+            forEachInstance {
+                it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END)
+            }
+
             val persistentInstances = previousRoom.instances.filter { it.persistent }
             newRoom.instances.addAll(persistentInstances)
         }

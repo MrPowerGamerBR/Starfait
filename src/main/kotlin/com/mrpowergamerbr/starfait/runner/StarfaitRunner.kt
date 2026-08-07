@@ -237,7 +237,31 @@ class StarfaitRunner(
         }
     }
 
-    inline fun forEachInstanceByDepth(crossinline action: (Instance) -> Unit) {
+    fun firstInstance(filter: (Instance) -> Boolean): Instance? {
+        for (instance in this.currentRoom.instances.reversed()) {
+            val result = filter(instance)
+
+            if (result)
+                return instance
+        }
+
+        return null
+    }
+
+    fun filterInstances(filter: (Instance) -> Boolean): List<Instance> {
+        val allInstances = mutableListOf<Instance>()
+
+        for (instance in this.currentRoom.instances.reversed()) {
+            val result = filter(instance)
+
+            if (result)
+                allInstances.add(instance)
+        }
+
+        return allInstances
+    }
+
+    inline fun forEachInstanceByDepth(action: (Instance) -> Unit) {
         // sortedBy creates a copy, so we don't need to worry about ConcurrentModificationException here
         //
         // "In GameMaker the lower the depth value for an instance, the "closer to the camera" that instance will be drawn,

@@ -7,7 +7,6 @@ import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
-import com.mrpowergamerbr.starfait.wad.GameObject
 import kotlin.math.absoluteValue
 import kotlin.math.ceil
 import kotlin.math.cos
@@ -495,13 +494,22 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerBooleanFunction("instance_exists", 1) { args ->
-            // "This function does not take into account those instances that have been deactivated using the instance deactivate functions."
-            // TODO: Inheritance
-            for (instance in runner.currentRoom.instances) {
-                if (instance.destroyed)
-                    continue
+            val queryId = args[0].int
 
-                if (instance.objectIndex == args[0].int)
+            // "This function does not take into account those instances that have been deactivated using the instance deactivate functions."
+            runner.forEachInstance { instance ->
+                val matches = instance.matchesObjectOrInstanceId(
+                    queryId,
+                    excludeInstance = null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true
+                )
+
+                if (matches)
                     return@registerBooleanFunction true
             }
 
@@ -561,35 +569,27 @@ class VMBuiltins(val vm: StarfaitVM) {
             val selfBBox = BoundingBox(x1.toFloat(), x2.toFloat(), y1.toFloat(), y2.toFloat())
 
             runner.forEachInstance { instance ->
-                val bbox = instance.getBoundingBox()
+                val matches = instance.matchesObjectOrInstanceId(
+                    obj,
+                    excludeInstance = if (notme) self else null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true
+                )
 
-                if (instance == self && notme)
-                    return@forEachInstance
+                if (matches) {
+                    val bbox = instance.getBoundingBox()
 
-                // Hacky
-                fun isInstanceOrParent(startGameObjectId: Int, queryGameObjectId: Int): Boolean {
-                    var targetGameObjectId = startGameObjectId
-                    while (true) {
-                        if (0 > targetGameObjectId)
-                            return false
-
-                        if (targetGameObjectId == queryGameObjectId)
-                            return true
-
-                        val gameObject = vm.gameWAD.objt.objects[targetGameObjectId]
-                        targetGameObjectId = gameObject.parentId
+                    if (selfBBox.isCollidingWith(bbox)) {
+                        return@registerIntAsRealFunction instance.id
                     }
-                }
-
-                if (obj != SpecialObjectReferenceType.ALL && !isInstanceOrParent(instance.objectIndex, obj))
-                    return@forEachInstance
-
-                if (selfBBox.isCollidingWith(bbox)) {
-                    return@registerIntAsRealFunction instance.id
                 }
             }
 
-            return@registerIntAsRealFunction SpecialObjectReferenceType.NOONE
+            return@registerIntAsRealFunction InstanceReferenceType.NOONE
         }
 
         registerIntAsRealFunction("collision_point", 5) { args ->
@@ -601,20 +601,27 @@ class VMBuiltins(val vm: StarfaitVM) {
             val notme = args[4].bool
 
             runner.forEachInstance { instance ->
-                val bbox = instance.getBoundingBox()
+                val matches = instance.matchesObjectOrInstanceId(
+                    obj,
+                    excludeInstance = if (notme) self else null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true
+                )
 
-                if (instance == self && notme)
-                    return@forEachInstance
+                if (matches) {
+                    val bbox = instance.getBoundingBox()
 
-                if (obj != SpecialObjectReferenceType.ALL && instance.objectIndex != obj)
-                    return@forEachInstance
-
-                if (bbox.contains(x, y)) {
-                    return@registerIntAsRealFunction instance.id
+                    if (bbox.contains(x, y)) {
+                        return@registerIntAsRealFunction instance.id
+                    }
                 }
             }
 
-            return@registerIntAsRealFunction SpecialObjectReferenceType.NOONE
+            return@registerIntAsRealFunction InstanceReferenceType.NOONE
         }
 
         registerRealFunction("abs", 1) { args -> args[0].real.absoluteValue }

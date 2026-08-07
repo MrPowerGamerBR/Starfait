@@ -1,5 +1,7 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
+import com.mrpowergamerbr.starfait.vm.VariableScope
 import com.mrpowergamerbr.starfait.wad.GameObject
 import kotlin.collections.filter
 
@@ -160,5 +162,56 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
             bboxTopAbsolute,
             bboxBottomAbsolute
         )
+    }
+
+    fun matchesObjectOrInstanceId(
+        queryId: Int,
+        excludeInstance: Instance?,
+        skipDestroyed: Boolean,
+        checkHierarchy: Boolean,
+        checkSpecialSelf: Boolean,
+        checkSpecialOther: Boolean,
+        checkSpecialAll: Boolean,
+        checkSpecialNoone: Boolean,
+    ): Boolean {
+        if (this == excludeInstance)
+            return false
+
+        if (skipDestroyed && this.destroyed)
+            return false
+
+        if (0 > queryId) {
+            return when {
+                checkSpecialSelf && queryId == InstanceReferenceType.SELF -> vm.currentSelfInstance == this
+                checkSpecialOther && queryId == InstanceReferenceType.OTHER -> vm.currentCallFrame.other == this
+                checkSpecialAll && queryId == InstanceReferenceType.ALL -> true
+                checkSpecialNoone && queryId == InstanceReferenceType.NOONE -> false
+                else -> error("Unsupported InstanceReferenceType ID $queryId!")
+            }
+        }
+
+        if (queryId >= StarfaitRunner.BASE_INSTANCE_ID) {
+            return this.id == queryId
+        } else {
+            if (this.objectIndex == queryId)
+                return true
+
+            if (checkHierarchy) {
+                // TODO: We really should optimize this by storing a bit set or a boolean set
+                var parentGameObjectId = this.gameObject.parentId
+
+                while (true) {
+                    if (0 > parentGameObjectId)
+                        break
+
+                    if (parentGameObjectId == queryId)
+                        return true
+
+                    parentGameObjectId = runner.gameWAD.objt.objects[parentGameObjectId].parentId
+                }
+            }
+
+            return false
+        }
     }
 }

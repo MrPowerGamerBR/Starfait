@@ -200,19 +200,30 @@ class StarfaitVM(
                 // TODO: Use correct instance here!
                 pushVariableFromVariableContainer(
                     when {
-                        instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentSelfInstance)
-                        instanceId == SpecialObjectReferenceType.LOCAL -> this.currentCallFrame
-                        instanceId == SpecialObjectReferenceType.OTHER -> this.currentCallFrame.other!!
-                        instanceId == SpecialObjectReferenceType.GLOBAL -> this.global
+                        instanceId == VariableScope.SELF -> requireNotNull(currentSelfInstance)
+                        instanceId == VariableScope.LOCAL -> this.currentCallFrame
+                        instanceId == VariableScope.OTHER -> this.currentCallFrame.other!!
+                        instanceId == VariableScope.GLOBAL -> this.global
                         instanceId >= 0 -> {
-                            val instance = runner.currentRoom.instances.firstOrNull { it.objectIndex == instanceId }
+                            val matchedInstance = this.runner.firstInstance {
+                                it.matchesObjectOrInstanceId(
+                                    instanceId,
+                                    null,
+                                    skipDestroyed = true,
+                                    checkHierarchy = true,
+                                    checkSpecialSelf = true,
+                                    checkSpecialOther = true,
+                                    checkSpecialAll = true,
+                                    checkSpecialNoone = true
+                                )
+                            }
 
-                            if (instance == null) {
+                            if (matchedInstance == null) {
                                 stack.push().setUndefined()
                                 return
                             }
 
-                            instance
+                            matchedInstance
                         }
                         else -> error("Unsupported instance ID $instanceId!")
                     },
@@ -318,7 +329,7 @@ class StarfaitVM(
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
                 when (instanceId) {
-                    SpecialObjectReferenceType.SELF -> {
+                    VariableScope.SELF -> {
                         val instance = this.currentSelfInstance
 
                         if (varId >= REGULAR_VARIABLES_BASE) {
@@ -326,7 +337,7 @@ class StarfaitVM(
                         } else error("Tried writing a global built-in variable from the INT32 pop path!")
                     }
 
-                    SpecialObjectReferenceType.GLOBAL -> {
+                    VariableScope.GLOBAL -> {
                         val instance = this.global
 
                         if (varId >= REGULAR_VARIABLES_BASE) {
@@ -350,28 +361,21 @@ class StarfaitVM(
 
                 // TODO: Use correct instance here!
                 val variableContainers = when {
-                    instanceId == SpecialObjectReferenceType.SELF -> listOf(this.currentSelfInstance)
-                    instanceId == SpecialObjectReferenceType.OTHER -> listOf(requireNotNull(this.currentCallFrame.other))
-                    instanceId == SpecialObjectReferenceType.LOCAL -> listOf(this.currentCallFrame)
-                    instanceId == SpecialObjectReferenceType.GLOBAL -> listOf(this.global)
-                    instanceId >= 0 -> {
-                        // This is a reference to all instances with a specific object index
-                        // This is a horrible hack, fix it later!
-                        val matchedInstances = mutableListOf<Instance>()
-
-                        for (instance in runner.currentRoom.instances) {
-                            val matched = if (instanceId >= StarfaitRunner.BASE_INSTANCE_ID) {
-                                instance.id == instanceId
-                            } else {
-                                instance.objectIndex == instanceId
-                            }
-
-                            if (matched) {
-                                matchedInstances.add(instance)
-                            }
-                        }
-
-                        matchedInstances
+                    instanceId == VariableScope.SELF -> listOf(this.currentSelfInstance)
+                    instanceId == VariableScope.OTHER -> listOf(requireNotNull(this.currentCallFrame.other))
+                    instanceId == VariableScope.LOCAL -> listOf(this.currentCallFrame)
+                    instanceId == VariableScope.GLOBAL -> listOf(this.global)
+                    instanceId >= 0 -> runner.filterInstances {
+                        it.matchesObjectOrInstanceId(
+                            instanceId,
+                            null,
+                            skipDestroyed = true,
+                            checkHierarchy = true,
+                            checkSpecialAll = true,
+                            checkSpecialNoone = true,
+                            checkSpecialSelf = true,
+                            checkSpecialOther = true
+                        )
                     }
                     else -> error("Unsupported instance ID $instanceId!")
                 }
@@ -637,27 +641,17 @@ class StarfaitVM(
     private fun handlePushEnv(reader: StarfaitByteBuffer, ip: Int, branchOffset: Int) {
         val objectId = stack.pop().int
 
-        // Hacky
-        fun isInstanceOrParent(startGameObjectId: Int, queryGameObjectId: Int): Boolean {
-            var targetGameObjectId = startGameObjectId
-            while (true) {
-                if (0 > targetGameObjectId)
-                    return false
-
-                if (targetGameObjectId == queryGameObjectId)
-                    return true
-
-                val gameObject = gameWAD.objt.objects[targetGameObjectId]
-                targetGameObjectId = gameObject.parentId
-            }
-        }
-
-        val instances = runner.currentRoom.instances.filter {
-            if (objectId >= StarfaitRunner.BASE_INSTANCE_ID) {
-                return@filter it.id == objectId
-            }
-
-            objectId == SpecialObjectReferenceType.ALL || isInstanceOrParent(it.objectIndex, objectId)
+        val instances = runner.filterInstances {
+            it.matchesObjectOrInstanceId(
+                objectId,
+                null,
+                skipDestroyed = true,
+                checkHierarchy = true,
+                checkSpecialAll = true,
+                checkSpecialNoone = true,
+                checkSpecialSelf = true,
+                checkSpecialOther = true
+            )
         }
 
         if (instances.isEmpty()) {

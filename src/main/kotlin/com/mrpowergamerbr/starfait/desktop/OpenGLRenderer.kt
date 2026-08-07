@@ -191,7 +191,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                     runner.drawSetColor
                 )
 
-                x += glyph.width.toFloat()
+                x += glyph.shift
             }
         }
     }

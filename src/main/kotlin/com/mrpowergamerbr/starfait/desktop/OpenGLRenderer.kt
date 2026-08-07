@@ -61,6 +61,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     var currentIndex = 0
     val vao = glGenVertexArrays()
     val vbo = glGenBuffers()
+    val white1x1Texture = textureManager.load1x1WhiteTexture()
     val textures = gameWAD.txtr.textures.map { this.textureManager.loadTexture(it.blob, GL_NEAREST) }
 
     init {
@@ -194,6 +195,21 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                 x += glyph.shift
             }
         }
+    }
+
+    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor) {
+        drawQuad(
+            x,
+            y,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            width,
+            height,
+            white1x1Texture,
+            color
+        )
     }
 
     override fun frame(block: () -> Unit) {

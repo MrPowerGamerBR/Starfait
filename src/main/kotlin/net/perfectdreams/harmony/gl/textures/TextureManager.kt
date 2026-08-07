@@ -1,6 +1,7 @@
 package net.perfectdreams.harmony.gl.textures
 
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.GL_NEAREST
 import org.lwjgl.opengl.GL30
 import org.lwjgl.stb.STBImage
 import org.lwjgl.stb.STBImage.stbi_set_flip_vertically_on_load
@@ -9,6 +10,48 @@ import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
 
 class TextureManager {
+    fun load1x1WhiteTexture(): Texture {
+        // 1. Generate and bind a new texture ID
+        val textureId = GL11.glGenTextures()
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId)
+
+        // 2. Tell OpenGL how to unpack the RGBA bytes.
+        // Each component is 1 byte size
+        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
+
+        // 3. Set texture parameters
+        // Repeat image in both directions
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT)
+        // When stretching the image, pixelate
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        // When shrinking the image, pixelate
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+
+        // 4. Upload the texture data
+        MemoryStack.stackPush().use { stack ->
+            val pixel = stack.malloc(4)
+                .put(0, 0xFF.toByte())
+                .put(1, 0xFF.toByte())
+                .put(2, 0xFF.toByte())
+                .put(3, 0xFF.toByte())
+
+            GL11.glTexImage2D(
+                GL11.GL_TEXTURE_2D,
+                0,
+                GL11.GL_RGBA8,
+                1,
+                1,
+                0,
+                GL11.GL_RGBA,
+                GL11.GL_UNSIGNED_BYTE,
+                pixel
+            )
+        }
+
+        return Texture(textureId, 1, 1)
+    }
+
     fun loadTexture(data: ByteArray, textureInterpolationType: Int): Texture {
         stbi_set_flip_vertically_on_load(false)
 

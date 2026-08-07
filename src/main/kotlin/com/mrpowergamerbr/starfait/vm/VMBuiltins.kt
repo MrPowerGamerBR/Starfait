@@ -594,5 +594,18 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             return@registerIntAsRealFunction width
         }
+
+        registerVoidFunction("draw_rectangle", 5) { args ->
+            val x1 = args[0].real
+            val y1 = args[1].real
+            val x2 = args[2].real
+            val y2 = args[3].real
+            // TODO: outline support
+            val outline = args[4].bool
+            if (outline)
+                warnFunctionSemiStub("draw_rectangle")
+            
+            runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawSetColor)
+        }
     }
 }

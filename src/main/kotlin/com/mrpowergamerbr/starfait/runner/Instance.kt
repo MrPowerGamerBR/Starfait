@@ -3,7 +3,7 @@ package com.mrpowergamerbr.starfait.runner
 import com.mrpowergamerbr.starfait.wad.GameObject
 import kotlin.collections.filter
 
-class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : ObjectBase() {
+class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : ObjectBase(runner.vm) {
     var x = 0.0f
     var y = 0.0f
     var imageSpeed = 1.0f

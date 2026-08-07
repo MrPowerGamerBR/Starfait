@@ -24,7 +24,7 @@ class StarfaitVM(
 
     lateinit var runner: StarfaitRunner
     val stack = VMStack()
-    val global = ObjectBase()
+    val global = ObjectBase(this)
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     lateinit var regularVariableNames: Array<String>
@@ -55,7 +55,7 @@ class StarfaitVM(
         eventSubtype: Int,
         arguments: Array<RValue>
     ): RValue? {
-        val callFrame = CallFrame(code, currentInstance, null, eventObject, eventType, eventSubtype, arguments, mutableMapOf(), stack.top)
+        val callFrame = CallFrame(this, code, currentInstance, null, eventObject, eventType, eventSubtype, arguments, stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
 
@@ -197,16 +197,12 @@ class StarfaitVM(
                 // println("instanceId is $instanceId")
 
                 // TODO: Use correct instance here!
-                pushVariableFromObject(
+                pushVariableFromVariableContainer(
                     when {
                         instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentSelfInstance)
-                        instanceId == SpecialObjectReferenceType.LOCAL -> {
-                            // ewww this is a horrible hack
-                            stack.push().copyFrom(currentCallFrame.localVariables[varId]!!)
-                            return
-                        }
-                        instanceId == SpecialObjectReferenceType.OTHER -> currentCallFrame.other!!
-                        instanceId == SpecialObjectReferenceType.GLOBAL -> global
+                        instanceId == SpecialObjectReferenceType.LOCAL -> this.currentCallFrame
+                        instanceId == SpecialObjectReferenceType.OTHER -> this.currentCallFrame.other!!
+                        instanceId == SpecialObjectReferenceType.GLOBAL -> this.global
                         instanceId >= 0 -> {
                             val instance = runner.currentRoom.instances.firstOrNull { it.objectIndex == instanceId }
 
@@ -262,15 +258,8 @@ class StarfaitVM(
                 // println("instanceID? $instanceId")
 
                 val pushed = stack.push()
-                val localVariable = currentCallFrame.localVariables[operand.variableIndex()]
-
-                // println("Local Variable with VarID ${operand.variableIndex()} is ${localVariable?.toStringTyped()}")
-
-                if (localVariable != null) {
-                    pushed.copyFrom(localVariable)
-                } else {
-                    pushed.setUndefined()
-                }
+                val localVariable = this.currentCallFrame.getVariable(operand.variableIndex(), arrayIndex)
+                pushed.copyFrom(localVariable)
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
@@ -289,31 +278,25 @@ class StarfaitVM(
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
-                pushVariableFromObject(global, operand, null)
+                pushVariableFromVariableContainer(global, operand, null)
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }
 
-    private fun pushVariableFromObject(objectBase: ObjectBase, operand: VariableReferenceOperand, arrayIndex: Int?) {
+    private fun pushVariableFromVariableContainer(variableContainer: VariableContainer, operand: VariableReferenceOperand, arrayIndex: Int?) {
         // println("The VarID of the operand is ${operand.variableIndex()}")
         val variableId = operand.variableIndex()
         // println("The variable on ${objectBase} is ${variableId?.toStringTyped()} (VarID: ${operand.variableIndex()})")
 
         val result = stack.push()
         if (variableId >= REGULAR_VARIABLES_BASE) {
-            val variable = objectBase.variables[variableId] ?: error("Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not set before reading it")
-            if (arrayIndex != null) {
-                check(variable.type == RValueDataType.ARRAY) { "Variable with VarID ${operand.variableIndex()} (${getVariableNameFromVariableIndex(operand.variableIndex())}) is not an array, but we wanted to read arrayIndex $arrayIndex from it!" }
-                val array = variable.ref as GMLArray
-                val variable = array.entries[arrayIndex] ?: error("Trying to read from array index $arrayIndex, but the element does not exist!")
-                result.copyFrom(variable)
-            } else {
-                result.copyFrom(variable)
-            }
+            result.copyFrom(variableContainer.getVariable(variableId, arrayIndex))
         } else {
-            val builtinVariableHandler = builtinVariableHandlers[variableId]
-            builtinVariableHandler.readHandler.invoke(objectBase as Instance, result, arrayIndex)
+            check(variableContainer is Instance) { "Cannot read a built-in variable from a non-instance!" }
+
+            val builtinVariableHandler = this.builtinVariableHandlers[variableId]
+            builtinVariableHandler.readHandler.invoke(variableContainer, result, arrayIndex)
         }
     }
 
@@ -329,64 +312,24 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
-                val value = stack.pop().makeIndependent()
+                val independentValue = stack.pop().makeIndependent()
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
                 when (instanceId) {
                     SpecialObjectReferenceType.SELF -> {
-                        val instance = currentSelfInstance
+                        val instance = this.currentSelfInstance
 
                         if (varId >= REGULAR_VARIABLES_BASE) {
-                            if (arrayIndex != null) {
-                                // Arrays a bit trickier...
-                                // In this case, we want to WRITE to a specific slot in the array
-                                val arrayRValue = instance.variables[varId] ?: RValue().apply { this.setUndefined() }
-                                val gmlArray = if (arrayRValue.type == RValueDataType.ARRAY) {
-                                    arrayRValue.ref as GMLArray
-                                } else {
-                                    GMLArray()
-                                }
-
-                                gmlArray.entries[arrayIndex] = value
-
-                                arrayRValue.setArray(gmlArray)
-
-                                // println("GMLArray elements: ${gmlArray.entries}")
-
-                                // We don't need to make it independent because or it is a RValue that we already own, or it was the already existing RValue
-                                instance.variables[varId] = arrayRValue
-                            } else {
-                                instance.variables[varId] = value
-                            }
+                            instance.setVariable(varId, independentValue, arrayIndex)
                         } else error("Tried writing a global built-in variable from the INT32 pop path!")
                     }
 
                     SpecialObjectReferenceType.GLOBAL -> {
-                        val instance = global
+                        val instance = this.global
 
                         if (varId >= REGULAR_VARIABLES_BASE) {
-                            if (arrayIndex != null) {
-                                // Arrays a bit trickier...
-                                // In this case, we want to WRITE to a specific slot in the array
-                                val arrayRValue = instance.variables[varId] ?: RValue().apply { this.setUndefined() }
-                                val gmlArray = if (arrayRValue.type == RValueDataType.ARRAY) {
-                                    arrayRValue.ref as GMLArray
-                                } else {
-                                    GMLArray()
-                                }
-
-                                gmlArray.entries[arrayIndex] = value
-
-                                arrayRValue.setArray(gmlArray)
-
-                                // println("GMLArray elements: ${gmlArray.entries}")
-
-                                // We don't need to make it independent because or it is a RValue that we already own, or it was the already existing RValue
-                                instance.variables[varId] = arrayRValue
-                            } else {
-                                instance.variables[varId] = value
-                            }
+                            instance.setVariable(varId, independentValue, arrayIndex)
                         } else error("Tried writing a global built-in variable from the INT32 pop path!")
                     }
                     else -> TODO("Unsupported instance ID $instanceId!")
@@ -405,20 +348,14 @@ class StarfaitVM(
                 // println("instanceID? $instanceId")
 
                 // TODO: Use correct instance here!
-                val instance = when {
-                    instanceId == SpecialObjectReferenceType.SELF -> requireNotNull(currentSelfInstance)
-                    instanceId == SpecialObjectReferenceType.LOCAL -> {
-                        // ewww this is a horrible hack
-                        val popped = stack.pop()
-                        // println("Writing ${popped.toStringTyped()} to local variable VarID $varId")
-                        currentCallFrame.localVariables[varId] = popped.makeIndependent()
-                        return
-                    }
-                    instanceId == SpecialObjectReferenceType.GLOBAL -> global
+                val variableContainers = when {
+                    instanceId == SpecialObjectReferenceType.SELF -> listOf(this.currentSelfInstance)
+                    instanceId == SpecialObjectReferenceType.LOCAL -> listOf(this.currentCallFrame)
+                    instanceId == SpecialObjectReferenceType.GLOBAL -> listOf(this.global)
                     instanceId >= 0 -> {
                         // This is a reference to all instances with a specific object index
-                        // Once again this is a horrible hack, fix it later!
-                        val poppedValue = stack.pop()
+                        // This is a horrible hack, fix it later!
+                        val matchedInstances = mutableListOf<Instance>()
 
                         for (instance in runner.currentRoom.instances) {
                             val matched = if (instanceId >= StarfaitRunner.BASE_INSTANCE_ID) {
@@ -428,46 +365,30 @@ class StarfaitVM(
                             }
 
                             if (matched) {
-                                // Only the FIRST match receives the value
-                                if (varId >= REGULAR_VARIABLES_BASE) {
-                                    instance.variables[varId] = poppedValue.makeIndependent() // .also { println("Setting variable $varId to ${it.toStringTyped()}") }
-                                } else {
-                                    val builtinVariableHandler = builtinVariableHandlers[varId]
-                                    builtinVariableHandler.writeHandler.invoke(instance, poppedValue, null)
-                                }
+                                matchedInstances.add(instance)
                             }
                         }
-                        return
+
+                        matchedInstances
                     }
                     else -> error("Unsupported instance ID $instanceId!")
                 }
 
-                if (varId >= REGULAR_VARIABLES_BASE) {
-                    if (arrayIndex != null) {
-                        // Arrays a bit trickier...
-                        // In this case, we want to WRITE to a specific slot in the array
-                        val arrayRValue = instance.variables[varId] ?: RValue().apply { this.setUndefined() }
-                        val gmlArray = if (arrayRValue.type == RValueDataType.ARRAY) {
-                            arrayRValue.ref as GMLArray
-                        } else {
-                            GMLArray()
-                        }
+                val poppedValue = stack.pop()
+                for (variableContainer in variableContainers) {
+                    // We need to create a new independent value for each container!
+                    // Because if we don't, because RValues are mutable, a different caller may change a RValue data, changing it on EVERY VariableContainer
+                    val independentValue = poppedValue.makeIndependent()
 
-                        gmlArray.entries[arrayIndex] = stack.pop().makeIndependent()
-
-                        arrayRValue.setArray(gmlArray)
-
-                        // println("GMLArray elements: ${gmlArray.entries}")
-
-                        // We don't need to make it independent because or it is a RValue that we already own, or it was the already existing RValue
-                        instance.variables[varId] = arrayRValue
+                    if (varId >= REGULAR_VARIABLES_BASE) {
+                        variableContainer.setVariable(varId, independentValue, arrayIndex)
                     } else {
-                        instance.variables[varId] = stack.pop().makeIndependent()
+                        // Builtin variable!
+                        check(variableContainer is Instance) { "Cannot write a built-in variable to a non-instance!" }
+
+                        val builtinVariableHandler = builtinVariableHandlers[varId]
+                        builtinVariableHandler.writeHandler.invoke(variableContainer, independentValue, arrayIndex)
                     }
-                } else {
-                    // Builtin variable!
-                    val builtinVariableHandler = builtinVariableHandlers[varId]
-                    builtinVariableHandler.writeHandler.invoke(instance as Instance, stack.pop().makeIndependent(), arrayIndex)
                 }
             }
             InstructionDataType.STRING -> TODO()
@@ -849,7 +770,7 @@ class StarfaitVM(
         return variable.varId
     }
 
-    private fun getVariableNameFromVariableIndex(index: Int): String {
+    fun getVariableNameFromVariableIndex(index: Int): String {
         require(index >= REGULAR_VARIABLES_BASE) { "Trying to get the name of a builtin variable!" }
         return regularVariableNames.getOrNull(index - REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
     }

@@ -15,7 +15,8 @@ class StarfaitVM(
     val gameWAD: GameWAD,
     val gmlScriptsOpcodesToBeTraced: Set<String>,
     val functionCallsToBeTraced: Set<String>,
-    val alarmsToBeTraced: Set<String>
+    val alarmsToBeTraced: Set<String>,
+    val eventsToBeTraced: Set<String>
 ) {
     companion object {
         private const val REGULAR_VARIABLES_BASE = 100_000

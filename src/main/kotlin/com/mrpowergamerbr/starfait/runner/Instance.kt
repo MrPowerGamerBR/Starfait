@@ -69,6 +69,14 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
         for (action in subtypeEvents) {
             val code = this.runner.gameWAD.code.codes[action.codeId]
+
+            if (runner.vm.eventsToBeTraced.contains("*") || runner.vm.eventsToBeTraced.contains(objectName)) {
+                val eventTypeName = EventType.getEventTypeName(eventType)
+                val eventSubtypeName = EventType.getEventSubtypeName(eventType, eventSubtype)
+
+                println("Runner: [${this.objectName} / ${this.id}] Dispatching Event $eventTypeName $eventSubtypeName ($eventType, $eventSubtype)")
+            }
+
             this.runner.vm.executeCode(code, this, gameObject, eventType, eventSubtype, emptyArray())
         }
 

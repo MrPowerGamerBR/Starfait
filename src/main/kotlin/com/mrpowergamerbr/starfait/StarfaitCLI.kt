@@ -43,6 +43,7 @@ class StarfaitCLI : CliktCommand() {
     val traceOpcodes by option()
     val traceFunctionCalls by option()
     val traceAlarms by option()
+    val traceEvents by option()
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
         for ((index, element) in list.withIndex()) {
@@ -160,6 +161,7 @@ class StarfaitCLI : CliktCommand() {
             gmlScriptsOpcodesToBeTraced = traceOpcodes?.split(",")?.toSet().orEmpty(),
             functionCallsToBeTraced = traceFunctionCalls?.split(",")?.toSet().orEmpty(),
             alarmsToBeTraced = traceAlarms?.split(",")?.toSet().orEmpty(),
+            eventsToBeTraced = traceEvents?.split(",")?.toSet().orEmpty()
         )
         vm.remapReferences()
 

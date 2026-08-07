@@ -31,6 +31,7 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         gameInstance.depth = gameObject.depth.toFloat()
         gameInstance.persistent = gameObject.persistent
         gameInstance.solid = gameObject.solid
+        gameInstance.maskIndex = gameObject.maskId.toFloat()
 
         builder(gameInstance)
         this.instances.add(gameInstance)

@@ -12,6 +12,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var imageAlpha = 1.0f
     var imageIndex = 0.0f
     var spriteIndex = 0.0f
+    var maskIndex = -1.0f
     var speed = 0.0f
     var depth = 0.0f
     var direction = 0.0f
@@ -95,7 +96,9 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
     fun getBoundingBox(): BoundingBox {
         // bbox_*: "Please note that when the instance has no sprite assigned the value returned will be the same as the instance Y position."
-        if (0 > this.spriteIndex) {
+        val maskIndex = (if (this.maskIndex >= 0.0f) this.maskIndex else this.spriteIndex).toInt()
+
+        if (0 > maskIndex) {
             return BoundingBox(
                 this.x,
                 this.x,
@@ -104,7 +107,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
             )
         }
 
-        val sprite = runner.gameWAD.sprt.sprites[this.spriteIndex.toInt()]
+        val sprite = runner.gameWAD.sprt.sprites[maskIndex]
 
         val bboxLeftAbsolute = this.x + sprite.bboxLeft
         val bboxRightAbsolute = this.x + sprite.bboxRight

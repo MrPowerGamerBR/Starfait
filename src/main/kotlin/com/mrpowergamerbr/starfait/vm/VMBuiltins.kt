@@ -163,6 +163,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("image_alpha", Instance::imageAlpha)
         registerInstanceRealVariable("image_index", Instance::imageIndex)
         registerInstanceRealVariable("sprite_index", Instance::spriteIndex)
+        registerInstanceRealVariable("mask_index", Instance::maskIndex)
         registerInstanceRealVariable("depth", Instance::depth)
         registerInstanceRealVariable("direction", Instance::direction)
         registerInstanceRealVariable("image_blend", Instance::imageBlend)

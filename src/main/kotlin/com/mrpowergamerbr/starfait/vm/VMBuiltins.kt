@@ -460,7 +460,9 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerStringFunction char.toString()
         }
 
-        registerRealStubbedFunction("random", 1, 0.0)
+        registerRealFunction("random", 1) { args ->
+            return@registerRealFunction runner.random.nextDouble() * args[0].real
+        }
 
         registerBooleanFunction("instance_exists", 1) { args ->
             // "This function does not take into account those instances that have been deactivated using the instance deactivate functions."

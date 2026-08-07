@@ -464,6 +464,19 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerRealFunction runner.random.nextDouble() * args[0].real
         }
 
+        registerIntAsRealFunction("irandom", 1) { args ->
+            val bound = args[0].real.toInt()
+
+            // If it is 0 it won't ever have any other random number :3
+            if (bound == 0) {
+                return@registerIntAsRealFunction 0
+            } else if (bound > 0) {
+                return@registerIntAsRealFunction runner.random.nextInt(bound + 1)
+            } else {
+                return@registerIntAsRealFunction -runner.random.nextInt(-bound + 1)
+            }
+        }
+
         registerBooleanFunction("instance_exists", 1) { args ->
             // "This function does not take into account those instances that have been deactivated using the instance deactivate functions."
             // TODO: Inheritance

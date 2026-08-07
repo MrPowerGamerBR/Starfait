@@ -343,8 +343,16 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerBooleanFunction("ds_map_add", 3) { args ->
             val dsMap = vm.dsMapPool[args[0].int]
+            if (dsMap.containsKey(args[1]))
+                return@registerBooleanFunction false
+
             dsMap.set(args[1], args[2])
             return@registerBooleanFunction true
+        }
+
+        registerVoidFunction("ds_map_set", 3) { args ->
+            val dsMap = vm.dsMapPool[args[0].int]
+            dsMap.set(args[1], args[2])
         }
 
         registerRawFunction("ds_map_find_value", null) { args, result ->

@@ -604,8 +604,20 @@ class VMBuiltins(val vm: StarfaitVM) {
             val outline = args[4].bool
             if (outline)
                 warnFunctionSemiStub("draw_rectangle")
-            
+
             runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawSetColor)
+        }
+
+        registerVoidFunction("action_move_to", 2) { args ->
+            val x = args[0].real
+            val y = args[1].real
+
+            vm.currentSelfInstance.x = x.toFloat()
+            vm.currentSelfInstance.y = y.toFloat()
+        }
+
+        registerVoidFunction("action_kill_object", 0) { args ->
+            vm.currentSelfInstance.markAsDestroyed(true)
         }
     }
 }

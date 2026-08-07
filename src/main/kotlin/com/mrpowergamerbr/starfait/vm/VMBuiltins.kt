@@ -13,6 +13,7 @@ import kotlin.math.floor
 import kotlin.math.round
 import kotlin.math.sin
 import kotlin.reflect.KMutableProperty1
+import kotlin.text.iterator
 
 class VMBuiltins(val vm: StarfaitVM) {
     val runner: StarfaitRunner
@@ -563,6 +564,24 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRawFunction("choose", null) { args, result ->
             result.copyFrom(args.random(runner.random))
+        }
+
+        registerIntAsRealFunction("string_width", 1) { args ->
+            val text = args[0].toGMLString()
+            val font = requireNotNull(runner.activeDrawFont)
+
+            // This is essentially how the text is rendered... but WITHOUT the rendering
+            var width = 0
+            for (char in text) {
+                // TODO: HashMap lookup for the glyphs would be pretty swell
+                val glyph = font.glyphs.firstOrNull { it.character == char }
+
+                if (glyph != null) {
+                    width += glyph.shift
+                }
+            }
+
+            return@registerIntAsRealFunction width
         }
     }
 }

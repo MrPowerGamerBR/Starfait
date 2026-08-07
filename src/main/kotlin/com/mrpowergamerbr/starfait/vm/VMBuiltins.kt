@@ -8,8 +8,10 @@ import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import kotlin.math.absoluteValue
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.round
+import kotlin.math.sin
 import kotlin.reflect.KMutableProperty1
 
 class VMBuiltins(val vm: StarfaitVM) {
@@ -522,5 +524,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRealFunction("floor", 1) { args -> floor(args[0].real) }
         registerRealFunction("ceil", 1) { args -> ceil(args[0].real) }
+        registerRealFunction("sin", 1) { args -> sin(args[0].real) }
+        registerRealFunction("cos", 1) { args -> cos(args[0].real) }
     }
 }

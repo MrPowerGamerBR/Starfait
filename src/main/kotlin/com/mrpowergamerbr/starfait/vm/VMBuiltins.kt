@@ -540,12 +540,12 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerBooleanStubbedFunction("ini_section_exists", 1, false)
 
         registerVoidFunction("draw_sprite", 4) { args ->
-            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())
+            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat(), 1f, 1f, 1f)
         }
 
         registerVoidFunction("draw_sprite_ext", 9) { args ->
             warnFunctionSemiStub("draw_sprite_ext")
-            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat())
+            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].int], args[1].int, args[2].real.toFloat(), args[3].real.toFloat(), 1f, 1f, 1f)
         }
 
         registerStringFunction("chr", 1) { args -> args[0].int.toChar().toString() }

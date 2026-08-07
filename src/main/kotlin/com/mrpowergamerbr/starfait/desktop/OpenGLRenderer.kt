@@ -44,8 +44,8 @@ import org.lwjgl.opengl.GL30.glGenVertexArrays
 class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     companion object {
         private const val MAX_BATCH_ELEMENTS = 512
-        private const val FIELDS_PER_ELEMENT = 42
-        private const val TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT = 7
+        private const val FIELDS_PER_ELEMENT = 48
+        private const val TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT = 8
     }
 
     lateinit var runner: StarfaitRunner
@@ -76,15 +76,15 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
 
         // aPosition
         // stride is from the START of the current "section"!
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, 7 * Float.SIZE_BYTES, 0L)
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 0L)
         glEnableVertexAttribArray(0)
 
         // aTexCoord
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, 7 * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
         glEnableVertexAttribArray(1)
 
         // aBlendColor
-        glVertexAttribPointer(2, 3, GL_FLOAT, false, 7 * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
+        glVertexAttribPointer(2, 4, GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
         glEnableVertexAttribArray(2)
     }
 
@@ -96,14 +96,17 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                 sprite,
                 instance.imageIndex.toInt(),
                 instance.x,
-                instance.y
+                instance.y,
+                instance.imageXScale,
+                instance.imageYScale,
+                instance.imageAlpha
             )
         } else {
             // println("Instance ${instance.objectName} has no sprite index!")
         }
     }
 
-    override fun drawSprite(sprite: Sprite, subimg: Int, x: Float, y: Float) {
+    override fun drawSprite(sprite: Sprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, alpha: Float) {
         // Only attempt to render instances that DO have a sprite index
         val framePointer = sprite.frames[subimg]
         val tpag = runner.gameWAD.tpag.entries[framePointer]!!
@@ -116,10 +119,11 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             tpag.sourceY.toFloat() / texture.height,
             (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-            sprite.width.toFloat() - tpag.targetX.toFloat(),
-            sprite.height.toFloat() - tpag.targetY.toFloat(),
+            (sprite.width.toFloat() - tpag.targetX.toFloat()) * xscale,
+            (sprite.height.toFloat() - tpag.targetY.toFloat()) * yscale,
             textures[tpag.textureIndex.toInt()],
-            GMLColor(0xFFFFFF)
+            GMLColor(0xFFFFFF),
+            alpha
         )
     }
 
@@ -137,7 +141,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             width - tpag.targetX.toFloat(),
             height - tpag.targetY.toFloat(),
             textures[tpag.textureIndex.toInt()],
-            GMLColor(0xFFFFFF)
+            GMLColor(0xFFFFFF),
+            1.0f
         )
     }
 
@@ -161,7 +166,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             tile.width.toFloat(),
             tile.height.toFloat(),
             textures[tpag.textureIndex.toInt()],
-            GMLColor(0xFFFFFF)
+            GMLColor(0xFFFFFF),
+            1.0f
         )
     }
 
@@ -189,7 +195,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                     glyph.width.toFloat(),
                     glyph.height.toFloat(),
                     texture,
-                    runner.drawSetColor
+                    runner.drawSetColor,
+                    1.0f
                 )
 
                 x += glyph.shift
@@ -208,7 +215,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             width,
             height,
             white1x1Texture,
-            color
+            color,
+            1.0f
         )
     }
 
@@ -249,7 +257,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         width: Float,
         height: Float,
         texture: Texture,
-        blend: GMLColor
+        blend: GMLColor,
+        alpha: Float
     ) {
         flushIfNeeded(texture)
 
@@ -260,6 +269,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = blend.redF
         batch[currentIndex++] = blend.greenF
         batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = alpha
 
         // bottom-right
         batch[currentIndex++] = x + width; batch[currentIndex++] = y + height;
@@ -268,6 +278,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = blend.redF
         batch[currentIndex++] = blend.greenF
         batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = alpha
 
         // bottom-left
         batch[currentIndex++] = x; batch[currentIndex++] = y + height;
@@ -276,6 +287,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = blend.redF
         batch[currentIndex++] = blend.greenF
         batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = alpha
 
         // top-left
         batch[currentIndex++] = x; batch[currentIndex++] = y;
@@ -284,6 +296,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = blend.redF
         batch[currentIndex++] = blend.greenF
         batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = alpha
 
         // top-right
         batch[currentIndex++] = x + width; batch[currentIndex++] = y;
@@ -292,6 +305,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = blend.redF
         batch[currentIndex++] = blend.greenF
         batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = alpha
 
         // bottom-right
         batch[currentIndex++] = x + width; batch[currentIndex++] = y + height;
@@ -300,6 +314,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = blend.redF
         batch[currentIndex++] = blend.greenF
         batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = alpha
 
         this.activeBatchTexture = texture
     }

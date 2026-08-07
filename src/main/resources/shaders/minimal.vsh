@@ -3,13 +3,13 @@
 // For batching, we store the position of each quad directly on the position, so we don't actually *need* to have a uModel
 layout(location = 0) in vec2 aPosition;
 layout(location = 1) in vec2 aTexCoord;
-layout(location = 2) in vec3 aBlendColor;
+layout(location = 2) in vec4 aBlendColor;
 
 uniform vec4 uColor;
 uniform mat4 uProjection;
 
 out vec2 vTexCoord;
-out vec3 vBlendColor;
+out vec4 vBlendColor;
 
 void main() {
     vTexCoord = aTexCoord;

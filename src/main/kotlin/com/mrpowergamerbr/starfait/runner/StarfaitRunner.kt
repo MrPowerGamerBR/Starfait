@@ -113,8 +113,13 @@ class StarfaitRunner(
         // We need to set the currentRoom BEFORE we dispatch the create events
         this.currentRoom = newRoom
 
+        val newlyCreatedInstances = mutableListOf<Instance>()
         for (instance in room.instances) {
-            newRoom.createAndSpawnInstance(instance)
+            newlyCreatedInstances.add(newRoom.createAndSpawnInstance(instance))
+        }
+
+        for (instance in newlyCreatedInstances) {
+            instance.dispatchEvent(EventType.CREATE, 0, null)
         }
 
         forEachInstance {

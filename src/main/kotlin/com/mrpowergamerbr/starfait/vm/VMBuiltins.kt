@@ -327,6 +327,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 this.x = x.toFloat()
                 this.y = y.toFloat()
             }
+            instance.dispatchEvent(EventType.CREATE, 0, null)
 
             return@registerIntAsRealFunction instance.id
         }

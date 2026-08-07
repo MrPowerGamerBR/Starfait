@@ -120,12 +120,12 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         return subtypeEvents.isNotEmpty()
     }
 
-    fun markAsDestroyed(executeDestroyEvent: Boolean) {
+    fun markAsDestroyed(fireDestroyEvent: Boolean) {
         check(!this.destroyed) { "Instance is already destroyed!" }
 
         this.destroyed = true
 
-        if (executeDestroyEvent)
+        if (fireDestroyEvent)
             dispatchEvent(EventType.DESTROY, 0, null)
     }
 

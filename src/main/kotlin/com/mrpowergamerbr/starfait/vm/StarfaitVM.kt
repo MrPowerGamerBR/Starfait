@@ -660,8 +660,6 @@ class StarfaitVM(
             objectId == SpecialObjectReferenceType.ALL || isInstanceOrParent(it.objectIndex, objectId)
         }
 
-        println("I want $objectId Filtered instances: ${instances}")
-
         if (instances.isEmpty()) {
             // The branchOffset jumps to the PopEnv IN RELATION to the beginning of the PushEnv
             // But for this case, we can just jump directly AFTER the PushEnv (we are already +4 because we read the word)

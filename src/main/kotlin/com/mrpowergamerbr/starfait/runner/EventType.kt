@@ -22,6 +22,22 @@ object EventType {
     object OtherSubType {
         @Event const val GAME_START = 2
         @Event const val ROOM_START = 4
+        @Event const val USER_0 = 10
+        @Event const val USER_1 = 11
+        @Event const val USER_2 = 12
+        @Event const val USER_3 = 13
+        @Event const val USER_4 = 14
+        @Event const val USER_5 = 15
+        @Event const val USER_6 = 16
+        @Event const val USER_7 = 17
+        @Event const val USER_8 = 18
+        @Event const val USER_9 = 19
+        @Event const val USER_10 = 20
+        @Event const val USER_11 = 21
+        @Event const val USER_12 = 22
+        @Event const val USER_13 = 23
+        @Event const val USER_14 = 24
+        @Event const val USER_15 = 25
     }
 
     @SubTypesOf(DRAW)

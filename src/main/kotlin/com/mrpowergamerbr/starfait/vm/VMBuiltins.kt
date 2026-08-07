@@ -400,6 +400,41 @@ class VMBuiltins(val vm: StarfaitVM) {
             }
         }
 
+        registerVoidFunction("event_user", 1) { args ->
+            val number = args[0].int
+            require(number in 0..15) { "User Event is out of bounds!" }
+            // event_user is like event_inherited, but for user events
+            val currentInstance = vm.currentSelfInstance
+            val callFrame = vm.currentCallFrame
+            val subtype = EventType.OtherSubType.USER_0 + number
+
+            var gameObject = callFrame.eventObject
+
+            val events = gameObject.events[EventType.OTHER]
+            var subtypeEvents = events
+                .filter { it.subtype == subtype }
+                .flatMap { it.actions }
+
+            // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
+            var attempts = 0
+            while (subtypeEvents.isEmpty()) {
+                if (0 > gameObject.parentId)
+                    break
+
+                gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
+                subtypeEvents = gameObject.events[EventType.OTHER]
+                    .filter { it.subtype == subtype }
+                    .flatMap { it.actions }
+                attempts++
+            }
+
+            for (action in subtypeEvents) {
+                val code = this.runner.gameWAD.code.codes[action.codeId]
+                println("Executing code ${this.runner.gameWAD.strg.getString(code.name)}")
+                this.runner.vm.executeCode(code, currentInstance, gameObject, EventType.OTHER, subtype, emptyArray())
+            }
+        }
+
         registerStringFunction("string_replace_all", 3) { args ->
             val string = args[0].refAsString()
             return@registerStringFunction string.replace(args[1].refAsString(), args[2].refAsString())

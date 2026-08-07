@@ -576,7 +576,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerIntAsRealFunction("ord", 1) { args -> args[0].refAsString()[0].code }
 
         registerIntAsRealFunction("collision_rectangle", 7) { args ->
-            println("[${vm.currentCallFrameCodeName}] collision_rectangle")
             val self = vm.currentSelfInstance
             val x1 = args[0].real
             val y1 = args[1].real
@@ -621,7 +620,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerIntAsRealFunction("collision_point", 5) { args ->
-            println("[${vm.currentCallFrameCodeName}] collision_point")
             val self = vm.currentSelfInstance
             val x = args[0].real.toFloat()
             val y = args[1].real.toFloat()

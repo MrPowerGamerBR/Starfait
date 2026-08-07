@@ -6,6 +6,7 @@ import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
+import kotlin.random.Random
 
 class StarfaitRunner(
     val gameWAD: GameWAD,
@@ -25,6 +26,7 @@ class StarfaitRunner(
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
     var drawSetColor = GMLColor(0xFFFFFF)
+    val random = Random(System.currentTimeMillis())
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()

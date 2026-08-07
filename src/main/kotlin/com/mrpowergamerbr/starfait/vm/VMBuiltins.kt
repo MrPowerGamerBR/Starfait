@@ -526,5 +526,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealFunction("ceil", 1) { args -> ceil(args[0].real) }
         registerRealFunction("sin", 1) { args -> sin(args[0].real) }
         registerRealFunction("cos", 1) { args -> cos(args[0].real) }
+
+        registerRawFunction("choose", null) { args, result ->
+            result.copyFrom(args.random(runner.random))
+        }
     }
 }

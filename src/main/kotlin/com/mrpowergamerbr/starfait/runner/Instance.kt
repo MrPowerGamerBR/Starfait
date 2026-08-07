@@ -6,6 +6,8 @@ import kotlin.collections.filter
 class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : ObjectBase(runner.vm) {
     var x = 0.0f
     var y = 0.0f
+    var xPrevious = 0.0f
+    var yPrevious = 0.0f
     var imageSpeed = 1.0f
     var imageXScale = 1.0f
     var imageYScale = 1.0f
@@ -48,25 +50,58 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
      *
      * @return true if the instance had a event liostener for it
      */
-    fun dispatchEvent(eventType: Int, eventSubtype: Int): Boolean {
+    fun dispatchEvent(eventType: Int, eventSubtype: Int, other: Instance?): Boolean {
         var gameObject = this.runner.gameWAD.objt.objects[this.objectIndex]
         val events = gameObject.events[eventType]
 
-        var subtypeEvents = events
-            .filter { it.subtype == eventSubtype }
-            .flatMap { it.actions }
+        val subtypeEvents = if (eventType == EventType.COLLISION) {
+            // TODO: This SUCKS even more
+            val allParentsOfCollidedObject = mutableListOf<Int>()
 
-        // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
-        var attempts = 0
-        while (subtypeEvents.isEmpty()) {
-            if (0 > gameObject.parentId)
-                break
+            var targetGameObjectId = eventSubtype
+            while (true) {
+                if (0 > targetGameObjectId)
+                    break
 
-            gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
-            subtypeEvents = gameObject.events[eventType]
+                allParentsOfCollidedObject.add(targetGameObjectId)
+                val targetGameObject = vm.gameWAD.objt.objects[targetGameObjectId]
+                targetGameObjectId = targetGameObject.parentId
+            }
+
+            val subtypeEvents = mutableListOf<GameObject.Action>()
+
+            // Get the first matched event
+            for (id in allParentsOfCollidedObject) {
+                if (subtypeEvents.isNotEmpty())
+                    break
+
+                subtypeEvents.addAll(
+                    events
+                        .filter { it.subtype == id }
+                        .flatMap { it.actions }
+                )
+            }
+
+            subtypeEvents
+        } else {
+            var subtypeEvents = events
                 .filter { it.subtype == eventSubtype }
                 .flatMap { it.actions }
-            attempts++
+
+            // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
+            var attempts = 0
+            while (subtypeEvents.isEmpty()) {
+                if (0 > gameObject.parentId)
+                    break
+
+                gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
+                subtypeEvents = gameObject.events[eventType]
+                    .filter { it.subtype == eventSubtype }
+                    .flatMap { it.actions }
+                attempts++
+            }
+
+            subtypeEvents
         }
 
         for (action in subtypeEvents) {
@@ -79,7 +114,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
                 println("Runner: [${this.objectName} / ${this.id}] Dispatching Event $eventTypeName $eventSubtypeName ($eventType, $eventSubtype)")
             }
 
-            this.runner.vm.executeCode(code, this, gameObject, eventType, eventSubtype, emptyArray())
+            this.runner.vm.executeCode(code, this, other, gameObject, eventType, eventSubtype, emptyArray())
         }
 
         return subtypeEvents.isNotEmpty()
@@ -91,7 +126,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         this.destroyed = true
 
         if (executeDestroyEvent)
-            dispatchEvent(EventType.DESTROY, 0)
+            dispatchEvent(EventType.DESTROY, 0, null)
     }
 
     fun getBoundingBox(): BoundingBox {
@@ -109,16 +144,21 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
         val sprite = runner.gameWAD.sprt.sprites[maskIndex]
 
-        val bboxLeftAbsolute = this.x + sprite.bboxLeft
-        val bboxRightAbsolute = this.x + sprite.bboxRight
-        val bboxTopAbsolute = this.y + sprite.bboxTop
-        val bboxBottomAbsolute = this.y + sprite.bboxBottom
+        val scaledBBoxLeftAndOffset = (sprite.bboxLeft - sprite.originX) * this.imageXScale
+        val scaledBBoxRightAndOffset = (sprite.bboxRight - sprite.originX) * this.imageXScale
+        val scaledBBoxTopAndOffset = (sprite.bboxTop - sprite.originY) * this.imageYScale
+        val scaledBBoxBottomAndOffset = (sprite.bboxBottom - sprite.originY) * this.imageYScale
+
+        val bboxLeftAbsolute = this.x + scaledBBoxLeftAndOffset
+        val bboxRightAbsolute = this.x + scaledBBoxRightAndOffset
+        val bboxTopAbsolute = this.y + scaledBBoxTopAndOffset
+        val bboxBottomAbsolute = this.y + scaledBBoxBottomAndOffset
 
         return BoundingBox(
-            bboxLeftAbsolute - sprite.originX,
-            bboxRightAbsolute - sprite.originX,
-            bboxTopAbsolute - sprite.originY,
-            bboxBottomAbsolute - sprite.originY
+            bboxLeftAbsolute,
+            bboxRightAbsolute,
+            bboxTopAbsolute,
+            bboxBottomAbsolute
         )
     }
 }

@@ -1,11 +1,13 @@
 package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.GMLColor
+import com.mrpowergamerbr.starfait.runner.BoundingBox
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import com.mrpowergamerbr.starfait.wad.GameObject
 import kotlin.math.absoluteValue
 import kotlin.math.ceil
 import kotlin.math.cos
@@ -257,8 +259,8 @@ class VMBuiltins(val vm: StarfaitVM) {
             result.setReal(bbox.bottom.toDouble())
         }
 
-        registerReadOnlyInstanceVariable("xprevious") { instance, result, _ -> result.setReal(instance.x.toDouble()) }
-        registerReadOnlyInstanceVariable("yprevious") { instance, result, _ -> result.setReal(instance.y.toDouble()) }
+        registerReadOnlyInstanceVariable("xprevious") { instance, result, _ -> result.setReal(instance.xPrevious.toDouble()) }
+        registerReadOnlyInstanceVariable("yprevious") { instance, result, _ -> result.setReal(instance.yPrevious.toDouble()) }
 
         // ===[ BUILTIN FUNCTIONS ]===
         registerRawFunction("script_execute", null) { args, result ->
@@ -267,7 +269,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val script = vm.gameWAD.scpt.scripts[scriptId]
             val code = vm.gameWAD.code.codes[script.codeIndex]
             val arguments = args.drop(1).map { it.makeIndependent() }.toTypedArray()
-            val scriptResult = vm.executeCode(code, vm.currentSelfInstance, callFrame.eventObject, callFrame.eventType, callFrame.eventSubtype, arguments)
+            val scriptResult = vm.executeCode(code, vm.currentSelfInstance, callFrame.other, callFrame.eventObject, callFrame.eventType, callFrame.eventSubtype, arguments)
             if (scriptResult != null) {
                 return@registerRawFunction result.copyFrom(scriptResult)
             } else {
@@ -308,6 +310,12 @@ class VMBuiltins(val vm: StarfaitVM) {
             val newRoomIndex = args[0].int
             val room = vm.gameWAD.room.rooms[newRoomIndex]
             runner.pendingRoom = PendingRoom(newRoomIndex, room)
+        }
+        registerIntAsRealFunction("room_next", 1) { args ->
+            val roomIndex = args[0].int
+            val positionInRoomOrder = vm.gameWAD.gen8.roomOrder.indexOf(roomIndex)
+            val newRoomIndex = vm.gameWAD.gen8.roomOrder[positionInRoomOrder + 1]
+            newRoomIndex
         }
         registerBooleanFunction("is_undefined", 1) { args -> args[0].type == RValueDataType.UNDEFINED }
         registerIntAsRealFunction("instance_create", 3) { args ->
@@ -427,7 +435,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             for (action in subtypeEvents) {
                 val code = this.runner.gameWAD.code.codes[action.codeId]
                 println("Executing code ${this.runner.gameWAD.strg.getString(code.name)}")
-                this.runner.vm.executeCode(code, currentInstance, gameObject, callFrame.eventType, callFrame.eventSubtype, emptyArray())
+                this.runner.vm.executeCode(code, currentInstance, callFrame.other, gameObject, callFrame.eventType, callFrame.eventSubtype, emptyArray())
             }
         }
 
@@ -439,7 +447,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val callFrame = vm.currentCallFrame
             val subtype = EventType.OtherSubType.USER_0 + number
 
-            var gameObject = callFrame.eventObject
+            var gameObject = currentInstance.gameObject
 
             val events = gameObject.events[EventType.OTHER]
             var subtypeEvents = events
@@ -462,7 +470,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             for (action in subtypeEvents) {
                 val code = this.runner.gameWAD.code.codes[action.codeId]
                 println("Executing code ${this.runner.gameWAD.strg.getString(code.name)}")
-                this.runner.vm.executeCode(code, currentInstance, gameObject, EventType.OTHER, subtype, emptyArray())
+                this.runner.vm.executeCode(code, currentInstance, callFrame.other, gameObject, EventType.OTHER, subtype, emptyArray())
             }
         }
 
@@ -566,8 +574,76 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerStringFunction("chr", 1) { args -> args[0].int.toChar().toString() }
         registerIntAsRealFunction("ord", 1) { args -> args[0].refAsString()[0].code }
 
-        registerRealStubbedFunction("collision_point", 5, SpecialObjectReferenceType.NOONE.toDouble())
-        registerRealStubbedFunction("collision_rectangle", 7, SpecialObjectReferenceType.NOONE.toDouble())
+        registerIntAsRealFunction("collision_rectangle", 7) { args ->
+            println("[${vm.currentCallFrameCodeName}] collision_rectangle")
+            val self = vm.currentSelfInstance
+            val x1 = args[0].real
+            val y1 = args[1].real
+            val x2 = args[2].real
+            val y2 = args[3].real
+            val obj = args[4].int
+            val usePreciseCollisionCheck = args[5].bool
+            val notme = args[6].bool
+
+            val selfBBox = BoundingBox(x1.toFloat(), x2.toFloat(), y1.toFloat(), y2.toFloat())
+
+            runner.forEachInstance { instance ->
+                val bbox = instance.getBoundingBox()
+
+                if (instance == self && notme)
+                    return@forEachInstance
+
+                // Hacky
+                fun isInstanceOrParent(startGameObjectId: Int, queryGameObjectId: Int): Boolean {
+                    var targetGameObjectId = startGameObjectId
+                    while (true) {
+                        if (0 > targetGameObjectId)
+                            return false
+
+                        if (targetGameObjectId == queryGameObjectId)
+                            return true
+
+                        val gameObject = vm.gameWAD.objt.objects[targetGameObjectId]
+                        targetGameObjectId = gameObject.parentId
+                    }
+                }
+
+                if (obj != SpecialObjectReferenceType.ALL && !isInstanceOrParent(instance.objectIndex, obj))
+                    return@forEachInstance
+
+                if (selfBBox.isCollidingWith(bbox)) {
+                    return@registerIntAsRealFunction instance.id
+                }
+            }
+
+            return@registerIntAsRealFunction SpecialObjectReferenceType.NOONE
+        }
+
+        registerIntAsRealFunction("collision_point", 5) { args ->
+            println("[${vm.currentCallFrameCodeName}] collision_point")
+            val self = vm.currentSelfInstance
+            val x = args[0].real.toFloat()
+            val y = args[1].real.toFloat()
+            val obj = args[2].int
+            val usePreciseCollisionCheck = args[3].bool
+            val notme = args[4].bool
+
+            runner.forEachInstance { instance ->
+                val bbox = instance.getBoundingBox()
+
+                if (instance == self && notme)
+                    return@forEachInstance
+
+                if (obj != SpecialObjectReferenceType.ALL && instance.objectIndex != obj)
+                    return@forEachInstance
+
+                if (bbox.contains(x, y)) {
+                    return@registerIntAsRealFunction instance.id
+                }
+            }
+
+            return@registerIntAsRealFunction SpecialObjectReferenceType.NOONE
+        }
 
         registerRealFunction("abs", 1) { args -> args[0].real.absoluteValue }
 

@@ -34,8 +34,12 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
         gameInstance.maskIndex = gameObject.maskId.toFloat()
 
         builder(gameInstance)
+
+        gameInstance.xPrevious = gameInstance.x
+        gameInstance.yPrevious = gameInstance.y
+
         this.instances.add(gameInstance)
-        gameInstance.dispatchEvent(EventType.CREATE, 0)
+        gameInstance.dispatchEvent(EventType.CREATE, 0, null)
         return gameInstance
     }
 

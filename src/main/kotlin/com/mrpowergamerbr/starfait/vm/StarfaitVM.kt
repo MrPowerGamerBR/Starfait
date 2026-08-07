@@ -50,12 +50,13 @@ class StarfaitVM(
     fun executeCode(
         code: Code,
         currentInstance: Instance,
+        otherInstance: Instance?,
         eventObject: GameObject,
         eventType: Int,
         eventSubtype: Int,
         arguments: Array<RValue>
     ): RValue? {
-        val callFrame = CallFrame(this, code, currentInstance, null, eventObject, eventType, eventSubtype, arguments, stack.top)
+        val callFrame = CallFrame(this, code, currentInstance, otherInstance, eventObject, eventType, eventSubtype, arguments, stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
 
@@ -350,6 +351,7 @@ class StarfaitVM(
                 // TODO: Use correct instance here!
                 val variableContainers = when {
                     instanceId == SpecialObjectReferenceType.SELF -> listOf(this.currentSelfInstance)
+                    instanceId == SpecialObjectReferenceType.OTHER -> listOf(requireNotNull(this.currentCallFrame.other))
                     instanceId == SpecialObjectReferenceType.LOCAL -> listOf(this.currentCallFrame)
                     instanceId == SpecialObjectReferenceType.GLOBAL -> listOf(this.global)
                     instanceId >= 0 -> {
@@ -465,6 +467,7 @@ class StarfaitVM(
             val returnValue = executeCode(
                 gameWAD.code.codes[script.codeIndex],
                 callFrame.self,
+                callFrame.other,
                 callFrame.eventObject,
                 callFrame.eventType,
                 callFrame.eventSubtype,
@@ -634,7 +637,30 @@ class StarfaitVM(
     private fun handlePushEnv(reader: StarfaitByteBuffer, ip: Int, branchOffset: Int) {
         val objectId = stack.pop().int
 
-        val instances = runner.currentRoom.instances.filter { it.objectIndex == objectId }
+        // Hacky
+        fun isInstanceOrParent(startGameObjectId: Int, queryGameObjectId: Int): Boolean {
+            var targetGameObjectId = startGameObjectId
+            while (true) {
+                if (0 > targetGameObjectId)
+                    return false
+
+                if (targetGameObjectId == queryGameObjectId)
+                    return true
+
+                val gameObject = gameWAD.objt.objects[targetGameObjectId]
+                targetGameObjectId = gameObject.parentId
+            }
+        }
+
+        val instances = runner.currentRoom.instances.filter {
+            if (objectId >= StarfaitRunner.BASE_INSTANCE_ID) {
+                return@filter it.id == objectId
+            }
+
+            objectId == SpecialObjectReferenceType.ALL || isInstanceOrParent(it.objectIndex, objectId)
+        }
+
+        println("I want $objectId Filtered instances: ${instances}")
 
         if (instances.isEmpty()) {
             // The branchOffset jumps to the PopEnv IN RELATION to the beginning of the PushEnv

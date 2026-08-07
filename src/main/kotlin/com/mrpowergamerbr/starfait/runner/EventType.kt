@@ -8,6 +8,7 @@ object EventType {
     @Event const val DESTROY = 1
     @Event const val ALARM = 2
     @Event const val STEP = 3
+    @Event const val COLLISION = 4
     @Event const val OTHER = 7
     @Event const val DRAW = 8
 

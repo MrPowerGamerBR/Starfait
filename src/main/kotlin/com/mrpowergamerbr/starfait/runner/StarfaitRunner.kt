@@ -103,7 +103,7 @@ class StarfaitRunner(
             val previousRoom = this.currentRoom
 
             forEachInstance {
-                it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END)
+                it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END, null)
             }
 
             val persistentInstances = previousRoom.instances.filter { it.persistent }
@@ -118,11 +118,16 @@ class StarfaitRunner(
         }
 
         forEachInstance {
-            it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_START)
+            it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_START, null)
         }
     }
 
     fun step() {
+        forEachInstance {
+            it.xPrevious = it.x
+            it.yPrevious = it.y
+        }
+
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.BEGIN)
 
         // Alarms are checked PER ALARM ID, not per instance!
@@ -137,13 +142,14 @@ class StarfaitRunner(
 
                     if (newValue == 0) {
                         println("Runner: [${instance.objectName}] Alarm $alarmId triggered!")
-                        instance.dispatchEvent(EventType.ALARM, alarmId)
+                        instance.dispatchEvent(EventType.ALARM, alarmId, null)
                     }
                 }
             }
         }
 
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
+        dispatchCollisions()
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
 
         currentRoom.updateViews()
@@ -172,7 +178,7 @@ class StarfaitRunner(
         }
 
         forEachInstanceByDepth { instance ->
-            val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW)
+            val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
 
             if (!instanceHasDrawEvent) {
                 // Draw the instance manually
@@ -190,13 +196,33 @@ class StarfaitRunner(
         this.keyboard.tick()
     }
 
-    fun dispatchEventToAllInstances(eventType: Int, eventSubtype: Int) {
-        forEachInstance { instance ->
-            instance.dispatchEvent(eventType, eventSubtype)
+    fun dispatchCollisions() {
+        forEachInstance { selfInstance ->
+            val selfBBox = selfInstance.getBoundingBox()
+
+            forEachInstance { otherInstance ->
+                // We can't collide with self
+                if (selfInstance == otherInstance)
+                    return@forEachInstance
+
+                val otherBBox = otherInstance.getBoundingBox()
+
+                if (!selfBBox.isCollidingWith(otherBBox))
+                    return@forEachInstance
+
+                selfInstance.dispatchEvent(EventType.COLLISION, otherInstance.objectIndex, otherInstance)
+                otherInstance.dispatchEvent(EventType.COLLISION, selfInstance.objectIndex, selfInstance)
+            }
         }
     }
 
-    inline fun forEachInstance(crossinline action: (Instance) -> Unit) {
+    fun dispatchEventToAllInstances(eventType: Int, eventSubtype: Int) {
+        forEachInstance { instance ->
+            instance.dispatchEvent(eventType, eventSubtype, null)
+        }
+    }
+
+    inline fun forEachInstance(action: (Instance) -> Unit) {
         // reversed creates a copy, so we don't need to worry about ConcurrentModificationException here
         for (instance in this.currentRoom.instances.reversed()) {
             if (instance.destroyed)

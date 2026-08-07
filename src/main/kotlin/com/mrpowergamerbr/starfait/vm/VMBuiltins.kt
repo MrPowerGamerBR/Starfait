@@ -288,7 +288,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val room = vm.gameWAD.room.rooms[newRoomIndex]
             runner.pendingRoom = PendingRoom(newRoomIndex, room)
         }
-        registerVoidFunction("room_goto", 0) { args ->
+        registerVoidFunction("room_goto", 1) { args ->
             val newRoomIndex = args[0].int
             val room = vm.gameWAD.room.rooms[newRoomIndex]
             runner.pendingRoom = PendingRoom(newRoomIndex, room)

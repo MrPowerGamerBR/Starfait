@@ -27,6 +27,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
     var visible = true
     var destroyed = false
+        private set
 
     val gameObject: GameObject
         get() = runner.gameWAD.objt.objects[this.objectIndex]
@@ -81,5 +82,14 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         }
 
         return subtypeEvents.isNotEmpty()
+    }
+
+    fun markAsDestroyed(executeDestroyEvent: Boolean) {
+        check(!this.destroyed) { "Instance is already destroyed!" }
+
+        this.destroyed = true
+
+        if (executeDestroyEvent)
+            dispatchEvent(EventType.DESTROY, 0)
     }
 }

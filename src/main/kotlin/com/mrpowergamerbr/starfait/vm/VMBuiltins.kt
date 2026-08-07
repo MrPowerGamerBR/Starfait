@@ -300,7 +300,9 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerIntAsRealFunction instance.id
         }
         registerVoidFunction("instance_destroy", null) { args ->
-            vm.currentSelfInstance.destroyed = true
+            // TODO: instance ID
+            // TODO: execute_event_flag
+            vm.currentSelfInstance.markAsDestroyed(true)
         }
 
         registerBooleanFunction("keyboard_check", 1) { args ->

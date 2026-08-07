@@ -93,7 +93,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import kotlin.use
 
-class StarfaitWindow(val vm: StarfaitVM) {
+class StarfaitWindow(val vm: StarfaitVM, val seed: Long) {
     fun start() {
         check(SDL_Init(SDL_INIT_VIDEO)) { "SDL_Init failed: ${SDL_GetError()}" }
 
@@ -111,7 +111,7 @@ class StarfaitWindow(val vm: StarfaitVM) {
         SDL_GL_SetSwapInterval(1) // vsync
 
         val renderer = OpenGLRenderer(vm.gameWAD)
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer)
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, seed)
         renderer.runner = runner
         vm.runner = runner
         runner.start()

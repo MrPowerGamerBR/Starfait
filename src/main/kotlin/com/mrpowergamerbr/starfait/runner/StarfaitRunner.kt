@@ -11,7 +11,8 @@ import kotlin.random.Random
 class StarfaitRunner(
     val gameWAD: GameWAD,
     val vm: StarfaitVM,
-    val renderer: Renderer
+    val renderer: Renderer,
+    val seed: Long
 ) {
     companion object {
         // You can check that by creating a room with a single instance where the instance's code is just "show_debug_message(id)"
@@ -26,7 +27,7 @@ class StarfaitRunner(
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
     var drawSetColor = GMLColor(0xFFFFFF)
-    val random = Random(System.currentTimeMillis())
+    val random = Random(seed)
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()

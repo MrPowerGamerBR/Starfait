@@ -107,6 +107,10 @@ class StarfaitRunner(
         for (instance in room.instances) {
             newRoom.createAndSpawnInstance(instance)
         }
+
+        forEachInstance {
+            it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_START)
+        }
     }
 
     fun step() {

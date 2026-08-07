@@ -21,6 +21,7 @@ object EventType {
     @SubTypesOf(OTHER)
     object OtherSubType {
         @Event const val GAME_START = 2
+        @Event const val ROOM_START = 4
     }
 
     @SubTypesOf(DRAW)

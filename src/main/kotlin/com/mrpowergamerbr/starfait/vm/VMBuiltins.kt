@@ -238,10 +238,24 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         // TODO: This should be writeable
         registerReadOnlyVariable("room") { _, result, _ -> result.setInt32(runner.currentRoom.roomId) }
-        registerReadOnlyInstanceVariable("bbox_top") { _, result, _ -> result.setReal(32.0) }
-        registerReadOnlyInstanceVariable("bbox_left") { _, result, _ -> result.setReal(32.0) }
-        registerReadOnlyInstanceVariable("bbox_right") { _, result, _ -> result.setReal(32.0) }
-        registerReadOnlyInstanceVariable("bbox_bottom") { _, result, _ -> result.setReal(32.0) }
+
+        registerReadOnlyInstanceVariable("bbox_left") { instance, result, _ ->
+            val bbox = instance.getBoundingBox()
+            result.setReal(bbox.left.toDouble())
+        }
+        registerReadOnlyInstanceVariable("bbox_right") { instance, result, _ ->
+            val bbox = instance.getBoundingBox()
+            result.setReal(bbox.right.toDouble())
+        }
+        registerReadOnlyInstanceVariable("bbox_top") { instance, result, _ ->
+            val bbox = instance.getBoundingBox()
+            result.setReal(bbox.top.toDouble())
+        }
+        registerReadOnlyInstanceVariable("bbox_bottom") { instance, result, _ ->
+            val bbox = instance.getBoundingBox()
+            result.setReal(bbox.bottom.toDouble())
+        }
+
         registerReadOnlyInstanceVariable("xprevious") { instance, result, _ -> result.setReal(instance.x.toDouble()) }
         registerReadOnlyInstanceVariable("yprevious") { instance, result, _ -> result.setReal(instance.y.toDouble()) }
 

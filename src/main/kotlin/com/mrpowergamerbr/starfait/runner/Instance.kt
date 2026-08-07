@@ -92,4 +92,30 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         if (executeDestroyEvent)
             dispatchEvent(EventType.DESTROY, 0)
     }
+
+    fun getBoundingBox(): BoundingBox {
+        // bbox_*: "Please note that when the instance has no sprite assigned the value returned will be the same as the instance Y position."
+        if (0 > this.spriteIndex) {
+            return BoundingBox(
+                this.x,
+                this.x,
+                this.y,
+                this.y
+            )
+        }
+
+        val sprite = runner.gameWAD.sprt.sprites[this.spriteIndex.toInt()]
+
+        val bboxLeftAbsolute = this.x + sprite.bboxLeft
+        val bboxRightAbsolute = this.x + sprite.bboxRight
+        val bboxTopAbsolute = this.y + sprite.bboxTop
+        val bboxBottomAbsolute = this.y + sprite.bboxBottom
+
+        return BoundingBox(
+            bboxLeftAbsolute - sprite.originX,
+            bboxRightAbsolute - sprite.originX,
+            bboxTopAbsolute - sprite.originY,
+            bboxBottomAbsolute - sprite.originY
+        )
+    }
 }

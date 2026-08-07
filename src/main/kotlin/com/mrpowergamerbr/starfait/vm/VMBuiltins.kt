@@ -469,6 +469,17 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerStringFunction char.toString()
         }
 
+        registerIntAsRealFunction("string_pos", 2) { args ->
+            val string = args[0].refAsString()
+            val substr = args[1].refAsString()
+
+            val index = string.indexOf(substr)
+
+            // "The function will return 0 if it's not found at all, or the position of the first character of the sub-string if it is found.
+            // Keep in mind that for legacy support strings are indexed from 1, so 1 is the first position in the string, not 0 as you may expect."
+            return@registerIntAsRealFunction index + 1
+        }
+
         registerRealFunction("random", 1) { args ->
             return@registerRealFunction runner.random.nextDouble() * args[0].real
         }

@@ -171,6 +171,21 @@ class StarfaitRunner(
             }
         }
 
+        for ((index, trigger) in keyboard.keyHeld.withIndex()) {
+            if (trigger)
+                dispatchEventToAllInstances(EventType.KEYBOARD, index)
+        }
+
+        for ((index, trigger) in keyboard.keyPressed.withIndex()) {
+            if (trigger)
+                dispatchEventToAllInstances(EventType.KEY_PRESS, index)
+        }
+
+        for ((index, trigger) in keyboard.keyReleased.withIndex()) {
+            if (trigger)
+                dispatchEventToAllInstances(EventType.KEY_RELEASE, index)
+        }
+        
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
 
         forEachInstance { instance ->

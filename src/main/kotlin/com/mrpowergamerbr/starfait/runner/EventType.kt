@@ -9,8 +9,11 @@ object EventType {
     @Event const val ALARM = 2
     @Event const val STEP = 3
     @Event const val COLLISION = 4
+    @Event const val KEYBOARD = 5
     @Event const val OTHER = 7
     @Event const val DRAW = 8
+    @Event const val KEY_PRESS = 9
+    @Event const val KEY_RELEASE = 10
 
     @SubTypesOf(STEP)
     object StepSubType {

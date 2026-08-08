@@ -626,6 +626,7 @@ class StarfaitVM(
             InstructionDataType.VARIABLE -> {
                 when (poppedValue.type) {
                     RValueDataType.INT32 -> pushedValue.setInt32(-poppedValue.int)
+                    RValueDataType.REAL -> pushedValue.setReal(-poppedValue.real)
                     else -> error("I don't know how to handle a ${poppedValue.type}!")
                 }
             }

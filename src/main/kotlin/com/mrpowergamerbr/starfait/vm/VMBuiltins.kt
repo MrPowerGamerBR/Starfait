@@ -175,6 +175,14 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("hspeed", Instance::hspeed)
         registerInstanceRealVariable("vspeed", Instance::vspeed)
         registerInstanceRealVariable("friction", Instance::friction)
+        registerReadOnlyInstanceVariable("sprite_width") { instance, result, _ ->
+            val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
+            result.setReal(sprite.width.toDouble() * instance.imageXScale)
+        }
+        registerReadOnlyInstanceVariable("sprite_height") { instance, result, _ ->
+            val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
+            result.setReal(sprite.height.toDouble() * instance.imageYScale)
+        }
         registerInstanceBooleanVariable("solid", Instance::solid)
         registerVariable("room_persistent", { _, result, _ -> result.setBoolean(runner.currentRoom.persistent) }, { _, value, _ -> runner.currentRoom.persistent = value.bool })
         repeat(16) {
@@ -235,9 +243,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealStubbedVariable("application_surface", -1.0)
 
         registerReadOnlyVariable("current_time") { _, result, _ -> result.setReal((System.currentTimeMillis() - runner.startedAt).toDouble()) }
-
-        registerRealStubbedVariable("sprite_height", 240.0)
-        registerRealStubbedVariable("sprite_width", 240.0)
 
         // TODO: This should be writeable
         registerReadOnlyVariable("room") { _, result, _ -> result.setInt32(runner.currentRoom.roomId) }

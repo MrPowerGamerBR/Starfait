@@ -163,6 +163,11 @@ class StarfaitRunner(
             if (!background.enabled)
                 continue
 
+            // Sometimes a background index can be negative even though the background is enabled
+            val backgroundIndex = background.backgroundIndex
+            if (0 > backgroundIndex)
+                continue
+
             val background = gameWAD.bgnd.backgrounds[background.backgroundIndex]
             val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
 

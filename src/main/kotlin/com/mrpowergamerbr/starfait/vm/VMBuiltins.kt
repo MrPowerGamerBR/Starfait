@@ -176,6 +176,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("vspeed", Instance::vspeed)
         registerInstanceRealVariable("friction", Instance::friction)
         registerInstanceBooleanVariable("solid", Instance::solid)
+        registerVariable("room_persistent", { _, result, _ -> result.setBoolean(runner.currentRoom.persistent) }, { _, value, _ -> runner.currentRoom.persistent = value.bool })
         repeat(16) {
             registerVariable(
                 "argument$it",

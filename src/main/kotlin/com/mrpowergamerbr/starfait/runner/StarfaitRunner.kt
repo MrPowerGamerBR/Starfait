@@ -29,6 +29,7 @@ class StarfaitRunner(
     var drawSetColor = GMLColor(0xFFFFFF)
     var activeDrawFont = gameWAD.font.fonts.firstOrNull()
     val random = Random(seed)
+    val persistentRooms = mutableMapOf<Int, RunnerRoom>()
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
@@ -43,83 +44,98 @@ class StarfaitRunner(
     }
 
     fun initializeRoom(roomId: Int, room: Room) {
-        val newRoom = RunnerRoom(this, roomId)
         println("Runner: Initializing room $roomId (${gameWAD.strg.getString(room.name)})")
-        newRoom.width = room.width
-        newRoom.height = room.height
 
-        if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {
-            for (view in room.views) {
-                println("Visible? ${view.visible} - View BorderX is ${view.borderX}, View BorderY is ${view.borderY}, objectId is ${view.objectId}")
-                newRoom.views.add(
-                    RunnerRoom.RunnerView(
-                        view.viewX,
-                        view.viewY,
-                        view.viewWidth,
-                        view.viewHeight,
-                        view.portX,
-                        view.portY,
-                        view.portWidth,
-                        view.portHeight,
-                        view.visible,
-                        view.objectId
+        val persistentRoom = persistentRooms[roomId]
+        if (persistentRoom != null) {
+            this.currentRoom = persistentRoom
+        } else {
+            val newRoom = RunnerRoom(this, roomId)
+            newRoom.width = room.width
+            newRoom.height = room.height
+            newRoom.persistent = room.persistent
+
+            if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {
+                for (view in room.views) {
+                    println("Visible? ${view.visible} - View BorderX is ${view.borderX}, View BorderY is ${view.borderY}, objectId is ${view.objectId}")
+                    newRoom.views.add(
+                        RunnerRoom.RunnerView(
+                            view.viewX,
+                            view.viewY,
+                            view.viewWidth,
+                            view.viewHeight,
+                            view.portX,
+                            view.portY,
+                            view.portWidth,
+                            view.portHeight,
+                            view.visible,
+                            view.objectId
+                        )
+                    )
+                }
+            }
+
+            newRoom.backgroundColor = room.backgroundColor
+
+            for (background in room.backgrounds) {
+                newRoom.backgrounds.add(
+                    RunnerRoom.RunnerBackground(
+                        background.enabled,
+                        background.x,
+                        background.y,
+                        background.backgroundIndex
                     )
                 )
             }
-        }
 
-        newRoom.backgroundColor = room.backgroundColor
-
-        for (background in room.backgrounds) {
-            newRoom.backgrounds.add(
-                RunnerRoom.RunnerBackground(
-                    background.enabled,
-                    background.x,
-                    background.y,
-                    background.backgroundIndex
+            for (tile in room.tiles) {
+                newRoom.tiles.add(
+                    RunnerRoom.RunnerTile(
+                        tile.x,
+                        tile.y,
+                        tile.backgroundIndex,
+                        tile.sourceX,
+                        tile.sourceY,
+                        tile.width,
+                        tile.height,
+                        tile.depth,
+                        tile.id,
+                        tile.scaleX
+                    )
                 )
-            )
-        }
-
-        for (tile in room.tiles) {
-            newRoom.tiles.add(
-                RunnerRoom.RunnerTile(
-                    tile.x,
-                    tile.y,
-                    tile.backgroundIndex,
-                    tile.sourceX,
-                    tile.sourceY,
-                    tile.width,
-                    tile.height,
-                    tile.depth,
-                    tile.id,
-                    tile.scaleX
-                )
-            )
-        }
-
-        // TODO: This sucks, maybe make it nullable?
-        if (this::currentRoom.isInitialized) {
-            val previousRoom = this.currentRoom
-
-            forEachInstance {
-                it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END, null)
             }
 
-            val persistentInstances = previousRoom.instances.filter { it.persistent }
-            newRoom.instances.addAll(persistentInstances)
-        }
+            // TODO: This sucks, maybe make it nullable?
+            if (this::currentRoom.isInitialized) {
+                val previousRoom = this.currentRoom
 
-        // We need to set the currentRoom BEFORE we dispatch the create events
-        this.currentRoom = newRoom
+                forEachInstance {
+                    it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END, null)
+                }
 
-        val newlyCreatedInstances = mutableListOf<Instance>()
-        for (instance in room.instances) {
-            newlyCreatedInstances.add(newRoom.createAndSpawnInstance(instance))
-        }
+                val persistentInstances = previousRoom.instances.filter { it.persistent }
+                newRoom.instances.addAll(persistentInstances)
 
-        for (instance in newlyCreatedInstances) {
-            instance.dispatchEvent(EventType.CREATE, 0, null)
+                if (previousRoom.persistent) {
+                    // If the current room is persistent, we'll store it in our map instead of destroying the instance
+                    persistentRooms[previousRoom.roomId] = previousRoom
+
+                    // However we should NOT persist persistent instances in the persistent room
+                    previousRoom.instances.removeAll { it.persistent }
+                }
+            }
+
+            // We need to set the currentRoom BEFORE we dispatch the create events
+            this.currentRoom = newRoom
+
+            val newlyCreatedInstances = mutableListOf<Instance>()
+            for (instance in room.instances) {
+                newlyCreatedInstances.add(newRoom.createAndSpawnInstance(instance))
+            }
+
+            for (instance in newlyCreatedInstances) {
+                instance.dispatchEvent(EventType.CREATE, 0, null)
+            }
         }
 
         forEachInstance {

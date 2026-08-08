@@ -9,6 +9,7 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
     var width = 0
     var height = 0
     var backgroundColor = GMLColor(0)
+    var persistent = false
     val instances = mutableListOf<Instance>()
     val views = mutableListOf<RunnerView>()
     val backgrounds = mutableListOf<RunnerBackground>()

@@ -16,7 +16,7 @@ class VMStack {
     }
 
     fun peek(): RValue {
-        require(stack.size != top) { "You can't peek an empty stack!" }
+        require(top != 0) { "You can't peek an empty stack!" }
         return stack[top - 1]
     }
 

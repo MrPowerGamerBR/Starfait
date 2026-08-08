@@ -296,6 +296,46 @@ class StarfaitVM(
         }
     }
 
+    private fun writeVariableToInstanceId(varId: Int, arrayIndex: Int?, instanceId: Int, poppedValue: RValue) {
+        // TECHNICALLY I'm pretty sure that not all push paths write to builtin vs regular variable
+        // But to make everything consistent, we'll use the same path for everything
+        val variableContainers = when {
+            instanceId == VariableScope.SELF -> listOf(this.currentSelfInstance)
+            instanceId == VariableScope.OTHER -> listOf(requireNotNull(this.currentCallFrame.other))
+            instanceId == VariableScope.LOCAL -> listOf(this.currentCallFrame)
+            instanceId == VariableScope.GLOBAL -> listOf(this.global)
+            instanceId >= 0 -> runner.filterInstances {
+                it.matchesObjectOrInstanceId(
+                    instanceId,
+                    null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true
+                )
+            }
+            else -> error("Unsupported instance ID $instanceId!")
+        }
+
+        for (variableContainer in variableContainers) {
+            // We need to create a new independent value for each container!
+            // Because if we don't, because RValues are mutable, a different caller may change a RValue data, changing it on EVERY VariableContainer
+            val independentValue = poppedValue.makeIndependent()
+
+            if (varId >= REGULAR_VARIABLES_BASE) {
+                variableContainer.setVariable(varId, independentValue, arrayIndex)
+            } else {
+                // Builtin variable!
+                check(variableContainer is Instance) { "Cannot write a built-in variable to a non-instance!" }
+
+                val builtinVariableHandler = builtinVariableHandlers[varId]
+                builtinVariableHandler.writeHandler.invoke(variableContainer, independentValue, arrayIndex)
+            }
+        }
+    }
+
     private fun pushVariableFromVariableContainer(variableContainer: VariableContainer, operand: VariableReferenceOperand, arrayIndex: Int?) {
         // println("The VarID of the operand is ${operand.variableIndex()}")
         val variableId = operand.variableIndex()
@@ -324,28 +364,16 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
-                val independentValue = stack.pop().makeIndependent()
+                val poppedValue = stack.pop().makeIndependent()
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
-                when (instanceId) {
-                    VariableScope.SELF -> {
-                        val instance = this.currentSelfInstance
-
-                        if (varId >= REGULAR_VARIABLES_BASE) {
-                            instance.setVariable(varId, independentValue, arrayIndex)
-                        } else error("Tried writing a global built-in variable from the INT32 pop path!")
-                    }
-
-                    VariableScope.GLOBAL -> {
-                        val instance = this.global
-
-                        if (varId >= REGULAR_VARIABLES_BASE) {
-                            instance.setVariable(varId, independentValue, arrayIndex)
-                        } else error("Tried writing a global built-in variable from the INT32 pop path!")
-                    }
-                    else -> TODO("Unsupported instance ID $instanceId!")
-                }
+                writeVariableToInstanceId(
+                    varId,
+                    arrayIndex,
+                    instanceId,
+                    poppedValue
+                )
             }
             InstructionDataType.INT64 -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
@@ -356,46 +384,13 @@ class StarfaitVM(
                 val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
 
-                // println("array index? $arrayIndex")
-                // println("instanceID? $instanceId")
-
-                // TODO: Use correct instance here!
-                val variableContainers = when {
-                    instanceId == VariableScope.SELF -> listOf(this.currentSelfInstance)
-                    instanceId == VariableScope.OTHER -> listOf(requireNotNull(this.currentCallFrame.other))
-                    instanceId == VariableScope.LOCAL -> listOf(this.currentCallFrame)
-                    instanceId == VariableScope.GLOBAL -> listOf(this.global)
-                    instanceId >= 0 -> runner.filterInstances {
-                        it.matchesObjectOrInstanceId(
-                            instanceId,
-                            null,
-                            skipDestroyed = true,
-                            checkHierarchy = true,
-                            checkSpecialAll = true,
-                            checkSpecialNoone = true,
-                            checkSpecialSelf = true,
-                            checkSpecialOther = true
-                        )
-                    }
-                    else -> error("Unsupported instance ID $instanceId!")
-                }
-
                 val poppedValue = stack.pop()
-                for (variableContainer in variableContainers) {
-                    // We need to create a new independent value for each container!
-                    // Because if we don't, because RValues are mutable, a different caller may change a RValue data, changing it on EVERY VariableContainer
-                    val independentValue = poppedValue.makeIndependent()
-
-                    if (varId >= REGULAR_VARIABLES_BASE) {
-                        variableContainer.setVariable(varId, independentValue, arrayIndex)
-                    } else {
-                        // Builtin variable!
-                        check(variableContainer is Instance) { "Cannot write a built-in variable to a non-instance!" }
-
-                        val builtinVariableHandler = builtinVariableHandlers[varId]
-                        builtinVariableHandler.writeHandler.invoke(variableContainer, independentValue, arrayIndex)
-                    }
-                }
+                writeVariableToInstanceId(
+                    varId,
+                    arrayIndex,
+                    instanceId,
+                    poppedValue
+                )
             }
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()

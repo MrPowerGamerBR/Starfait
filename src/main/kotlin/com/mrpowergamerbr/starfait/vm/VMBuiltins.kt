@@ -552,6 +552,35 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerIntAsRealFunction count
         }
 
+        registerIntAsRealFunction("instance_find", 2) { args ->
+            val queryId = args[0].int
+            val targetIndex = args[1].int
+
+            var index = 0
+            // TODO: Does this need to check for deactivated instances?
+            runner.forEachInstance { instance ->
+                val matches = instance.matchesObjectOrInstanceId(
+                    queryId,
+                    excludeInstance = null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true
+                )
+
+                if (matches) {
+                    if (index == targetIndex)
+                        return@registerIntAsRealFunction instance.id
+
+                    index++
+                }
+            }
+
+            return@registerIntAsRealFunction InstanceReferenceType.NOONE
+        }
+
         registerVoidFunction("draw_text_transformed", 6) { args ->
             val x = args[0].real
             val y = args[1].real
@@ -722,7 +751,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 x += vm.currentSelfInstance.x
                 y += vm.currentSelfInstance.y
             }
-            
+
             vm.currentSelfInstance.x = x.toFloat()
             vm.currentSelfInstance.y = y.toFloat()
         }

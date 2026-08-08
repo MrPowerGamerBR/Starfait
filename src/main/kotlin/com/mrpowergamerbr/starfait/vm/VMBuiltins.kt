@@ -715,9 +715,14 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerVoidFunction("action_move_to", 2) { args ->
-            val x = args[0].real
-            val y = args[1].real
+            var x = args[0].real
+            var y = args[1].real
 
+            if (vm.dragAndDropRelativeValues) {
+                x += vm.currentSelfInstance.x
+                y += vm.currentSelfInstance.y
+            }
+            
             vm.currentSelfInstance.x = x.toFloat()
             vm.currentSelfInstance.y = y.toFloat()
         }

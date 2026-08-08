@@ -4,6 +4,8 @@ class RunnerKeyboard {
     companion object {
         const val GML_KEY_COUNT = 256
 
+        const val VK_NOKEY = 0
+        const val VK_ANYKEY = 1
         const val VK_BACKSPACE = 8
         const val VK_TAB = 9
         const val VK_ENTER = 13

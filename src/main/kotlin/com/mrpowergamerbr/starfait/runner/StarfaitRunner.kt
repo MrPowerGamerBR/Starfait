@@ -171,21 +171,10 @@ class StarfaitRunner(
             }
         }
 
-        for ((index, trigger) in keyboard.keyHeld.withIndex()) {
-            if (trigger)
-                dispatchEventToAllInstances(EventType.KEYBOARD, index)
-        }
+        dispatchKeyboard(EventType.KEYBOARD, keyboard.keyHeld)
+        dispatchKeyboard(EventType.KEY_PRESS, keyboard.keyPressed)
+        dispatchKeyboard(EventType.KEY_RELEASE, keyboard.keyReleased)
 
-        for ((index, trigger) in keyboard.keyPressed.withIndex()) {
-            if (trigger)
-                dispatchEventToAllInstances(EventType.KEY_PRESS, index)
-        }
-
-        for ((index, trigger) in keyboard.keyReleased.withIndex()) {
-            if (trigger)
-                dispatchEventToAllInstances(EventType.KEY_RELEASE, index)
-        }
-        
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
 
         forEachInstance { instance ->
@@ -247,6 +236,23 @@ class StarfaitRunner(
         }
 
         this.keyboard.tick()
+    }
+
+    fun dispatchKeyboard(eventType: Int, targetArray: Array<Boolean>) {
+        var anyKey = false
+        var noKey = true
+        for ((index, trigger) in targetArray.withIndex()) {
+            if (trigger) {
+                dispatchEventToAllInstances(eventType, index)
+                anyKey = true
+                noKey = false
+            }
+        }
+
+        if (anyKey)
+            dispatchEventToAllInstances(eventType, RunnerKeyboard.VK_ANYKEY)
+        if (noKey)
+            dispatchEventToAllInstances(eventType, RunnerKeyboard.VK_NOKEY)
     }
 
     fun dispatchCollisions() {

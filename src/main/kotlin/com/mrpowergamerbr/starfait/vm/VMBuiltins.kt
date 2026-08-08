@@ -75,7 +75,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
     fun registerVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
         require(name !in registeredVariables) { "Tried registering variable $name, but it already exists!" }
-        registeredVariables[name] = BuiltinVariable(readHandler, writeHandler)
+        registeredVariables[name] = BuiltinVariable(name, readHandler, writeHandler)
     }
 
     fun registerReadOnlyVariable(name: String, readHandler: (Instance?, RValue, Int?) -> (Unit)) {

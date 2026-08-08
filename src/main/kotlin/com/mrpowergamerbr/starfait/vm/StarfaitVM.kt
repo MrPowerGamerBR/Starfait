@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
+import com.mrpowergamerbr.starfait.runner.GlobalObject
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.ObjectBase
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
@@ -16,7 +17,9 @@ class StarfaitVM(
     val gmlScriptsOpcodesToBeTraced: Set<String>,
     val functionCallsToBeTraced: Set<String>,
     val alarmsToBeTraced: Set<String>,
-    val eventsToBeTraced: Set<String>
+    val eventsToBeTraced: Set<String>,
+    val traceVariableReads: Set<String>,
+    val traceVariableWrites: Set<String>
 ) {
     companion object {
         private const val REGULAR_VARIABLES_BASE = 100_000
@@ -24,7 +27,7 @@ class StarfaitVM(
 
     lateinit var runner: StarfaitRunner
     val stack = VMStack()
-    val global = ObjectBase(this)
+    val global = GlobalObject(this)
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     lateinit var regularVariableNames: Array<String>
@@ -201,38 +204,7 @@ class StarfaitVM(
                 // println("instanceId is $instanceId")
 
                 // TODO: Use correct instance here!
-                pushVariableFromVariableContainer(
-                    when {
-                        instanceId == VariableScope.SELF -> requireNotNull(currentSelfInstance)
-                        instanceId == VariableScope.LOCAL -> this.currentCallFrame
-                        instanceId == VariableScope.OTHER -> this.currentCallFrame.other!!
-                        instanceId == VariableScope.GLOBAL -> this.global
-                        instanceId >= 0 -> {
-                            val matchedInstance = this.runner.firstInstance {
-                                it.matchesObjectOrInstanceId(
-                                    instanceId,
-                                    null,
-                                    skipDestroyed = true,
-                                    checkHierarchy = true,
-                                    checkSpecialSelf = true,
-                                    checkSpecialOther = true,
-                                    checkSpecialAll = true,
-                                    checkSpecialNoone = true
-                                )
-                            }
-
-                            if (matchedInstance == null) {
-                                stack.push().setUndefined()
-                                return
-                            }
-
-                            matchedInstance
-                        }
-                        else -> error("Unsupported instance ID $instanceId!")
-                    },
-                    operand,
-                    arrayIndex
-                )
+                readVariableFromInstanceId(varId, arrayIndex, instanceId)
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()].also {
                 // println("Pushed string \"$it\" to the stack")
@@ -293,10 +265,53 @@ class StarfaitVM(
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
-                pushVariableFromVariableContainer(global, operand, null)
+                readVariableFromInstanceId(operand.variableIndex(), null, VariableScope.GLOBAL)
             }
             InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
+    }
+
+    private fun readVariableFromInstanceId(varId: Int, arrayIndex: Int?, instanceId: Int) {
+        // TECHNICALLY I'm pretty sure that not all push paths write to builtin vs regular variable
+        // But to make everything consistent, we'll use the same path for everything
+        val variableContainer = when {
+            instanceId == VariableScope.SELF -> this.currentSelfInstance
+            instanceId == VariableScope.OTHER -> requireNotNull(this.currentCallFrame.other)
+            instanceId == VariableScope.LOCAL -> this.currentCallFrame
+            instanceId == VariableScope.GLOBAL -> this.global
+            instanceId >= 0 -> runner.firstInstance {
+                it.matchesObjectOrInstanceId(
+                    instanceId,
+                    null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true
+                )
+            }
+            else -> error("Unsupported instance ID $instanceId!")
+        }
+
+        val pushedValue = stack.push()
+        if (variableContainer == null) {
+            // TODO: We should add a log for unmatched variable reads, but how?
+            pushedValue.setUndefined()
+            return
+        }
+
+        if (varId >= REGULAR_VARIABLES_BASE) {
+            pushedValue.copyFrom(variableContainer.getVariable(varId, arrayIndex))
+        } else {
+            // Builtin variable!
+            check(variableContainer is Instance) { "Cannot write a built-in variable to a non-instance!" }
+
+            val builtinVariableHandler = builtinVariableHandlers[varId]
+            builtinVariableHandler.readHandler.invoke(variableContainer, pushedValue, arrayIndex)
+        }
+
+        logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableReads, pushedValue, false)
     }
 
     private fun writeVariableToInstanceId(varId: Int, arrayIndex: Int?, instanceId: Int, poppedValue: RValue) {
@@ -327,6 +342,8 @@ class StarfaitVM(
             // Because if we don't, because RValues are mutable, a different caller may change a RValue data, changing it on EVERY VariableContainer
             val independentValue = poppedValue.makeIndependent()
 
+            logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableWrites, independentValue, true)
+
             if (varId >= REGULAR_VARIABLES_BASE) {
                 variableContainer.setVariable(varId, independentValue, arrayIndex)
             } else {
@@ -339,19 +356,30 @@ class StarfaitVM(
         }
     }
 
-    private fun pushVariableFromVariableContainer(variableContainer: VariableContainer, operand: VariableReferenceOperand, arrayIndex: Int?) {
-        // println("The VarID of the operand is ${operand.variableIndex()}")
-        val variableId = operand.variableIndex()
-        // println("The variable on ${objectBase} is ${variableId?.toStringTyped()} (VarID: ${operand.variableIndex()})")
+    private fun convertVariableContainerToHumanized(variableContainer: VariableContainer, includeVariableId: Boolean): String {
+        return when (variableContainer) {
+            is Instance -> buildString {
+                append(variableContainer.objectName)
+                if (includeVariableId)
+                    append("<${variableContainer.id}>")
+            }
+            is GlobalObject -> "global"
+            is CallFrame -> "local"
+            else -> error("Unsupported variable container type!")
+        }
+    }
 
-        val result = stack.push()
-        if (variableId >= REGULAR_VARIABLES_BASE) {
-            result.copyFrom(variableContainer.getVariable(variableId, arrayIndex))
-        } else {
-            check(variableContainer is Instance) { "Cannot read a built-in variable from a non-instance!" }
+    private fun logVariableAccess(varId: Int, variableContainer: VariableContainer, arrayIndex: Int?, set: Set<String>, value: RValue, isWrite: Boolean) {
+        if (set.isNotEmpty()) {
+            val variableName = getVariableNameFromVariableIndex(varId)
+            val variableContainerName = convertVariableContainerToHumanized(variableContainer, false)
 
-            val builtinVariableHandler = this.builtinVariableHandlers[variableId]
-            builtinVariableHandler.readHandler.invoke(variableContainer, result, arrayIndex)
+            if (set.contains(variableName) || set.contains(variableContainerName) || set.contains("$variableContainerName.$variableName") || set.contains("*")) {
+                print("VM: [$currentCallFrameCodeName] Variable ${if (isWrite) "Write" else "Read"} ${convertVariableContainerToHumanized(variableContainer, true)}.${getVariableNameFromVariableIndex(varId)}")
+                if (arrayIndex != null)
+                    print("[$arrayIndex]")
+                println(" = ${value.toStringTyped()}")
+            }
         }
     }
 
@@ -776,6 +804,7 @@ class StarfaitVM(
 
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
+                name,
                 { _, _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
                 { _, _, _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
             )
@@ -791,7 +820,10 @@ class StarfaitVM(
     }
 
     fun getVariableNameFromVariableIndex(index: Int): String {
-        require(index >= REGULAR_VARIABLES_BASE) { "Trying to get the name of a builtin variable!" }
-        return regularVariableNames.getOrNull(index - REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
+        if (index >= REGULAR_VARIABLES_BASE) {
+            return regularVariableNames.getOrNull(index - REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
+        } else {
+            return builtinVariableHandlers[index].name
+        }
     }
 }

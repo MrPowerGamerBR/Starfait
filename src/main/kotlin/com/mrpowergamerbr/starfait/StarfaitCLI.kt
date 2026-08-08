@@ -47,6 +47,8 @@ class StarfaitCLI : CliktCommand() {
     val traceFunctionCalls by option()
     val traceAlarms by option()
     val traceEvents by option()
+    val traceVariableReads by option()
+    val traceVariableWrites by option()
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -165,7 +167,9 @@ class StarfaitCLI : CliktCommand() {
             gmlScriptsOpcodesToBeTraced = traceOpcodes?.split(",")?.toSet().orEmpty(),
             functionCallsToBeTraced = traceFunctionCalls?.split(",")?.toSet().orEmpty(),
             alarmsToBeTraced = traceAlarms?.split(",")?.toSet().orEmpty(),
-            eventsToBeTraced = traceEvents?.split(",")?.toSet().orEmpty()
+            eventsToBeTraced = traceEvents?.split(",")?.toSet().orEmpty(),
+            traceVariableReads = traceVariableReads?.split(",")?.toSet().orEmpty(),
+            traceVariableWrites = traceVariableWrites?.split(",")?.toSet().orEmpty()
         )
         vm.remapReferences()
 

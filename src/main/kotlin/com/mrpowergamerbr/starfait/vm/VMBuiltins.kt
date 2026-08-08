@@ -528,6 +528,30 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerBooleanFunction false
         }
 
+        registerIntAsRealFunction("instance_number", 1) { args ->
+            val queryId = args[0].int
+
+            var count = 0
+            // "This function does not take into account those instances that have been deactivated using the instance deactivate functions."
+            runner.forEachInstance { instance ->
+                val matches = instance.matchesObjectOrInstanceId(
+                    queryId,
+                    excludeInstance = null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true
+                )
+
+                if (matches)
+                    count++
+            }
+
+            return@registerIntAsRealFunction count
+        }
+
         registerVoidFunction("draw_text_transformed", 6) { args ->
             val x = args[0].real
             val y = args[1].real

@@ -466,6 +466,14 @@ class VMBuiltins(val vm: StarfaitVM) {
             currentInstance.dispatchEvent(EventType.OTHER, EventType.OtherSubType.USER_0 + number, null)
         }
 
+        registerVoidFunction("event_perform", 2) { args ->
+            // event_perform is like event_user, but for all events
+            val eventType = args[0].int
+            val eventSubtype = args[1].int
+            val currentInstance = vm.currentSelfInstance
+            currentInstance.dispatchEvent(eventType, eventSubtype, null)
+        }
+
         registerStringFunction("string_replace_all", 3) { args ->
             val string = args[0].refAsString()
             return@registerStringFunction string.replace(args[1].refAsString(), args[2].refAsString())

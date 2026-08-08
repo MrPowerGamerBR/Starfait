@@ -10,6 +10,8 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var y = 0.0f
     var xPrevious = 0.0f
     var yPrevious = 0.0f
+    var xStart = 0.0f
+    var yStart = 0.0f
     var imageSpeed = 1.0f
     var imageXScale = 1.0f
     var imageYScale = 1.0f

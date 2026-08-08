@@ -175,6 +175,8 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("hspeed", Instance::hspeed)
         registerInstanceRealVariable("vspeed", Instance::vspeed)
         registerInstanceRealVariable("friction", Instance::friction)
+        registerInstanceRealVariable("xstart", Instance::xStart)
+        registerInstanceRealVariable("ystart", Instance::yStart)
         registerReadOnlyInstanceVariable("sprite_width") { instance, result, _ ->
             val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
             result.setReal(sprite.width.toDouble() * instance.imageXScale)

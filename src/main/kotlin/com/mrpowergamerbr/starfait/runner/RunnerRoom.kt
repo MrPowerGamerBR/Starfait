@@ -38,6 +38,8 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
 
         gameInstance.xPrevious = gameInstance.x
         gameInstance.yPrevious = gameInstance.y
+        gameInstance.xStart = gameInstance.x
+        gameInstance.yStart = gameInstance.y
 
         this.instances.add(gameInstance)
         return gameInstance

@@ -407,11 +407,23 @@ class VMBuiltins(val vm: StarfaitVM) {
             if (args[0].type != RValueDataType.STRING)
                 return@registerStringFunction ""
 
-            val index = args[1].int - 1 // "The position of the first character in the string to copy from (numbered from 1)"
-            val count = args[2].int
+            val index = (args[1].int - 1).coerceAtLeast(0) // "The position of the first character in the string to copy from (numbered from 1)"
+            val count = (args[2].int).coerceAtLeast(0)
 
             val string = args[0].refAsString()
-            return@registerStringFunction string.substring(index, index + count)
+
+            // When testing in GameMaker: Studio 1.4.9999, it seems that the string_copy copies TRASH if you are copying beyond the string length
+            // We don't do that, because it doesn't make sense to do that nor can it be reliably reproduced
+            if (index >= string.length || count == 0)
+                return@registerStringFunction ""
+
+            // For anything else, we'll just cap it at index + count
+            val coercedEndIndex = (index + count).coerceAtMost(string.length)
+
+            if (index == coercedEndIndex)
+                return@registerStringFunction ""
+
+            return@registerStringFunction string.substring(index, coercedEndIndex)
         }
 
         registerVoidFunction("event_inherited", 0) { args ->

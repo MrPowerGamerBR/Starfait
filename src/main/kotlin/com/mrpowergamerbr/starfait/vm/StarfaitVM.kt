@@ -294,12 +294,16 @@ class StarfaitVM(
             else -> error("Unsupported instance ID $instanceId!")
         }
 
-        val pushedValue = stack.push()
         if (variableContainer == null) {
-            // TODO: We should add a log for unmatched variable reads, but how?
-            pushedValue.setUndefined()
-            return
+            if (instanceId >= StarfaitRunner.BASE_INSTANCE_ID) {
+                error("Unable to find any instance with ID $instanceId to read variable \"${getVariableNameFromVariableIndex(varId)}\"")
+            } else {
+                val gameObjectName = gameWAD.strg.getString(gameWAD.objt.objects[instanceId].name)
+                error("Unable to find any instance for object \"$gameObjectName\" (Object Index: $instanceId) to read variable \"${getVariableNameFromVariableIndex(varId)}\"")
+            }
         }
+
+        val pushedValue = stack.push()
 
         if (varId >= REGULAR_VARIABLES_BASE) {
             pushedValue.copyFrom(variableContainer.getVariable(varId, arrayIndex))

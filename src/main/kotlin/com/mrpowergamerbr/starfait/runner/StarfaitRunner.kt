@@ -6,6 +6,8 @@ import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.random.Random
 
 class StarfaitRunner(
@@ -170,6 +172,16 @@ class StarfaitRunner(
         }
 
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
+
+        forEachInstance { instance ->
+            // TODO: This is borky
+            val rotX = cos(Math.toRadians(instance.direction.toDouble()).toFloat())
+            val rotY = sin(Math.toRadians(instance.direction.toDouble()).toFloat())
+
+            instance.x += (rotX * instance.hspeed)
+            instance.y += (rotY * instance.vspeed)
+        }
+
         dispatchCollisions()
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
 

@@ -47,6 +47,9 @@ class StarfaitVM(
 
     val dsMapPool = mutableListOf<DSMap>()
 
+    // The YoYo Runner also stores this globally, nasty, but it works
+    var dragAndDropRelativeValues = false
+
     fun executeCode(
         code: Code,
         currentInstance: Instance,

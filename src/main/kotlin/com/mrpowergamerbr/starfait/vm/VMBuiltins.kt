@@ -433,34 +433,12 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("event_inherited", 0) { args ->
             // event_inherited is like a script_execute, but for parent events
-            val currentInstance = vm.currentSelfInstance
             val callFrame = vm.currentCallFrame
+            val currentInstance = callFrame.self
 
             var gameObject = this.runner.gameWAD.objt.objects[callFrame.eventObject.parentId]
 
-            val events = gameObject.events[callFrame.eventType]
-            var subtypeEvents = events
-                .filter { it.subtype == callFrame.eventSubtype }
-                .flatMap { it.actions }
-
-            // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
-            var attempts = 0
-            while (subtypeEvents.isEmpty()) {
-                if (0 > gameObject.parentId)
-                    break
-
-                gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
-                subtypeEvents = gameObject.events[callFrame.eventType]
-                    .filter { it.subtype == callFrame.eventSubtype }
-                    .flatMap { it.actions }
-                attempts++
-            }
-
-            for (action in subtypeEvents) {
-                val code = this.runner.gameWAD.code.codes[action.codeId]
-                println("Executing code ${this.runner.gameWAD.strg.getString(code.name)}")
-                this.runner.vm.executeCode(code, currentInstance, callFrame.other, gameObject, callFrame.eventType, callFrame.eventSubtype, emptyArray())
-            }
+            currentInstance.dispatchEvent(gameObject, callFrame.eventType, callFrame.eventSubtype, callFrame.other)
         }
 
         registerVoidFunction("event_user", 1) { args ->
@@ -720,6 +698,21 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("action_kill_object", 0) { args ->
             vm.currentSelfInstance.markAsDestroyed(true)
+        }
+
+        registerVoidFunction("action_set_relative", 1) { args ->
+            val enabled = args[0].bool
+            vm.dragAndDropRelativeValues = enabled
+        }
+
+        registerVoidFunction("action_set_alarm", 2) { args ->
+            var steps = args[0].int
+            val alarm = args[1].int
+
+            if (vm.dragAndDropRelativeValues && vm.currentSelfInstance.isAlarmActive(alarm))
+                steps += vm.currentSelfInstance.alarms[alarm]
+
+            vm.currentSelfInstance.setAlarm(alarm, steps)
         }
     }
 }

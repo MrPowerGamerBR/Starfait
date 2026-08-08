@@ -47,13 +47,27 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         this.alarms[alarm] = time
     }
 
+    fun isAlarmActive(alarm: Int): Boolean {
+        require(alarm in 0 until StarfaitRunner.MAX_ALARMS) { "Invalid alarm index!" }
+        return this.alarms[alarm] >= 0
+    }
+
     /**
      * Dispatches an event to this instance
      *
      * @return true if the instance had a event liostener for it
      */
     fun dispatchEvent(eventType: Int, eventSubtype: Int, other: Instance?): Boolean {
-        var gameObject = this.runner.gameWAD.objt.objects[this.objectIndex]
+        return dispatchEvent(this.gameObject, eventType, eventSubtype, other)
+    }
+
+    /**
+     * Dispatches an event to this instance
+     *
+     * @return true if the instance had a event liostener for it
+     */
+    fun dispatchEvent(gameObject: GameObject, eventType: Int, eventSubtype: Int, other: Instance?): Boolean {
+        var gameObject = gameObject
         val events = gameObject.events[eventType]
 
         val subtypeEvents = if (eventType == EventType.COLLISION) {
@@ -106,6 +120,8 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
             subtypeEvents
         }
 
+        val previousRelative = this.runner.vm.dragAndDropRelativeValues
+        this.runner.vm.dragAndDropRelativeValues = false
         for (action in subtypeEvents) {
             val code = this.runner.gameWAD.code.codes[action.codeId]
 
@@ -118,6 +134,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
             this.runner.vm.executeCode(code, this, other, gameObject, eventType, eventSubtype, emptyArray())
         }
+        this.runner.vm.dragAndDropRelativeValues = previousRelative
 
         return subtypeEvents.isNotEmpty()
     }

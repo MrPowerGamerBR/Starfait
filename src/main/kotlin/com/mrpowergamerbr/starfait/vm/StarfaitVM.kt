@@ -374,7 +374,7 @@ class StarfaitVM(
             val variableName = getVariableNameFromVariableIndex(varId)
             val variableContainerName = convertVariableContainerToHumanized(variableContainer, false)
 
-            if (set.contains(variableName) || set.contains(variableContainerName) || set.contains("$variableContainerName.$variableName") || set.contains("*")) {
+            if (set.contains(currentCallFrameCodeName) || set.contains(variableName) || set.contains(variableContainerName) || set.contains("$variableContainerName.$variableName") || set.contains("*")) {
                 print("VM: [$currentCallFrameCodeName] Variable ${if (isWrite) "Write" else "Read"} ${convertVariableContainerToHumanized(variableContainer, true)}.${getVariableNameFromVariableIndex(varId)}")
                 if (arrayIndex != null)
                     print("[$arrayIndex]")

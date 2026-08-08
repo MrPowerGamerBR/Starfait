@@ -435,6 +435,40 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerStringFunction string.substring(index, coercedEndIndex)
         }
 
+        registerStringFunction("string_delete", null) { args ->
+            if (args[0].type != RValueDataType.STRING)
+                return@registerStringFunction ""
+
+            val string = args[0].refAsString()
+
+            // "The position of the first character to remove (from 1). Negative indices are supported and count
+            // from the end of the string, e.g. -1 indicates the last character."
+            val rawIndex = args[1].int
+            val index = if (0 > rawIndex) string.length + rawIndex else rawIndex - 1
+
+            // "A negative number means characters are deleted backwards. For example, -4 indicates the character
+            // at index and the 3 characters in front of it will be deleted."
+            val count = args[2].int
+
+            val begin: Int
+            val end: Int
+            if (count >= 0) {
+                begin = index
+                end = index + count
+            } else {
+                end = index + 1
+                begin = index + 1 + count
+            }
+
+            val coercedBegin = begin.coerceIn(0, string.length)
+            val coercedEnd = end.coerceIn(0, string.length)
+
+            if (coercedBegin >= coercedEnd)
+                return@registerStringFunction string
+
+            return@registerStringFunction string.substring(0, coercedBegin) + string.substring(coercedEnd)
+        }
+
         registerVoidFunction("event_inherited", 0) { args ->
             // event_inherited is like a script_execute, but for parent events
             val callFrame = vm.currentCallFrame

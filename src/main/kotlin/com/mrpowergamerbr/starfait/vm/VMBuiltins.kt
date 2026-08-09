@@ -810,5 +810,39 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             vm.currentSelfInstance.setAlarm(alarm, steps)
         }
+
+        registerVoidFunction("action_move", 2) { args ->
+            val possibleDirections = args[0].refAsString()
+            val speed = args[0].real
+
+            val enabledIndices = mutableListOf<Int>()
+
+            repeat(9) {
+                if (possibleDirections[it] == '1')
+                    enabledIndices.add(it)
+            }
+
+            val whereAreWeGoing = enabledIndices.random(runner.random)
+
+            val direction = when (whereAreWeGoing) {
+                0 -> 135
+                1 -> 90
+                2 -> 45
+                3 -> 180
+                4 -> null
+                5 -> 0
+                6 -> 225
+                7 -> 270
+                8 -> 315
+                else -> error("I don't know how to handle $whereAreWeGoing!")
+            }
+
+            if (direction != null) {
+                vm.currentSelfInstance.direction = direction.toFloat()
+                vm.currentSelfInstance.speed = speed.toFloat()
+            } else {
+                vm.currentSelfInstance.speed = 0.0f
+            }
+        }
     }
 }

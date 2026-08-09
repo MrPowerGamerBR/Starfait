@@ -25,6 +25,12 @@ object MathUtils {
         return String.format(Locale.ROOT, "%.2f", value)
     }
 
+    // Sqr in GameMaker-HTML5
+    fun squared(x: Float) = x * x
+    fun squared(x: Double) = x * x
+
+    fun clampFloat(_f: Double): Double = (_f * 1_000_000).toInt() / 1_000_000.0
+
     // From GameMaker-HTML5, this is also called "Round" and "round" in GM-HTML5's codebase
     fun delphiRound(_a: Float) = delphiRound(_a.toDouble())
     fun delphiRound(_a: Double): Int {

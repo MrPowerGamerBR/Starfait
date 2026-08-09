@@ -178,12 +178,8 @@ class StarfaitRunner(
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
 
         forEachInstance { instance ->
-            // TODO: This is borky
-            val rotX = cos(Math.toRadians(instance.direction.toDouble()).toFloat())
-            val rotY = sin(Math.toRadians(instance.direction.toDouble()).toFloat())
-
-            instance.x += (rotX * instance.hspeed)
-            instance.y += (rotY * instance.vspeed)
+            instance.x += instance.hspeed
+            instance.y += instance.vspeed
         }
 
         dispatchCollisions()

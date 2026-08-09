@@ -1,9 +1,16 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
 import com.mrpowergamerbr.starfait.vm.VariableScope
 import com.mrpowergamerbr.starfait.wad.GameObject
+import com.sun.tools.javac.jvm.ByteCodes.fmod
 import kotlin.collections.filter
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : ObjectBase(runner.vm) {
     var x = 0.0f
@@ -19,15 +26,34 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var imageIndex = 0.0f
     var spriteIndex = 0.0f
     var maskIndex = -1.0f
-    var speed = 0.0f
     var depth = 0.0f
-    var direction = 0.0f
     var imageBlend = -1.0f
     var imageAngle = 0.0f
     var pathSpeed = 0.0f
     var pathPosition = 0.0f
-    var hspeed = 0.0f
-    var vspeed = 0.0f
+
+    var hspeed: Float
+        get() = _hspeed
+        set(value) { if (_hspeed == value) return; _hspeed = value; computeSpeed1() }
+
+    var vspeed: Float
+        get() = _vspeed
+        set(value) { if (_vspeed == value) return; _vspeed = value; computeSpeed1() }
+
+    var speed: Float
+        get() = _speed
+        set(value) { if (_speed == value) return; _speed = value; computeSpeed2() }
+
+    var direction: Float
+        get() = _direction
+        set(value) {
+            var v = value
+            while (0.0f > v) v += 360.0f
+            while (v > 360.0f) v -= 360.0f
+            _direction = v % 360.0f   // note: set unconditionally, no early-out
+            computeSpeed2()
+        }
+
     var friction = 0.0f
     var persistent = false
     var solid = false
@@ -35,6 +61,14 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var visible = true
     var destroyed = false
         private set
+
+    private var _hspeed = 0.0f
+    private var _vspeed = 0.0f
+    // "Note that directions in GameMaker are usually calculated as 0° being right, 90° being up, 180° being left and 270° being down"
+    private var _direction = 0.0f
+    private var _speed = 0.0f
+    private var _gravity = 0.0f
+    private var _gravityDirection = 270.0f
 
     val gameObject: GameObject
         get() = runner.gameWAD.objt.objects[this.objectIndex]
@@ -232,5 +266,46 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
             return false
         }
+    }
+
+    // From GameMaker-HTML5
+    private fun computeSpeed1() {
+        // direction
+        if (this.hspeed == 0.0f)
+        {
+            if (this.vspeed > 0)
+            {
+                this._direction = 270.0f;
+            }
+            else if (this.vspeed < 0)
+            {
+                this._direction = 90.0f;
+            }
+            //else { this.__direction = 0; }
+        }
+        else
+        {
+            var dd = MathUtils.clampFloat(180 * (atan2(this.vspeed, this.hspeed)) / Math.PI).toFloat()
+            if (dd <= 0) { this._direction = -dd; } else { this._direction = 360.0f - dd; }
+        }
+
+        if (Math.abs(this._direction - MathUtils.delphiRound(this._direction)) < 0.0001)
+        {
+            this._direction = MathUtils.delphiRound(this._direction).toFloat()
+        }
+        this._direction = this._direction % 360.0f
+
+        // speed
+        this._speed = sqrt(MathUtils.squared(this.hspeed) + MathUtils.squared(this.vspeed))
+        if (Math.abs(this.speed - MathUtils.delphiRound(this.speed)) < 0.0001) this._speed = MathUtils.delphiRound(this._speed).toFloat()
+    }
+
+    private fun computeSpeed2() {
+        this._hspeed = this.speed * cos(Math.toRadians(this.direction.toDouble()).toFloat())
+        this._vspeed = -this.speed * sin(Math.toRadians(this.direction.toDouble()).toFloat())
+
+        // Round a bit
+        if (abs(this._hspeed - MathUtils.delphiRound(this._hspeed)) < 0.0001) { this._hspeed = MathUtils.delphiRound(this._hspeed).toFloat(); }
+        if (abs(this._vspeed - MathUtils.delphiRound(this._vspeed)) < 0.0001) { this._vspeed = MathUtils.delphiRound(this._vspeed).toFloat(); }
     }
 }

@@ -830,7 +830,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("action_move", 2) { args ->
             val possibleDirections = args[0].refAsString()
-            val speed = args[0].real
+            val speed = args[1].real
 
             val enabledIndices = mutableListOf<Int>()
 

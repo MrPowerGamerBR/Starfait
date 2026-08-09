@@ -1,6 +1,9 @@
 package com.mrpowergamerbr.starfait
 
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.sign
 
 object MathUtils {
     const val EPSILON = 1e-5
@@ -20,5 +23,44 @@ object MathUtils {
             return asLong.toString()
 
         return String.format(Locale.ROOT, "%.2f", value)
+    }
+
+    // From GameMaker-HTML5, this is also called "Round" and "round" in GM-HTML5's codebase
+    fun delphiRound(_a: Float) = delphiRound(_a.toDouble())
+    fun delphiRound(_a: Double): Int {
+        val i = (sign(_a) * floor(abs(_a))).toInt()
+
+        if (_a < 0) {
+            val f = _a - i
+            if ((i and 1) == 1)
+            {
+                if (f <= -0.5) {
+                    return i - 1
+                } else {
+                    return i
+                }
+            } else {
+                if (f >= -0.5) {
+                    return i
+                } else {
+                    return i - 1
+                }
+            }
+        } else {
+            val f = _a - i
+            if ((i and 1) == 1) {
+                if (f >= 0.5) {
+                    return i + 1
+                } else {
+                    return i
+                }
+            } else {
+                if (f <= 0.5) {
+                    return i
+                } else {
+                    return i + 1
+                }
+            }
+        }
     }
 }

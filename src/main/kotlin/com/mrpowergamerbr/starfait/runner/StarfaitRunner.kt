@@ -178,6 +178,8 @@ class StarfaitRunner(
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
 
         forEachInstance { instance ->
+            instance.adaptSpeed()
+
             instance.x += instance.hspeed
             instance.y += instance.vspeed
         }

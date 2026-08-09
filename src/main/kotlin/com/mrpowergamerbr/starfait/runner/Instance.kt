@@ -9,6 +9,8 @@ import kotlin.collections.filter
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -55,6 +57,8 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         }
 
     var friction = 0.0f
+    var gravity = 0.0f
+    var gravityDirection = 270.0f
     var persistent = false
     var solid = false
     var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
@@ -67,13 +71,27 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     // "Note that directions in GameMaker are usually calculated as 0° being right, 90° being up, 180° being left and 270° being down"
     private var _direction = 0.0f
     private var _speed = 0.0f
-    private var _gravity = 0.0f
-    private var _gravityDirection = 270.0f
 
     val gameObject: GameObject
         get() = runner.gameWAD.objt.objects[this.objectIndex]
     val objectName: String
         get() = runner.gameWAD.strg.getString(gameObject.name)
+
+    fun adaptSpeed() {
+        if (this.friction != 0.0f) {
+            val currentSpeed = this.speed
+            if (currentSpeed > 0.0f)
+                this.speed = max(0.0f, currentSpeed - this.friction)
+            else if (0.0f > currentSpeed)
+                this.speed = min(0.0f, currentSpeed + this.friction)
+        }
+
+        if (this.gravity != 0.0f) {
+            val radians = Math.toRadians(this.gravityDirection.toDouble()).toFloat()
+            this.hspeed += this.gravity * MathUtils.clampFloat(cos(radians).toDouble()).toFloat()
+            this.vspeed -= this.gravity * MathUtils.clampFloat(sin(radians).toDouble()).toFloat()
+        }
+    }
 
     fun setAlarm(alarm: Int, time: Int) {
         require(alarm in 0 until StarfaitRunner.MAX_ALARMS) { "Invalid alarm index!" }

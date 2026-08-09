@@ -8,6 +8,7 @@ import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import kotlin.math.absoluteValue
+import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
@@ -777,6 +778,20 @@ class VMBuiltins(val vm: StarfaitVM) {
                 warnFunctionSemiStub("draw_rectangle")
 
             runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawSetColor)
+        }
+
+        registerVoidFunction("move_towards_point", 3) { args ->
+            val x = args[0].real
+            val y = args[1].real
+            val sp = args[2].real
+
+            val dx = x - vm.currentSelfInstance.x
+            val dy = y - vm.currentSelfInstance.y
+            val angle = Math.toDegrees(atan2(-dy, dx))
+
+            val direction = angle.toFloat() % 360
+            vm.currentSelfInstance.direction = direction
+            vm.currentSelfInstance.speed = sp.toFloat()
         }
 
         registerVoidFunction("action_move_to", 2) { args ->

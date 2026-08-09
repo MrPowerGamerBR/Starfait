@@ -131,6 +131,13 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long) {
                     }
 
                     if (event.type() == SDL_EVENT_KEY_UP) {
+                        if (event.key().key() == SDLK_PAGEUP) {
+                            runner.pendingRoom = PendingRoom(
+                                runner.currentRoom.roomId - 1,
+                                vm.gameWAD.room.rooms[runner.currentRoom.roomId - 1]
+                            )
+                        }
+
                         if (event.key().key() == SDLK_PAGEDOWN) {
                             runner.pendingRoom = PendingRoom(
                                 runner.currentRoom.roomId + 1,

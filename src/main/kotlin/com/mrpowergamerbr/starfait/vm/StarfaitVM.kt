@@ -100,7 +100,7 @@ class StarfaitVM(
             val extra = word.extra()
 
             val scriptName = this.currentCallFrameCodeName
-            if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName)) {
+            if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName) || gmlScriptsOpcodesToBeTraced.contains(currentCallFrame.self.objectName)) {
                 print("VM: [$scriptName] ($start) [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
 
                 for (i in 0 until stack.top) {
@@ -501,7 +501,7 @@ class StarfaitVM(
         }
 
         val functionName = gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)
-        if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
+        if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains(currentCallFrame.self.objectName) || functionCallsToBeTraced.contains("*")) {
             println("VM: [$currentCallFrameCodeName] Calling function \"$functionName(${arguments.joinToString(", ")})\"")
         }
 
@@ -514,7 +514,7 @@ class StarfaitVM(
                 error("Wrong number of arguments to built-in function ${functionName}! Expected ${builtinFunction.parameterCount}, got ${arguments.size} instead, with the following arguments: $arguments")
 
             val result = builtinFunction.handler.invoke(arguments)
-            if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
+            if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains(currentCallFrame.self.objectName) || functionCallsToBeTraced.contains("*")) {
                 println("VM: [$currentCallFrameCodeName] Called built-in function \"$functionName(${arguments.joinToString(", ")})\"! Result: $result")
             }
             stack.pushVariable(result)
@@ -538,7 +538,7 @@ class StarfaitVM(
                 arguments.toTypedArray()
             )
 
-            if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
+            if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains(currentCallFrame.self.objectName) || functionCallsToBeTraced.contains("*")) {
                 println("VM: [$currentCallFrameCodeName] Called script function \"$functionName(${arguments.joinToString(", ")})\"! Result: ${returnValue ?: "undefined"}")
             }
 

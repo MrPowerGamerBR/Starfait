@@ -61,6 +61,7 @@ class StarfaitRunner(
             val newRoom = RunnerRoom(this, roomId)
             newRoom.width = room.width
             newRoom.height = room.height
+            newRoom.speed = room.speed
             newRoom.persistent = room.persistent
 
             if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {

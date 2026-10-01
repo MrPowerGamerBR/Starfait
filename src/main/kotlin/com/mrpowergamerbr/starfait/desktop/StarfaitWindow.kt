@@ -128,6 +128,7 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRend
             val event = SDL_Event.malloc(stack)
             var running = true
             while (running) {
+                val started = System.currentTimeMillis()
                 var stepOneFrame = false
 
                 while (SDL_PollEvent(event)) {
@@ -175,6 +176,10 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRend
                     renderer.frame {
                         runner.step()
                     }
+
+                    val finished = System.currentTimeMillis()
+                    val targetFramesPerSecond = 1000 / runner.currentRoom.speed.toDouble()
+                    Thread.sleep((targetFramesPerSecond - (finished - started)).toLong())
 
                     SDL_GL_SwapWindow(window)
                 }

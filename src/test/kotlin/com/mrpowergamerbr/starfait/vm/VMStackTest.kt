@@ -9,7 +9,7 @@ class VMStackTest {
     @Test
     fun `test push`() {
         val stack = VMStack()
-        stack.push()
+        stack.push(RValue.Undefined)
         require(stack.top == 1)
     }
 

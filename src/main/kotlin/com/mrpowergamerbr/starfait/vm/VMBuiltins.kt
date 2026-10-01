@@ -316,6 +316,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerStringFunction("string_upper", 1) { args -> args[0].convertToGMLString().uppercase() }
         registerStringFunction("string_lower", 1) { args -> args[0].convertToGMLString().lowercase() }
+        registerStubbedFunction("string_height", 1, 0.0)
         registerBooleanFunction("variable_global_exists", null) { args ->
             val variableName = args[0].convertToGMLString()
             // TODO: This is kinda nasty, I think it would be better to have a proper variable name -> varId lookup table

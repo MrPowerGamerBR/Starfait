@@ -12,8 +12,10 @@ import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.math.round
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.reflect.KMutableProperty1
 import kotlin.text.iterator
 
@@ -879,6 +881,30 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRealFunction("max", 2) { args ->
             args.maxOf { it.convertToReal() }
+        }
+
+        registerRealFunction("distance_to_point", 2) { args ->
+            val self = vm.currentCallFrame.self
+            val x2 = args[0].convertToReal()
+            val y2 = args[1].convertToReal()
+
+            val bbox = self.getBoundingBox()
+
+            // GameMaker-HTML5 does default these values to 0.0 so... ¯\_(ツ)_/¯
+            // Get the nearest corner to the target
+            val x1 = if (bbox.left > x2) {
+                bbox.left
+            } else {
+                bbox.right
+            }
+
+            val y1 = if (bbox.top > y2) {
+                bbox.top
+            } else {
+                bbox.bottom
+            }
+
+            return@registerRealFunction sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
         }
     }
 }

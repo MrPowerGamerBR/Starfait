@@ -75,6 +75,8 @@ import org.lwjgl.sdl.SDLKeycode.SDLK_RSHIFT
 import org.lwjgl.sdl.SDLKeycode.SDLK_SPACE
 import org.lwjgl.sdl.SDLKeycode.SDLK_TAB
 import org.lwjgl.sdl.SDLKeycode.SDLK_UP
+import org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_O
+import org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_P
 import org.lwjgl.sdl.SDLVideo.SDL_CreateWindow
 import org.lwjgl.sdl.SDLVideo.SDL_DestroyWindow
 import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_MAJOR_VERSION
@@ -118,10 +120,14 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long) {
 
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
 
+        var isPaused = false
+
         MemoryStack.stackPush().use { stack ->
             val event = SDL_Event.malloc(stack)
             var running = true
             while (running) {
+                var stepOneFrame = false
+
                 while (SDL_PollEvent(event)) {
                     if (event.type() == SDL_EVENT_QUIT)
                         running = false
@@ -145,15 +151,27 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long) {
                             )
                         }
 
+                        if (event.key().key() == 'p'.code) {
+                            isPaused = !isPaused
+                            println("Toggled pause")
+                        }
+
+                        if (event.key().key() == 'o'.code) {
+                            println("Stepped one frame")
+                            stepOneFrame = true
+                        }
+
                         runner.keyboard.onKeyUp(convertSDLKeycodeToGMLVK(event.key().key()))
                     }
                 }
 
-                renderer.frame {
-                    runner.step()
-                }
+                if (!isPaused || stepOneFrame) {
+                    renderer.frame {
+                        runner.step()
+                    }
 
-                SDL_GL_SwapWindow(window)
+                    SDL_GL_SwapWindow(window)
+                }
             }
         }
 

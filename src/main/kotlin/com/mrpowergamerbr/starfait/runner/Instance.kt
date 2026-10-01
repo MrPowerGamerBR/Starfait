@@ -66,6 +66,11 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
     var destroyed = false
         private set
 
+    /**
+     * Whether the instance was outside the room on the last check, the outside room event only fires when the instance *leaves* the room
+     */
+    var outsideRoom = false
+
     private var _hspeed = 0.0f
     private var _vspeed = 0.0f
     // "Note that directions in GameMaker are usually calculated as 0° being right, 90° being up, 180° being left and 270° being down"

@@ -184,6 +184,7 @@ class StarfaitRunner(
             instance.y += instance.vspeed
         }
 
+        dispatchOutsideRoom()
         dispatchCollisions()
         dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
 
@@ -251,6 +252,19 @@ class StarfaitRunner(
             dispatchEventToAllInstances(eventType, RunnerKeyboard.VK_ANYKEY)
         if (noKey)
             dispatchEventToAllInstances(eventType, RunnerKeyboard.VK_NOKEY)
+    }
+
+    fun dispatchOutsideRoom() {
+        // GameMaker-HTML5's "./scripts/Events.js"
+        forEachInstance { instance ->
+            val bbox = instance.getBoundingBox()
+            val outside = 0.0f > bbox.right || bbox.left > currentRoom.width || 0.0f > bbox.bottom || bbox.top > currentRoom.height
+
+            if (outside && !instance.outsideRoom)
+                instance.dispatchEvent(EventType.OTHER, EventType.OtherSubType.OUTSIDE_ROOM, instance)
+
+            instance.outsideRoom = outside
+        }
     }
 
     fun dispatchCollisions() {

@@ -906,5 +906,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             return@registerRealFunction sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
         }
+
+        registerStubbedFunction("ini_read_real", 3, 0.0)
     }
 }

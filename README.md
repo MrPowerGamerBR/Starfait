@@ -9,7 +9,7 @@ Starfait only targets Undertale v1.08 and NOTHING ELSE. I may add support for DE
 When creating Starfait, I thought about some language choices...
 
 * C: Believe it or not C is one of the best languages on this list! The reason I didn't want to go with C is that C's simplicity is also its downfall when talking about *productivity*. It is fun to reinvent the wheel from first principles when implementing things like ArrayLists, or how to manage memory manually, but sometimes you just want to get things *done*, and due to that I feel like Kotlin makes me more productive. But of course, you trade performance for productivity, [but it's a sacrifice that I'm willing to make](https://youtu.be/hiKuxfcSrEU).
-* C++: Before I used C++ I thought that C++ was like Java but lower level™. Ended up finding out that C++ feels *worse* to use than *gasp* C somehow? It didn't click with me, even though I'm a OOP enjoyer.
+* C++: Before I used C++ I thought that C++ was like Java but lower level™. Ended up finding out that C++ feels *worse* to use than *\*gasp\** C somehow? It didn't click with me, even though I'm a OOP enjoyer.
 * Rust: I feel like Rust's syntax is too unwieldy for this project. Yes, the unwieldy syntax is like that so that the compiler can find bugs during compilation instead of the application exploding it in your face. You productivity with compile time safetyness, which for a project like this I prefer the productivity. Of course, some people may think that "with LLMs this doesn't matter because they will write everything for you!"... well, I still like writing code. :)
 * Go: I don't like Go's error handling, and even though Go compiles to native code, it has around the same performance as the JVM, so it doesn't matter.
 
@@ -25,7 +25,7 @@ Because I wanted to understand better how the GameMaker VM worked, and to do tha
 
 Don't get me wrong, I do think that these tools help speed up development a LOT and I do use them, but you need to have a balance between "coding everything by hand" and "let's just make the LLM write everything for me".
 
-Starfait is not just a "Butterscotch: Kotlin Edition" port, Starfait's implementation diverges from Butterscotch in various ways. Because when you research and understand what you want to do, you figure out better ways of implementing things, whereas relying solely on a LLM without understanding the concepts you end up just accepting whatever the LLM outputs, because what you will do? If you don't understand it, you don't know if the output is actually good!
+Starfait is not "Butterscotch: Kotlin Edition", Starfait's implementation diverges from Butterscotch in various ways. Because when you research and understand what you want to do, you figure out better ways of implementing things, whereas relying solely on a LLM without understanding the concepts you end up just accepting whatever the LLM outputs, because what you will do? If you don't understand it, you don't know if the output is actually good!
 
 ## Why not support ALL games?
 

@@ -215,8 +215,8 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         if (0 > maskIndex) {
             return BoundingBox.fromWorldCoordinates(
                 this.x,
-                this.x,
                 this.y,
+                this.x,
                 this.y
             )
         }

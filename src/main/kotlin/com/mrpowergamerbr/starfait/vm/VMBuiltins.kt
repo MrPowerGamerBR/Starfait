@@ -908,5 +908,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerStubbedFunction("ini_read_real", 3, 0.0)
+        registerStubbedFunction("audio_sound_get_gain", 1, 0.0)
     }
 }

@@ -26,6 +26,7 @@ class Room(
     val backgrounds: List<Background>,
     @DumpNested
     val views: List<View>,
+    @DumpNested
     val instances: List<Instance>,
     val tiles: List<Tile>
 ) {

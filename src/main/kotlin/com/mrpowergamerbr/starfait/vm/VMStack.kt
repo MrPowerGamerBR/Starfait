@@ -1,13 +1,13 @@
 package com.mrpowergamerbr.starfait.vm
 
 class VMStack {
-    val stack = Array(1024) { RValue() }
+    val stack = Array<RValue>(1024) { RValue.Undefined }
     var top = 0
         private set
 
-    fun push(): RValue {
-        require(stack.size != top) { "VM stack overflow! Values on the stack: ${stack.joinToString { it.toGMLString() }}" }
-        return stack[top++]
+    fun push(value: RValue) {
+        require(stack.size != top) { "VM stack overflow! Values on the stack: ${stack.joinToString { it.toStringTyped() }}" }
+        stack[top++] = value
     }
 
     fun pop(): RValue {

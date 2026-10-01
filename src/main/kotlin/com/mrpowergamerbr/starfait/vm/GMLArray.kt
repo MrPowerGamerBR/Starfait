@@ -6,7 +6,7 @@ class GMLArray {
 
     fun copy(): GMLArray {
         val newGMLArray = GMLArray()
-        newGMLArray.entries.putAll(entries.mapValues { it.value.makeIndependent() })
+        newGMLArray.entries.putAll(entries)
         return newGMLArray
     }
 }

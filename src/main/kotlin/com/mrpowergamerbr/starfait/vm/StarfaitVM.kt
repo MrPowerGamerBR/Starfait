@@ -4,7 +4,6 @@ import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.runner.GlobalObject
 import com.mrpowergamerbr.starfait.runner.Instance
-import com.mrpowergamerbr.starfait.runner.ObjectBase
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -127,13 +126,13 @@ class StarfaitVM(
 
                     val comparisonFunction = word.comparisonFunction()
 
-                    if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
-                        val isEqual = left.ref == right.ref
-                        stack.push().setBoolean(if (comparisonFunction == CmpOp.EQUAL) isEqual else !isEqual)
+                    if (left is RValue.String || right is RValue.String) {
+                        val isEqual = left.convertToString() == right.convertToString()
+                        stack.push(RValue.Boolean(if (comparisonFunction == CmpOp.EQUAL) isEqual else !isEqual))
                         continue
                     }
 
-                    val diff = left.real - right.real
+                    val diff = left.convertToReal() - right.convertToReal()
                     val result = when (comparisonFunction) {
                         CmpOp.LESS_THAN -> diff < -MathUtils.EPSILON
                         CmpOp.LESS_THAN_OR_EQUAL -> diff <= MathUtils.EPSILON
@@ -143,16 +142,16 @@ class StarfaitVM(
                         CmpOp.GREATER_THAN -> MathUtils.EPSILON < diff
                         else -> error("Unsupported comparsion function $comparisonFunction")
                     }
-                    stack.push().setBoolean(result)
+                    stack.push(RValue.Boolean(result))
                 }
                 Op.CONV -> handleConv(reader, type1, type2)
                 Op.BF -> {
-                    val result = stack.pop().bool
+                    val result = stack.pop().convertToBoolean()
                     if (!result)
                         reader.position = start + word.branchOffset()
                 }
                 Op.BT -> {
-                    val result = stack.pop().bool
+                    val result = stack.pop().convertToBoolean()
                     if (result)
                         reader.position = start + word.branchOffset()
                 }
@@ -172,7 +171,7 @@ class StarfaitVM(
                 Op.DUP -> handleDup(reader, type1, extra)
                 Op.BREAK -> handleBreak(reader)
                 Op.RET -> {
-                    currentCallFrame.returnValue = stack.pop().makeIndependent()
+                    currentCallFrame.returnValue = stack.pop()
                     return
                 }
                 Op.EXIT -> return
@@ -187,17 +186,17 @@ class StarfaitVM(
         // println(type1DataType)
         when (type1DataType) {
             // While there's already PUSH_IMMEDIATE for INT16, it seems that GameMaker also does use handlePush with INT16 sometimes, in this case the value is the "extra" field
-            InstructionDataType.INT16 -> stack.push().setInt32(extra)
-            InstructionDataType.INT32 -> stack.push().setInt32(reader.readInt())
-            InstructionDataType.INT64 -> stack.push().setInt64(reader.readLong())
-            InstructionDataType.DOUBLE -> stack.push().setReal(reader.readDouble())
+            InstructionDataType.INT16 -> stack.push(RValue.Int32(extra))
+            InstructionDataType.INT32 -> stack.push(RValue.Int32(reader.readInt()))
+            InstructionDataType.INT64 -> stack.push(RValue.Int64(reader.readLong()))
+            InstructionDataType.DOUBLE -> stack.push(RValue.Real(reader.readDouble()))
             InstructionDataType.FLOAT -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
 
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
                 val varId = operand.variableIndex()
 
                 // println("arrayIndex is $arrayIndex")
@@ -206,9 +205,7 @@ class StarfaitVM(
                 // TODO: Use correct instance here!
                 readVariableFromInstanceId(varId, arrayIndex, instanceId)
             }
-            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()].also {
-                // println("Pushed string \"$it\" to the stack")
-            })
+            InstructionDataType.STRING -> stack.push(RValue.String(gameWAD.strg.stringsByIndex[reader.readInt()]))
         }
     }
 
@@ -218,10 +215,10 @@ class StarfaitVM(
         val operand = VariableReferenceOperand(reader.readInt())
         val varId = operand.variableIndex()
 
-        val pushed = stack.push()
         val builtinVariable = builtinVariableHandlers[varId]
 
-        builtinVariable.readHandler.invoke(null, pushed, null)
+        val result = builtinVariable.readHandler.invoke(null, null)
+        stack.push(result)
     }
 
     private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
@@ -238,17 +235,16 @@ class StarfaitVM(
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
 
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
 
                 // println("array index? $arrayIndex")
                 // println("instanceID? $instanceId")
 
-                val pushed = stack.push()
                 val localVariable = this.currentCallFrame.getVariable(operand.variableIndex(), arrayIndex)
-                pushed.copyFrom(localVariable)
+                val pushed = stack.push(localVariable)
             }
-            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
+            InstructionDataType.STRING -> stack.push(RValue.String(gameWAD.strg.stringsByIndex[reader.readInt()]))
         }
     }
 
@@ -267,7 +263,7 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
                 readVariableFromInstanceId(operand.variableIndex(), null, VariableScope.GLOBAL)
             }
-            InstructionDataType.STRING -> stack.push().setString(gameWAD.strg.stringsByIndex[reader.readInt()])
+            InstructionDataType.STRING -> stack.push(RValue.String(gameWAD.strg.stringsByIndex[reader.readInt()]))
         }
     }
 
@@ -303,19 +299,18 @@ class StarfaitVM(
             }
         }
 
-        val pushedValue = stack.push()
-
-        if (varId >= REGULAR_VARIABLES_BASE) {
-            pushedValue.copyFrom(variableContainer.getVariable(varId, arrayIndex))
+        val result = if (varId >= REGULAR_VARIABLES_BASE) {
+            variableContainer.getVariable(varId, arrayIndex)
         } else {
             // Builtin variable!
             check(variableContainer is Instance) { "Cannot write a built-in variable to a non-instance!" }
 
             val builtinVariableHandler = builtinVariableHandlers[varId]
-            builtinVariableHandler.readHandler.invoke(variableContainer, pushedValue, arrayIndex)
+            builtinVariableHandler.readHandler.invoke(variableContainer, arrayIndex)
         }
+        stack.push(result)
 
-        logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableReads, pushedValue, false)
+        logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableReads, result, false)
     }
 
     private fun writeVariableToInstanceId(varId: Int, arrayIndex: Int?, instanceId: Int, poppedValue: RValue) {
@@ -342,20 +337,16 @@ class StarfaitVM(
         }
 
         for (variableContainer in variableContainers) {
-            // We need to create a new independent value for each container!
-            // Because if we don't, because RValues are mutable, a different caller may change a RValue data, changing it on EVERY VariableContainer
-            val independentValue = poppedValue.makeIndependent()
-
-            logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableWrites, independentValue, true)
+            logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableWrites, poppedValue, true)
 
             if (varId >= REGULAR_VARIABLES_BASE) {
-                variableContainer.setVariable(varId, independentValue, arrayIndex)
+                variableContainer.setVariable(varId, poppedValue, arrayIndex)
             } else {
                 // Builtin variable!
                 check(variableContainer is Instance) { "Cannot write a built-in variable to a non-instance!" }
 
                 val builtinVariableHandler = builtinVariableHandlers[varId]
-                builtinVariableHandler.writeHandler.invoke(variableContainer, independentValue, arrayIndex)
+                builtinVariableHandler.writeHandler.invoke(variableContainer, poppedValue, arrayIndex)
             }
         }
     }
@@ -399,9 +390,9 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
-                val poppedValue = stack.pop().makeIndependent()
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+                val poppedValue = stack.pop()
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
 
                 writeVariableToInstanceId(
                     varId,
@@ -416,8 +407,8 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().int else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().int else extra
+                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
 
                 val poppedValue = stack.pop()
                 writeVariableToInstanceId(
@@ -437,26 +428,26 @@ class StarfaitVM(
         val sourceType = InstructionDataType.byId(type1)
         val destinationType = InstructionDataType.byId(type2)
         // println("Converting from $sourceType to $destinationType")
-        val topOfTheStack = stack.peek()
+        val topOfTheStack = stack.pop()
 
         // println("Top of the stack is ${topOfTheStack.toStringTyped()}")
 
         when (destinationType) {
             // no-op, this is only useful if some day we decide to go with non-tagged RValues (that is, using two arrays, one for native values and another for RValues)
             // Because in that case, we would need to convert the RValue to the native type
-            InstructionDataType.VARIABLE -> return
-            InstructionDataType.DOUBLE -> topOfTheStack.setReal(topOfTheStack.real)
+            InstructionDataType.VARIABLE -> stack.push(topOfTheStack)
+            InstructionDataType.DOUBLE -> stack.push(RValue.Real(topOfTheStack.convertToReal()))
             InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> topOfTheStack.setInt32(topOfTheStack.int)
+            InstructionDataType.INT32 -> stack.push(RValue.Int32(topOfTheStack.convertToInt32()))
             InstructionDataType.INT64 -> TODO()
-            InstructionDataType.BOOLEAN -> topOfTheStack.setBoolean(topOfTheStack.bool)
+            InstructionDataType.BOOLEAN -> stack.push(RValue.Boolean(topOfTheStack.convertToBoolean()))
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
         }
     }
 
     private fun handlePushImmediate(reader: StarfaitByteBuffer, extra: Int) {
-        stack.push().setInt32(extra)
+        stack.push(RValue.Int32(extra))
     }
 
     private fun handleCall(reader: StarfaitByteBuffer, extra: Int) {
@@ -466,8 +457,7 @@ class StarfaitVM(
         // extra = parameter count
         val arguments = ArrayList<RValue>(extra)
         repeat(extra) {
-            // We make it independent because we push the stack right down below, and that can cause these variables to change
-            arguments.add(stack.pop().makeIndependent())
+            arguments.add(stack.pop())
         }
 
         val functionName = gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)
@@ -483,11 +473,11 @@ class StarfaitVM(
             if (builtinFunction.parameterCount != null && builtinFunction.parameterCount != arguments.size)
                 error("Wrong number of arguments to built-in function ${functionName}! Expected ${builtinFunction.parameterCount}, got ${arguments.size} instead, with the following arguments: $arguments")
 
-            val result = stack.push()
-            builtinFunction.handler.invoke(arguments, result)
+            val result = builtinFunction.handler.invoke(arguments)
             if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
                 println("VM: [$currentCallFrameCodeName] Called built-in function \"$functionName(${arguments.joinToString(", ")})\"! Result: $result")
             }
+            stack.push(result)
             return
         }
 
@@ -516,11 +506,11 @@ class StarfaitVM(
                 // This happens when...
                 // * Op.EXIT is called
                 // * The script exits without any "return" or "exit" statement
-                stack.push().setUndefined()
+                stack.push(RValue.Undefined)
                 return
             }
 
-            stack.push().copyFrom(returnValue)
+            stack.push(returnValue)
             return
         }
 
@@ -531,8 +521,7 @@ class StarfaitVM(
         }
 
         // As a fallback, we'll push undefined to the stack if the function does not exist
-        val result = stack.push()
-        result.setUndefined()
+        val result = stack.push(RValue.Undefined)
     }
 
     private fun handleAdd(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
@@ -546,25 +535,19 @@ class StarfaitVM(
         val right = stack.pop()
         val left = stack.pop()
 
-        val pushed = stack.push()
-
         // println("ADD left type is ${left.type}, right type is ${right.type}")
-        if (left.type == RValueDataType.STRING || right.type == RValueDataType.STRING) {
-            if (left.type != RValueDataType.STRING || right.type != RValueDataType.STRING)
+        if (left is RValue.String || right is RValue.String) {
+            if (left !is RValue.String || right !is RValue.String)
                 error("DoAdd :: Execution Error")
 
-            val leftRef = left.ref
-            val rightRef = right.ref
+            val leftRef = left.convertToString()
+            val rightRef = right.convertToString()
 
-            // If the ref is not a string, then something went deeply wrong
-            check(leftRef is String)
-            check(rightRef is String)
-
-            pushed.setString(leftRef + rightRef)
+            stack.push(RValue.String(leftRef + rightRef))
             return
         }
 
-        pushed.setReal(left.real + right.real)
+        stack.push(RValue.Real(left.convertToReal() + right.convertToReal()))
     }
 
     private fun handleSub(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
@@ -576,9 +559,7 @@ class StarfaitVM(
         val right = stack.pop()
         val left = stack.pop()
 
-        val pushed = stack.push()
-
-        pushed.setReal(left.real - right.real)
+        stack.push(RValue.Real(left.convertToReal() - right.convertToReal()))
     }
 
     private fun handleMul(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
@@ -590,27 +571,21 @@ class StarfaitVM(
         val right = stack.pop()
         val left = stack.pop()
 
-        val pushed = stack.push()
-
-        pushed.setReal(left.real * right.real)
+        stack.push(RValue.Real(left.convertToReal() * right.convertToReal()))
     }
 
     private fun handleDiv(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
         val right = stack.pop()
         val left = stack.pop()
 
-        val pushed = stack.push()
-
-        pushed.setReal(left.real / right.real)
+        stack.push(RValue.Real(left.convertToReal() / right.convertToReal()))
     }
 
     private fun handleMod(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
         val right = stack.pop()
         val left = stack.pop()
 
-        val pushed = stack.push()
-
-        pushed.setReal(left.real % right.real)
+        stack.push(RValue.Real(left.convertToReal() % right.convertToReal()))
     }
 
     private fun handleDup(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
@@ -623,7 +598,7 @@ class StarfaitVM(
         val dupBottom = stack.top - 1 - extra
         repeat(total) {
             val target = stack.peekAt(dupBottom + it)
-            stack.push().copyFrom(target)
+            stack.push(target)
         }
     }
 
@@ -634,15 +609,14 @@ class StarfaitVM(
 
     private fun handleNot(reader: StarfaitByteBuffer, type1: Int) {
         val targetType = InstructionDataType.byId(type1)
-        val poppedValue = stack.pop().makeIndependent() // Create a copy so that the push below doesn't overwrite it
-        val pushedValue = stack.push()
+        val poppedValue = stack.pop()
 
         when (targetType) {
             InstructionDataType.DOUBLE -> TODO()
             InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> pushedValue.setInt32(poppedValue.int.inv()) // Same thing as ~Number
+            InstructionDataType.INT32 -> stack.push(RValue.Int32(poppedValue.convertToInt32().inv())) // Same thing as ~Number
             InstructionDataType.INT64 -> TODO()
-            InstructionDataType.BOOLEAN -> pushedValue.setBoolean(!poppedValue.bool)
+            InstructionDataType.BOOLEAN -> stack.push(RValue.Boolean(!poppedValue.convertToBoolean()))
             InstructionDataType.VARIABLE -> TODO()
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
@@ -651,29 +625,28 @@ class StarfaitVM(
 
     private fun handleNeg(reader: StarfaitByteBuffer, type1: Int) {
         val targetType = InstructionDataType.byId(type1)
-        val poppedValue = stack.pop().makeIndependent() // Create a copy so that the push below doesn't overwrite it
-        val pushedValue = stack.push()
+        val poppedValue = stack.pop()
 
         when (targetType) {
             InstructionDataType.VARIABLE -> {
-                when (poppedValue.type) {
-                    RValueDataType.INT32 -> pushedValue.setInt32(-poppedValue.int)
-                    RValueDataType.REAL -> pushedValue.setReal(-poppedValue.real)
-                    else -> error("I don't know how to handle a ${poppedValue.type}!")
+                when (poppedValue) {
+                    is RValue.Int32 -> stack.push(RValue.Int32(-poppedValue.convertToInt32()))
+                    is RValue.Real -> stack.push(RValue.Real(-poppedValue.convertToReal()))
+                    else -> error("I don't know how to handle a ${poppedValue}!")
                 }
             }
-            InstructionDataType.DOUBLE -> pushedValue.setReal(-poppedValue.real)
+            InstructionDataType.DOUBLE -> stack.push(RValue.Real(-poppedValue.convertToReal()))
             InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> pushedValue.setInt32(-poppedValue.int)
-            InstructionDataType.INT64 -> pushedValue.setInt64(-poppedValue.bits)
+            InstructionDataType.INT32 -> stack.push(RValue.Int32(-poppedValue.convertToInt32()))
+            InstructionDataType.INT64 -> stack.push(RValue.Int64(-poppedValue.convertToInt64()))
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.STRING -> TODO()
-            InstructionDataType.INT16 -> pushedValue.setInt32(-poppedValue.int)
+            InstructionDataType.INT16 -> stack.push(RValue.Int32(-poppedValue.convertToInt32()))
         }
     }
 
     private fun handlePushEnv(reader: StarfaitByteBuffer, ip: Int, branchOffset: Int) {
-        val objectId = stack.pop().int
+        val objectId = stack.pop().convertToInt32()
 
         val instances = runner.filterInstances {
             it.matchesObjectOrInstanceId(
@@ -809,7 +782,7 @@ class StarfaitVM(
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
                 name,
-                { _, _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
+                { _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
                 { _, _, _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
             )
         }

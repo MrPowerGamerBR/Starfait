@@ -2,122 +2,67 @@ package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.MathUtils
 
-// Yes this looks wonky as hell, but that's because we are trying to squeeze performance from the JVM (to avoid unnecessary allocations)
-class RValue {
-    var type = RValueDataType.UNDEFINED
-    var bits = 0L
-    var ref: Any? = null
+sealed class RValue {
+    abstract fun toStringTyped(): kotlin.String
 
-    val real: Double
-        get() = when (type) {
-            RValueDataType.REAL -> Double.fromBits(bits)
-            RValueDataType.BOOLEAN, RValueDataType.INT32, RValueDataType.INT64 -> bits.toDouble()
-            RValueDataType.STRING -> (ref as String).toDouble()
-            RValueDataType.UNDEFINED -> 0.0
-            else -> error("Cannot read $type as a real!")
-        }
+    // You may be thinking: "Couldn't we add a quick and easy (this as? Int32)?.value for things that we are SURE won't be a different type?"
+    // Well, I thought the same thing, but it seems that a lot of places that you THINK would use only int32 (like instanceIds on the VM) use sometimes int32 and sometimes reals
+    // So better make everything go through the converter functions
+    open fun convertToInt32(): Int = error("Type $this can't be converted to int32!")
+    open fun convertToInt64(): Long = error("Type $this can't be converted to int64!")
+    open fun convertToReal(): Double = error("Type $this can't be converted to real!")
+    open fun convertToString(): kotlin.String = error("Type $this can't be converted to string!")
+    open fun convertToBoolean(): kotlin.Boolean = error("Type $this can't be converted to boolean!")
 
-    val bool: Boolean
-        get() = when (type) {
-            RValueDataType.BOOLEAN -> bits != 0L
-            // GameMaker-HTML5's yyGetBool returns true if the value is > 0.5
-            RValueDataType.REAL -> Double.fromBits(bits) > 0.5
-            RValueDataType.INT32 -> bits > 0
-            else -> error("Cannot read $type as a boolean!")
-        }
+    data object Undefined : RValue() {
+        override fun toStringTyped() = "undefined"
 
-    val int: Int
-        get() = when (type) {
-            RValueDataType.INT32 -> bits.toInt()
-            RValueDataType.REAL -> Double.fromBits(bits).toInt()
-            else -> error("Cannot read $type as an int!")
-        }
-
-    fun setUndefined() {
-        this.type = RValueDataType.UNDEFINED
-        this.ref = null
+        override fun convertToString() = "undefined"
+        override fun convertToReal() = 0.0
     }
 
-    fun setString(value: String) {
-        this.type = RValueDataType.STRING
-        this.ref = value
+    data class String(val value: kotlin.String) : RValue() {
+        override fun toStringTyped() = "string(\"$value\")"
+
+        override fun convertToString() = value
+        override fun convertToReal() = value.toDouble()
     }
 
-    fun setInt32(value: Int) {
-        this.type = RValueDataType.INT32
-        this.bits = value.toLong()
-        this.ref = null
+    data class Int32(val value: Int) : RValue() {
+        override fun toStringTyped() = "int32($value)"
+
+        override fun convertToString() = value.toString()
+        override fun convertToInt32() = value
+        override fun convertToReal() = value.toDouble()
+        override fun convertToBoolean() = value > 0
     }
 
-    fun setInt64(value: Long) {
-        this.type = RValueDataType.INT64
-        this.bits = value
-        this.ref = null
+    data class Int64(val value: Long) : RValue() {
+        override fun toStringTyped() = "int64($value)"
+
+        override fun convertToString() = value.toString()
     }
 
-    fun setReal(value: Double) {
-        this.type = RValueDataType.REAL
-        this.bits = value.toRawBits()
-        this.ref = null
+    data class Real(val value: Double) : RValue() {
+        override fun toStringTyped() = "real($value)"
+
+        override fun convertToString() = MathUtils.formatReal(value)
+        override fun convertToReal() = value
+        override fun convertToInt32() = value.toInt()
+        override fun convertToBoolean() = value > 0.5 // GameMaker-HTML5's yyGetBool returns true if the value is > 0.5
     }
 
-    fun setBoolean(value: Boolean) {
-        this.type = RValueDataType.BOOLEAN
-        this.bits = if (value) 1 else 0
-        this.ref = null
+    data class Boolean(val value: kotlin.Boolean) : RValue() {
+        override fun toStringTyped() = "boolean($value)"
+
+        override fun convertToString() = if (value) "1" else "0"
+        override fun convertToBoolean() = value
+        override fun convertToReal() = if (value) 1.0 else 0.0
     }
 
-    fun setArray(array: GMLArray) {
-        this.type = RValueDataType.ARRAY
-        this.ref = array
-    }
+    data class Array(val value: GMLArray) : RValue() {
+        override fun toStringTyped() = "array($value)"
 
-    fun toGMLString(): String {
-        return when (type) {
-            RValueDataType.STRING -> ref as String
-            RValueDataType.REAL -> MathUtils.formatReal(Double.fromBits(bits))
-            RValueDataType.INT32 -> bits.toString()
-            RValueDataType.INT64 -> bits.toString()
-            RValueDataType.BOOLEAN -> if (bits != 0L) "1" else "0"
-            RValueDataType.UNDEFINED -> "undefined"
-            else -> error("Cannot convert $type to a string!")
-        }
-    }
-
-    fun toStringTyped(): String {
-        return when (type) {
-            RValueDataType.STRING -> "\"$ref\""
-            RValueDataType.INT32 -> "int32($bits)"
-            RValueDataType.INT64 -> "int64($bits)"
-            RValueDataType.BOOLEAN -> "boolean($bits)"
-            RValueDataType.UNDEFINED -> "undefined"
-            RValueDataType.REAL -> "real($real)"
-            RValueDataType.ARRAY -> "array($ref)"
-            else -> error("Unknown type $type!")
-        }
-    }
-
-    fun makeIndependent(): RValue {
-        val new = RValue()
-        new.copyFrom(this)
-        return new
-    }
-
-    fun copyFrom(rvalue: RValue) {
-        this.type = rvalue.type
-        this.bits = rvalue.bits
-        val ref = rvalue.ref
-        if (ref is GMLArray) {
-            // GameMaker uses CoW for arrays, so we need to copy the ENTIRE array!
-            this.ref = ref.copy()
-        } else {
-            this.ref = ref
-        }
-    }
-
-    fun refAsString() = ref as String
-
-    override fun toString(): String {
-        return toStringTyped()
+        override fun convertToString() = TODO()
     }
 }

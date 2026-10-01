@@ -4,10 +4,14 @@ class DSMap {
     val entries = mutableMapOf<Any, RValue>()
 
     private fun convertToMapKey(key: RValue): Any {
-        return when (key.type) {
-            RValueDataType.INT32 -> key.real
-            RValueDataType.STRING -> key.ref as String
-            else -> error("Cannot use $key as a key in a DSMap!")
+        return when (key) {
+            is RValue.Array -> TODO()
+            is RValue.Boolean -> TODO()
+            is RValue.Int32 -> TODO()
+            is RValue.Int64 -> TODO()
+            is RValue.Real -> TODO()
+            is RValue.String -> key.convertToString()
+            RValue.Undefined -> TODO()
         }
     }
 
@@ -18,7 +22,7 @@ class DSMap {
 
     fun set(key: RValue, value: RValue) {
         val realKey = convertToMapKey(key)
-        entries[realKey] = value.makeIndependent()
+        entries[realKey] = value
     }
 
     fun containsKey(key: RValue) = entries.containsKey(convertToMapKey(key))

@@ -872,5 +872,13 @@ class VMBuiltins(val vm: StarfaitVM) {
                 vm.currentSelfInstance.speed = 0.0f
             }
         }
+
+        registerRealFunction("min", 2) { args ->
+            args.minOf { it.convertToReal() }
+        }
+
+        registerRealFunction("max", 2) { args ->
+            args.maxOf { it.convertToReal() }
+        }
     }
 }

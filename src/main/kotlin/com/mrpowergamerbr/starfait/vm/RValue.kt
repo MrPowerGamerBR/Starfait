@@ -11,42 +11,43 @@ sealed class RValue {
     open fun convertToInt32(): Int = error("Type $this can't be converted to int32!")
     open fun convertToInt64(): Long = error("Type $this can't be converted to int64!")
     open fun convertToReal(): Double = error("Type $this can't be converted to real!")
-    open fun convertToString(): kotlin.String = error("Type $this can't be converted to string!")
+    open fun convertToGMLString(): kotlin.String = error("Type $this can't be converted to string!")
     open fun convertToBoolean(): kotlin.Boolean = error("Type $this can't be converted to boolean!")
 
     data object Undefined : RValue() {
         override fun toStringTyped() = "undefined"
 
-        override fun convertToString() = "undefined"
+        override fun convertToGMLString() = "undefined"
+        override fun convertToInt32() = 0
         override fun convertToReal() = 0.0
     }
 
     data class String(val value: kotlin.String) : RValue() {
         override fun toStringTyped() = "string(\"$value\")"
 
-        override fun convertToString() = value
+        override fun convertToGMLString() = value
         override fun convertToReal() = value.toDouble()
     }
 
     data class Int32(val value: Int) : RValue() {
         override fun toStringTyped() = "int32($value)"
 
-        override fun convertToString() = value.toString()
+        override fun convertToGMLString() = value.toString()
         override fun convertToInt32() = value
         override fun convertToReal() = value.toDouble()
-        override fun convertToBoolean() = value > 0
+        override fun convertToBoolean() = MathUtils.convertInt32ToBoolean(value)
     }
 
     data class Int64(val value: Long) : RValue() {
         override fun toStringTyped() = "int64($value)"
 
-        override fun convertToString() = value.toString()
+        override fun convertToGMLString() = value.toString()
     }
 
     data class Real(val value: Double) : RValue() {
         override fun toStringTyped() = "real($value)"
 
-        override fun convertToString() = MathUtils.formatReal(value)
+        override fun convertToGMLString() = MathUtils.formatReal(value)
         override fun convertToReal() = value
         override fun convertToInt32() = value.toInt()
         override fun convertToBoolean() = value > 0.5 // GameMaker-HTML5's yyGetBool returns true if the value is > 0.5
@@ -55,7 +56,7 @@ sealed class RValue {
     data class Boolean(val value: kotlin.Boolean) : RValue() {
         override fun toStringTyped() = "boolean($value)"
 
-        override fun convertToString() = if (value) "1" else "0"
+        override fun convertToGMLString() = if (value) "1" else "0"
         override fun convertToBoolean() = value
         override fun convertToReal() = if (value) 1.0 else 0.0
     }
@@ -63,6 +64,6 @@ sealed class RValue {
     data class Array(val value: GMLArray) : RValue() {
         override fun toStringTyped() = "array($value)"
 
-        override fun convertToString() = TODO()
+        override fun convertToGMLString() = TODO()
     }
 }

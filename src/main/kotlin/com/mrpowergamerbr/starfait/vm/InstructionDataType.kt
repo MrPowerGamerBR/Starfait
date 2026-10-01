@@ -1,14 +1,14 @@
 package com.mrpowergamerbr.starfait.vm
 
-enum class InstructionDataType(val id: Int) {
-    DOUBLE(0),
-    FLOAT(1),
-    INT32(2),
-    INT64(3),
-    BOOLEAN(4),
-    VARIABLE(5),
-    STRING(6),
-    INT16(15);
+enum class InstructionDataType(val id: Int, val stackSize: Byte) {
+    DOUBLE(0, 8),
+    FLOAT(1, 4),
+    INT32(2, 4),
+    INT64(3, 8),
+    BOOLEAN(4, 4),
+    VARIABLE(5, 16),
+    STRING(6, 4),
+    INT16(15, -1);
 
     companion object {
         private val BY_ID = arrayOfNulls<InstructionDataType>(16)

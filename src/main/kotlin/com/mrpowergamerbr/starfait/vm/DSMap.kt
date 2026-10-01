@@ -10,7 +10,7 @@ class DSMap {
             is RValue.Int32 -> TODO()
             is RValue.Int64 -> TODO()
             is RValue.Real -> TODO()
-            is RValue.String -> key.convertToString()
+            is RValue.String -> key.convertToGMLString()
             RValue.Undefined -> TODO()
         }
     }

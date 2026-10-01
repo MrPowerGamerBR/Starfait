@@ -106,7 +106,9 @@ class StarfaitVM(
                 for (i in 0 until stack.top) {
                     if (i != 0)
                         print(", ")
-                    print(stack.stack[i].toStringTyped())
+                    val value = stack.values[i]
+                    print(value.toStringTyped())
+                    print(" [dataType=${value.dataType}]")
                 }
                 print("]]")
                 println()
@@ -118,17 +120,32 @@ class StarfaitVM(
                 Op.PUSH_GLOBAL -> handlePushGlobal(reader, type1)
                 Op.PUSH_IMMEDIATE -> handlePushImmediate(reader, extra)
                 Op.PUSH_BUILTIN -> handlePushBuiltin(reader, type1, extra)
-                Op.POP -> handlePop(reader, type1, extra)
-                Op.POPZ -> stack.pop()
+                Op.POP -> handlePop(reader, type1, type2, extra)
+                Op.POPZ -> when (InstructionDataType.byId(type1)) {
+                    InstructionDataType.DOUBLE -> TODO()
+                    InstructionDataType.FLOAT -> TODO()
+                    InstructionDataType.INT32 -> stack.popInt32()
+                    InstructionDataType.INT64 -> TODO()
+                    InstructionDataType.BOOLEAN -> TODO()
+                    InstructionDataType.VARIABLE -> stack.popVariable()
+                    InstructionDataType.STRING -> TODO()
+                    InstructionDataType.INT16 -> TODO()
+                }
                 Op.CMP -> {
-                    val right = stack.pop()
-                    val left = stack.pop()
+                    val type1DataType = InstructionDataType.byId(type1)
+                    val type2DataType = InstructionDataType.byId(type2)
+
+                    val right = stack.popByInstructionType(type1DataType)
+                    val left = stack.popByInstructionType(type2DataType)
+                    val rightType = right.cmpType()
+                    val leftType = left.cmpType()
 
                     val comparisonFunction = word.comparisonFunction()
 
-                    if (left is RValue.String || right is RValue.String) {
-                        val isEqual = left.convertToString() == right.convertToString()
-                        stack.push(RValue.Boolean(if (comparisonFunction == CmpOp.EQUAL) isEqual else !isEqual))
+                    if (leftType == CmpType.STRING || rightType == CmpType.STRING) {
+                        val isEqual = left.convertToGMLString() == right.convertToGMLString()
+                        val result = if (comparisonFunction == CmpOp.EQUAL) isEqual else !isEqual
+                        stack.pushBoolean(result)
                         continue
                     }
 
@@ -142,16 +159,18 @@ class StarfaitVM(
                         CmpOp.GREATER_THAN -> MathUtils.EPSILON < diff
                         else -> error("Unsupported comparsion function $comparisonFunction")
                     }
-                    stack.push(RValue.Boolean(result))
+
+                    stack.pushBoolean(result)
                 }
                 Op.CONV -> handleConv(reader, type1, type2)
+                // Branches ALWAYS except a 4-byte value
                 Op.BF -> {
-                    val result = stack.pop().convertToBoolean()
+                    val result = stack.popBooleanLikeAndUnwrap()
                     if (!result)
                         reader.position = start + word.branchOffset()
                 }
                 Op.BT -> {
-                    val result = stack.pop().convertToBoolean()
+                    val result = stack.popBooleanLikeAndUnwrap()
                     if (result)
                         reader.position = start + word.branchOffset()
                 }
@@ -171,7 +190,7 @@ class StarfaitVM(
                 Op.DUP -> handleDup(reader, type1, extra)
                 Op.BREAK -> handleBreak(reader)
                 Op.RET -> {
-                    currentCallFrame.returnValue = stack.pop()
+                    currentCallFrame.returnValue = stack.popVariable().value
                     return
                 }
                 Op.EXIT -> return
@@ -186,17 +205,17 @@ class StarfaitVM(
         // println(type1DataType)
         when (type1DataType) {
             // While there's already PUSH_IMMEDIATE for INT16, it seems that GameMaker also does use handlePush with INT16 sometimes, in this case the value is the "extra" field
-            InstructionDataType.INT16 -> stack.push(RValue.Int32(extra))
-            InstructionDataType.INT32 -> stack.push(RValue.Int32(reader.readInt()))
-            InstructionDataType.INT64 -> stack.push(RValue.Int64(reader.readLong()))
-            InstructionDataType.DOUBLE -> stack.push(RValue.Real(reader.readDouble()))
+            InstructionDataType.INT16 -> stack.pushInt32(extra)
+            InstructionDataType.INT32 -> stack.pushInt32(reader.readInt())
+            InstructionDataType.INT64 -> stack.pushInt64(reader.readLong())
+            InstructionDataType.DOUBLE -> stack.pushDouble(reader.readDouble())
             InstructionDataType.FLOAT -> TODO()
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
 
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
+                val arrayIndex = if (operand.hasArrayIndex()) stack.popInt32().value else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.popInt32().value else extra
                 val varId = operand.variableIndex()
 
                 // println("arrayIndex is $arrayIndex")
@@ -205,20 +224,21 @@ class StarfaitVM(
                 // TODO: Use correct instance here!
                 readVariableFromInstanceId(varId, arrayIndex, instanceId)
             }
-            InstructionDataType.STRING -> stack.push(RValue.String(gameWAD.strg.stringsByIndex[reader.readInt()]))
+            InstructionDataType.STRING -> stack.pushString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }
 
     private fun handlePushBuiltin(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         // Pushes a builtin variable to the stack
         // handlePushBuiltin type1 is always "VARIABLE"
+        val type = InstructionDataType.byId(type1)
         val operand = VariableReferenceOperand(reader.readInt())
         val varId = operand.variableIndex()
 
         val builtinVariable = builtinVariableHandlers[varId]
 
         val result = builtinVariable.readHandler.invoke(null, null)
-        stack.push(result)
+        stack.pushVariable(result)
     }
 
     private fun handlePushLocal(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
@@ -235,16 +255,16 @@ class StarfaitVM(
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
 
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
+                val arrayIndex = if (operand.hasArrayIndex()) stack.popInt32AndUnwrap() else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.popInt32AndUnwrap() else extra
 
                 // println("array index? $arrayIndex")
                 // println("instanceID? $instanceId")
 
                 val localVariable = this.currentCallFrame.getVariable(operand.variableIndex(), arrayIndex)
-                val pushed = stack.push(localVariable)
+                stack.pushVariable(localVariable)
             }
-            InstructionDataType.STRING -> stack.push(RValue.String(gameWAD.strg.stringsByIndex[reader.readInt()]))
+            InstructionDataType.STRING -> stack.pushString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }
 
@@ -263,7 +283,7 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
                 readVariableFromInstanceId(operand.variableIndex(), null, VariableScope.GLOBAL)
             }
-            InstructionDataType.STRING -> stack.push(RValue.String(gameWAD.strg.stringsByIndex[reader.readInt()]))
+            InstructionDataType.STRING -> stack.pushString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
     }
 
@@ -308,7 +328,7 @@ class StarfaitVM(
             val builtinVariableHandler = builtinVariableHandlers[varId]
             builtinVariableHandler.readHandler.invoke(variableContainer, arrayIndex)
         }
-        stack.push(result)
+        stack.pushVariable(result)
 
         logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableReads, result, false)
     }
@@ -378,8 +398,10 @@ class StarfaitVM(
         }
     }
 
-    private fun handlePop(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
+    private fun handlePop(reader: StarfaitByteBuffer, type1: Int, type2: Int, extra: Int) {
         val type1DataType = InstructionDataType.byId(type1)
+        val typeOnTheStack = InstructionDataType.byId(type2)
+
         when (type1DataType) {
             InstructionDataType.DOUBLE -> TODO()
             InstructionDataType.FLOAT -> TODO()
@@ -390,9 +412,9 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
-                val poppedValue = stack.pop()
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
+                val poppedValue = stack.popVariable().value
+                val arrayIndex = if (operand.hasArrayIndex()) stack.popInt32AndUnwrap() else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.popInt32AndUnwrap() else extra
 
                 writeVariableToInstanceId(
                     varId,
@@ -407,10 +429,20 @@ class StarfaitVM(
                 val operand = VariableReferenceOperand(reader.readInt())
 
                 val varId = operand.variableIndex()
-                val arrayIndex = if (operand.hasArrayIndex()) stack.pop().convertToInt32() else null
-                val instanceId = if (operand.hasInstanceIdOnStack()) stack.pop().convertToInt32() else extra
+                val arrayIndex = if (operand.hasArrayIndex()) stack.popInt32AndUnwrap() else null
+                val instanceId = if (operand.hasInstanceIdOnStack()) stack.popInt32AndUnwrap() else extra
 
-                val poppedValue = stack.pop()
+                val poppedValue = when (typeOnTheStack) {
+                    InstructionDataType.DOUBLE -> stack.popDoubleAndUnwrap().let { RValue.Real(it) }
+                    InstructionDataType.FLOAT -> TODO()
+                    InstructionDataType.INT32 -> stack.popInt32AndUnwrap().let { RValue.Int32(it) }
+                    InstructionDataType.INT64 -> stack.popInt64AndUnwrap().let { RValue.Int64(it) }
+                    InstructionDataType.BOOLEAN -> stack.popBooleanLikeAndUnwrap().let { RValue.Boolean(it) }
+                    InstructionDataType.VARIABLE -> stack.popVariableAndUnwrap()
+                    InstructionDataType.STRING -> stack.popStringAndUnwrap().let { RValue.String(it) }
+                    InstructionDataType.INT16 -> TODO()
+                }
+
                 writeVariableToInstanceId(
                     varId,
                     arrayIndex,
@@ -427,27 +459,35 @@ class StarfaitVM(
         // type1 is the source type, type2 is the destination type
         val sourceType = InstructionDataType.byId(type1)
         val destinationType = InstructionDataType.byId(type2)
-        // println("Converting from $sourceType to $destinationType")
-        val topOfTheStack = stack.pop()
 
+        val topOfTheStack = when (sourceType) {
+            InstructionDataType.DOUBLE -> stack.popDouble()
+            InstructionDataType.FLOAT -> TODO()
+            InstructionDataType.INT32 -> stack.popInt32()
+            InstructionDataType.INT64 -> stack.popInt64()
+            InstructionDataType.BOOLEAN -> stack.popBoolean()
+            InstructionDataType.VARIABLE -> stack.popVariable()
+            InstructionDataType.STRING -> stack.popString()
+            InstructionDataType.INT16 -> TODO()
+        }
+
+        // println("Converting from $sourceType to $destinationType")
         // println("Top of the stack is ${topOfTheStack.toStringTyped()}")
 
         when (destinationType) {
-            // no-op, this is only useful if some day we decide to go with non-tagged RValues (that is, using two arrays, one for native values and another for RValues)
-            // Because in that case, we would need to convert the RValue to the native type
-            InstructionDataType.VARIABLE -> stack.push(topOfTheStack)
-            InstructionDataType.DOUBLE -> stack.push(RValue.Real(topOfTheStack.convertToReal()))
+            InstructionDataType.DOUBLE -> stack.pushDouble(topOfTheStack.convertToReal())
             InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> stack.push(RValue.Int32(topOfTheStack.convertToInt32()))
+            InstructionDataType.INT32 -> stack.pushInt32(topOfTheStack.convertToInt32())
             InstructionDataType.INT64 -> TODO()
-            InstructionDataType.BOOLEAN -> stack.push(RValue.Boolean(topOfTheStack.convertToBoolean()))
+            InstructionDataType.BOOLEAN -> stack.pushBoolean(topOfTheStack.convertToBoolean())
+            InstructionDataType.VARIABLE -> stack.pushVariable(topOfTheStack.convertToVariable())
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
         }
     }
 
     private fun handlePushImmediate(reader: StarfaitByteBuffer, extra: Int) {
-        stack.push(RValue.Int32(extra))
+        stack.pushInt32(extra)
     }
 
     private fun handleCall(reader: StarfaitByteBuffer, extra: Int) {
@@ -457,7 +497,7 @@ class StarfaitVM(
         // extra = parameter count
         val arguments = ArrayList<RValue>(extra)
         repeat(extra) {
-            arguments.add(stack.pop())
+            arguments.add(stack.popVariableAndUnwrap())
         }
 
         val functionName = gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)
@@ -477,7 +517,7 @@ class StarfaitVM(
             if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains("*")) {
                 println("VM: [$currentCallFrameCodeName] Called built-in function \"$functionName(${arguments.joinToString(", ")})\"! Result: $result")
             }
-            stack.push(result)
+            stack.pushVariable(result)
             return
         }
 
@@ -506,11 +546,11 @@ class StarfaitVM(
                 // This happens when...
                 // * Op.EXIT is called
                 // * The script exits without any "return" or "exit" statement
-                stack.push(RValue.Undefined)
+                stack.pushUndefinedVariable()
                 return
             }
 
-            stack.push(returnValue)
+            stack.pushVariable(returnValue)
             return
         }
 
@@ -521,84 +561,192 @@ class StarfaitVM(
         }
 
         // As a fallback, we'll push undefined to the stack if the function does not exist
-        val result = stack.push(RValue.Undefined)
+        stack.pushUndefinedVariable()
     }
 
-    private fun handleAdd(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
+    private fun handleArithmetic(
+        type1: Int,
+        type2: Int,
+        string: (String, String) -> String,
+        real: (Double, Double) -> Double,
+        int64: (Long, Long) -> Long,
+        int32: (Int, Int) -> Int,
+    ) {
         val type1DataType = InstructionDataType.byId(type1)
         val type2DataType = InstructionDataType.byId(type2)
 
         // println("ADD type1 is $type1DataType, type2 is $type2DataType")
+        val right = stack.popByInstructionType(type1DataType)
+        val left = stack.popByInstructionType(type2DataType)
 
-        // The YoYo Runner uses the type1/type2 data types to know how many bytes to read from the stack
-        // Because we use tagged RValues, we don't need them for this
-        val right = stack.pop()
-        val left = stack.pop()
+        val rightType = right.arithmeticType()
+        val leftType = left.arithmeticType()
+        val isVariable = type1DataType == InstructionDataType.VARIABLE || type2DataType == InstructionDataType.VARIABLE
 
-        // println("ADD left type is ${left.type}, right type is ${right.type}")
-        if (left is RValue.String || right is RValue.String) {
-            if (left !is RValue.String || right !is RValue.String)
-                error("DoAdd :: Execution Error")
+        when {
+            leftType == ArithmeticType.STRING && rightType == ArithmeticType.STRING -> {
+                val concat = string(left.convertToGMLString(), right.convertToGMLString())
 
-            val leftRef = left.convertToString()
-            val rightRef = right.convertToString()
+                if (isVariable)
+                    stack.pushVariable(RValue.String(concat))
+                else
+                    stack.pushString(concat)
+            }
+            // TODO: This shouldn't be always DoAdd
+            leftType == ArithmeticType.STRING || rightType == ArithmeticType.STRING -> error("DoAdd :: Execution Error")
+            leftType == ArithmeticType.REAL || rightType == ArithmeticType.REAL -> {
+                val sum = real(left.convertToReal(), right.convertToReal())
 
-            stack.push(RValue.String(leftRef + rightRef))
-            return
+                if (isVariable)
+                    stack.pushVariable(RValue.Real(sum))
+                else
+                    stack.pushDouble(sum)
+            }
+            leftType == ArithmeticType.INT64 || rightType == ArithmeticType.INT64 -> {
+                val sum = int64(left.convertToInt64(), right.convertToInt64())
+
+                if (isVariable)
+                    stack.pushVariable(RValue.Int64(sum))
+                else
+                    stack.pushInt64(sum)
+            }
+            leftType == ArithmeticType.INT32 || rightType == ArithmeticType.INT32 -> {
+                val sum = int32(left.convertToInt32(), right.convertToInt32())
+
+                if (isVariable)
+                    stack.pushVariable(RValue.Int32(sum))
+                else
+                    stack.pushInt32(sum)
+            }
+            else -> error("I don't know how to handle $leftType and $rightType!")
         }
+    }
 
-        stack.push(RValue.Real(left.convertToReal() + right.convertToReal()))
+    private fun handleAdd(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
+        handleArithmetic(
+            type1,
+            type2,
+            { left, right ->
+                left + right
+            },
+            { left, right ->
+                left + right
+            },
+            { left, right ->
+                left + right
+            },
+            { left, right ->
+                left + right
+            }
+        )
     }
 
     private fun handleSub(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
-        val type1DataType = InstructionDataType.byId(type1)
-        val type2DataType = InstructionDataType.byId(type2)
-
-        // The YoYo Runner uses the type1/type2 data types to know how many bytes to read from the stack
-        // Because we use tagged RValues, we don't need them for this
-        val right = stack.pop()
-        val left = stack.pop()
-
-        stack.push(RValue.Real(left.convertToReal() - right.convertToReal()))
+        handleArithmetic(
+            type1,
+            type2,
+            { _, _ ->
+                error("DoSub :: Execution Engine - Cannot operate on string type")
+            },
+            { left, right ->
+                left - right
+            },
+            { left, right ->
+                left - right
+            },
+            { left, right ->
+                left - right
+            }
+        )
     }
 
     private fun handleMul(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
-        val type1DataType = InstructionDataType.byId(type1)
-        val type2DataType = InstructionDataType.byId(type2)
-
-        // The YoYo Runner uses the type1/type2 data types to know how many bytes to read from the stack
-        // Because we use tagged RValues, we don't need them for this
-        val right = stack.pop()
-        val left = stack.pop()
-
-        stack.push(RValue.Real(left.convertToReal() * right.convertToReal()))
+        handleArithmetic(
+            type1,
+            type2,
+            { _, _ ->
+                // TODO: This supports multiplication, we need to pass the raw StackValue to here
+                error("DoMul :: Execution Error")
+            },
+            { left, right ->
+                left * right
+            },
+            { left, right ->
+                left * right
+            },
+            { left, right ->
+                left * right
+            }
+        )
     }
 
     private fun handleDiv(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
-        val right = stack.pop()
-        val left = stack.pop()
-
-        stack.push(RValue.Real(left.convertToReal() / right.convertToReal()))
+        handleArithmetic(
+            type1,
+            type2,
+            { _, _ ->
+                // TODO: This supports multiplication
+                error("DoMul :: Execution Error")
+            },
+            { left, right ->
+                left / right
+            },
+            { left, right ->
+                left / right
+            },
+            { left, right ->
+                left / right
+            }
+        )
     }
 
     private fun handleMod(reader: StarfaitByteBuffer, type1: Int, type2: Int) {
-        val right = stack.pop()
-        val left = stack.pop()
-
-        stack.push(RValue.Real(left.convertToReal() % right.convertToReal()))
+        handleArithmetic(
+            type1,
+            type2,
+            { _, _ ->
+                // TODO: This supports multiplication
+                error("DoMul :: Execution Error")
+            },
+            { left, right ->
+                left % right
+            },
+            { left, right ->
+                left % right
+            },
+            { left, right ->
+                left % right
+            }
+        )
     }
 
     private fun handleDup(reader: StarfaitByteBuffer, type1: Int, extra: Int) {
         // In the YoYo Runner, the type1 would've been used to figure out how many bytes to be copied from the stack
-        // Because all of our types are tagged RValues, we don't need to rely on it (yay)
+        // Because the YoYo Runner stores all the stack in a contiguous byte array, so it NEEDS which type is going to be copied
+        // We don't do that because we store everything using tagged RValues, but we need to "unconvert" the type1 value by walking back and figuring out how many "bytes" will be copied
+        //
         // extra = how many additional elements will be copied from the stack, that is...
         // If the stack is [a, b], and extra is 1, the result will be [a, b, a, b]
         require(extra >= 0) { "Negative extra value on the dup!" }
         val total = extra + 1
-        val dupBottom = stack.top - 1 - extra
-        repeat(total) {
-            val target = stack.peekAt(dupBottom + it)
-            stack.push(target)
+
+        val type1DataType = InstructionDataType.byId(type1)
+        val wantedBytes = total * type1DataType.stackSize.toInt()
+        var filledBytes = 0
+
+        var bottom = stack.top - 1
+        val stackValuesToBeCopied = mutableListOf<StackValue>()
+        while (wantedBytes > filledBytes) {
+            val stackValue = stack.values[bottom]
+            filledBytes += stackValue.dataType.stackSize
+            stackValuesToBeCopied.add(stackValue)
+            bottom--
+        }
+
+        require(wantedBytes == filledBytes) { "Tried copying too many bytes from the stack! Wanted $wantedBytes bytes but walked $filledBytes bytes" }
+
+        for (stackValue in stackValuesToBeCopied.reversed()) {
+            stack.push(stackValue)
         }
     }
 
@@ -609,14 +757,13 @@ class StarfaitVM(
 
     private fun handleNot(reader: StarfaitByteBuffer, type1: Int) {
         val targetType = InstructionDataType.byId(type1)
-        val poppedValue = stack.pop()
 
         when (targetType) {
             InstructionDataType.DOUBLE -> TODO()
             InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> stack.push(RValue.Int32(poppedValue.convertToInt32().inv())) // Same thing as ~Number
+            InstructionDataType.INT32 -> stack.pushInt32(stack.popInt32AndUnwrap().inv()) // Same thing as ~Number
             InstructionDataType.INT64 -> TODO()
-            InstructionDataType.BOOLEAN -> stack.push(RValue.Boolean(!poppedValue.convertToBoolean()))
+            InstructionDataType.BOOLEAN -> stack.pushBoolean(!stack.popBooleanLikeAndUnwrap())
             InstructionDataType.VARIABLE -> TODO()
             InstructionDataType.STRING -> TODO()
             InstructionDataType.INT16 -> TODO()
@@ -625,28 +772,27 @@ class StarfaitVM(
 
     private fun handleNeg(reader: StarfaitByteBuffer, type1: Int) {
         val targetType = InstructionDataType.byId(type1)
-        val poppedValue = stack.pop()
 
         when (targetType) {
             InstructionDataType.VARIABLE -> {
-                when (poppedValue) {
-                    is RValue.Int32 -> stack.push(RValue.Int32(-poppedValue.convertToInt32()))
-                    is RValue.Real -> stack.push(RValue.Real(-poppedValue.convertToReal()))
+                when (val poppedValue = stack.popVariableAndUnwrap()) {
+                    is RValue.Int32 -> stack.pushVariable(RValue.Int32(-poppedValue.convertToInt32()))
+                    is RValue.Real -> stack.pushVariable(RValue.Real(-poppedValue.convertToReal()))
                     else -> error("I don't know how to handle a ${poppedValue}!")
                 }
             }
-            InstructionDataType.DOUBLE -> stack.push(RValue.Real(-poppedValue.convertToReal()))
+            InstructionDataType.DOUBLE -> stack.pushDouble(stack.popDoubleAndUnwrap())
             InstructionDataType.FLOAT -> TODO()
-            InstructionDataType.INT32 -> stack.push(RValue.Int32(-poppedValue.convertToInt32()))
-            InstructionDataType.INT64 -> stack.push(RValue.Int64(-poppedValue.convertToInt64()))
+            InstructionDataType.INT32 -> stack.pushInt32(stack.popInt32AndUnwrap())
+            InstructionDataType.INT64 -> stack.pushInt64(stack.popInt64AndUnwrap())
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.STRING -> TODO()
-            InstructionDataType.INT16 -> stack.push(RValue.Int32(-poppedValue.convertToInt32()))
+            InstructionDataType.INT16 -> TODO()
         }
     }
 
     private fun handlePushEnv(reader: StarfaitByteBuffer, ip: Int, branchOffset: Int) {
-        val objectId = stack.pop().convertToInt32()
+        val objectId = stack.popInt32AndUnwrap()
 
         val instances = runner.filterInstances {
             it.matchesObjectOrInstanceId(

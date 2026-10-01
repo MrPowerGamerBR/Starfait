@@ -304,8 +304,8 @@ class VMBuiltins(val vm: StarfaitVM) {
             }
         }
 
-        registerVoidFunction("show_debug_message", null) { args -> println("Game: ${args[0].convertToString()}") }
-        registerFunction("string", 1) { args -> RValue.String(args[0].convertToString()) }
+        registerVoidFunction("show_debug_message", null) { args -> println("Game: ${args[0].convertToGMLString()}") }
+        registerFunction("string", 1) { args -> RValue.String(args[0].convertToGMLString()) }
         registerFunction("real", 1) { args -> RValue.Real(args[0].convertToReal()) }
 
         registerStubbedFunction("steam_initialised", 0, true)
@@ -314,10 +314,10 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerStubbedFunction("os_get_language", 0, "pt")
         registerStubbedFunction("os_get_region", 0, "BR")
 
-        registerStringFunction("string_upper", 1) { args -> args[0].convertToString().uppercase() }
-        registerStringFunction("string_lower", 1) { args -> args[0].convertToString().lowercase() }
+        registerStringFunction("string_upper", 1) { args -> args[0].convertToGMLString().uppercase() }
+        registerStringFunction("string_lower", 1) { args -> args[0].convertToGMLString().lowercase() }
         registerBooleanFunction("variable_global_exists", null) { args ->
-            val variableName = args[0].convertToString()
+            val variableName = args[0].convertToGMLString()
             // TODO: This is kinda nasty, I think it would be better to have a proper variable name -> varId lookup table
             val varId = vm.getVariableIndexFromVariableName(variableName)
             println("varId: $varId")
@@ -506,7 +506,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerStringFunction("string_replace_all", 3) { args ->
-            val string = args[0].convertToString()
+            val string = args[0].convertToGMLString()
             val oldValue = (args[1] as RValue.String).value
             val newValue = (args[2] as RValue.String).value
 
@@ -514,7 +514,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerStringFunction("string_char_at", 2) { args ->
-            val string = args[0].convertToString()
+            val string = args[0].convertToGMLString()
 
             // "with the index starting at 1 for the first character"
             // "however if the given index is equal to or smaller than 0, then the first character of the string is returned."
@@ -633,7 +633,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVoidFunction("draw_text_transformed", 6) { args ->
             val x = args[0].convertToReal()
             val y = args[1].convertToReal()
-            val string = args[2].convertToString()
+            val string = args[2].convertToGMLString()
             val font = requireNotNull(runner.activeDrawFont)
 
             runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
@@ -642,7 +642,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVoidFunction("draw_text", 3) { args ->
             val x = args[0].convertToReal()
             val y = args[1].convertToReal()
-            val string = args[2].convertToString()
+            val string = args[2].convertToGMLString()
             val font = requireNotNull(runner.activeDrawFont)
 
             runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
@@ -668,7 +668,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerStringFunction("chr", 1) { args -> args[0].convertToInt32().toChar().toString() }
-        registerIntFunction("ord", 1) { args -> args[0].convertToString()[0].code }
+        registerIntFunction("ord", 1) { args -> args[0].convertToGMLString()[0].code }
 
         registerIntFunction("collision_rectangle", 7) { args ->
             val self = vm.currentSelfInstance
@@ -762,7 +762,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerIntFunction("string_width", 1) { args ->
-            val text = args[0].convertToString()
+            val text = args[0].convertToGMLString()
             val font = requireNotNull(runner.activeDrawFont)
 
             // This is essentially how the text is rendered... but WITHOUT the rendering
@@ -839,7 +839,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerVoidFunction("action_move", 2) { args ->
-            val possibleDirections = args[0].convertToString()
+            val possibleDirections = args[0].convertToGMLString()
             val speed = args[1].convertToReal()
 
             val enabledIndices = mutableListOf<Int>()

@@ -69,4 +69,6 @@ object MathUtils {
             }
         }
     }
+
+    fun convertInt32ToBoolean(value: Int) = value > 0
 }

@@ -33,6 +33,8 @@ class StarfaitRunner(
 
     var enableCollisionRendering = true
     val debugRectangles = mutableListOf<BoundingBox>()
+    // TODO: This should be actually verified against the WAD, only for newer GM games!
+    val collisionCompatibilityMode = true
 
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()

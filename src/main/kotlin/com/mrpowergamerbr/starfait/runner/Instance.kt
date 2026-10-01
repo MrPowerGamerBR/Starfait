@@ -2,9 +2,7 @@ package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
-import com.mrpowergamerbr.starfait.vm.VariableScope
 import com.mrpowergamerbr.starfait.wad.GameObject
-import com.sun.tools.javac.jvm.ByteCodes.fmod
 import kotlin.collections.filter
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -224,9 +222,9 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         val sprite = runner.gameWAD.sprt.sprites[maskIndex]
 
         val scaledBBoxLeftAndOffset = (sprite.bboxLeft - sprite.originX) * this.imageXScale
-        val scaledBBoxRightAndOffset = (sprite.bboxRight - sprite.originX) * this.imageXScale
+        val scaledBBoxRightAndOffset = (sprite.bboxRight - sprite.originX + if (runner.collisionCompatibilityMode) 1 else 0) * this.imageXScale
         val scaledBBoxTopAndOffset = (sprite.bboxTop - sprite.originY) * this.imageYScale
-        val scaledBBoxBottomAndOffset = (sprite.bboxBottom - sprite.originY) * this.imageYScale
+        val scaledBBoxBottomAndOffset = (sprite.bboxBottom - sprite.originY + if (runner.collisionCompatibilityMode) 1 else 0) * this.imageYScale
 
         val bboxLeftAbsolute = this.x + scaledBBoxLeftAndOffset
         val bboxRightAbsolute = this.x + scaledBBoxRightAndOffset

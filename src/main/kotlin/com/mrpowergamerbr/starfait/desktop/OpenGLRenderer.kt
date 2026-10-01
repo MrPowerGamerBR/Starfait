@@ -227,6 +227,45 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         glClear(GL_COLOR_BUFFER_BIT)
 
         block()
+
+        if (runner.enableCollisionRendering) {
+            for (instance in runner.currentRoom.instances) {
+                val bbox = instance.getBoundingBox()
+
+                drawQuad(
+                    bbox.left,
+                    bbox.top,
+                    0.0f,
+                    0.0f,
+                    1.0f,
+                    1.0f,
+                    bbox.right - bbox.left,
+                    bbox.bottom - bbox.top,
+                    white1x1Texture,
+                    GMLColor(0x00ff00),
+                    0.25f
+                )
+            }
+
+            for (debugRectangle in runner.debugRectangles) {
+                drawQuad(
+                    debugRectangle.left,
+                    debugRectangle.top,
+                    0.0f,
+                    0.0f,
+                    1.0f,
+                    1.0f,
+                    debugRectangle.right - debugRectangle.left,
+                    debugRectangle.bottom - debugRectangle.top,
+                    white1x1Texture,
+                    GMLColor(0x0000ff),
+                    0.5f
+                )
+            }
+        }
+
+        runner.debugRectangles.clear()
+
         flush(runner)
     }
 

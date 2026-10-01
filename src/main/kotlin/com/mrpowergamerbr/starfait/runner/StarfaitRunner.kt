@@ -31,6 +31,9 @@ class StarfaitRunner(
     val random = Random(seed)
     val persistentRooms = mutableMapOf<Int, RunnerRoom>()
 
+    var enableCollisionRendering = true
+    val debugRectangles = mutableListOf<BoundingBox>()
+
     fun start() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]

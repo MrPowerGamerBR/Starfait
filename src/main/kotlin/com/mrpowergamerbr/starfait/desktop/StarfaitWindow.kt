@@ -48,6 +48,7 @@ import org.lwjgl.sdl.SDLKeycode.SDLK_END
 import org.lwjgl.sdl.SDLKeycode.SDLK_ESCAPE
 import org.lwjgl.sdl.SDLKeycode.SDLK_F1
 import org.lwjgl.sdl.SDLKeycode.SDLK_F12
+import org.lwjgl.sdl.SDLKeycode.SDLK_F5
 import org.lwjgl.sdl.SDLKeycode.SDLK_HOME
 import org.lwjgl.sdl.SDLKeycode.SDLK_INSERT
 import org.lwjgl.sdl.SDLKeycode.SDLK_KP_0
@@ -95,7 +96,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import kotlin.use
 
-class StarfaitWindow(val vm: StarfaitVM, val seed: Long) {
+class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRendering: Boolean) {
     fun start() {
         check(SDL_Init(SDL_INIT_VIDEO)) { "SDL_Init failed: ${SDL_GetError()}" }
 
@@ -116,6 +117,7 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long) {
         val runner = StarfaitRunner(vm.gameWAD, vm, renderer, seed)
         renderer.runner = runner
         vm.runner = runner
+        vm.runner.enableCollisionRendering = enableCollisionRendering
         runner.start()
 
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
@@ -149,6 +151,10 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long) {
                                 runner.currentRoom.roomId + 1,
                                 vm.gameWAD.room.rooms[runner.currentRoom.roomId + 1]
                             )
+                        }
+
+                        if (event.key().key() == SDLK_F5) {
+                            runner.enableCollisionRendering = !runner.enableCollisionRendering
                         }
 
                         if (event.key().key() == 'p'.code) {

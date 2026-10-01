@@ -683,7 +683,10 @@ class VMBuiltins(val vm: StarfaitVM) {
             val usePreciseCollisionCheck = args[5].convertToBoolean()
             val notme = args[6].convertToBoolean()
 
-            val selfBBox = BoundingBox(x1.toFloat(), x2.toFloat(), y1.toFloat(), y2.toFloat())
+            val selfBBox = BoundingBox.fromWorldCoordinates(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat())
+
+            if (runner.enableCollisionRendering)
+                runner.debugRectangles.add(selfBBox)
 
             runner.forEachInstance { instance ->
                 val matches = instance.matchesObjectOrInstanceId(

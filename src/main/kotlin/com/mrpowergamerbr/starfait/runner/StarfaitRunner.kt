@@ -6,8 +6,6 @@ import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.random.Random
 
 class StarfaitRunner(
@@ -50,6 +48,9 @@ class StarfaitRunner(
 
         val persistentRoom = persistentRooms[roomId]
         if (persistentRoom != null) {
+            val previousRoom = this.currentRoom
+            handlePersistentRoomInstanceHandover(previousRoom, persistentRoom)
+
             this.currentRoom = persistentRoom
         } else {
             val newRoom = RunnerRoom(this, roomId)
@@ -110,13 +111,7 @@ class StarfaitRunner(
             // TODO: This sucks, maybe make it nullable?
             if (this::currentRoom.isInitialized) {
                 val previousRoom = this.currentRoom
-
-                forEachInstance {
-                    it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END, null)
-                }
-
-                val persistentInstances = previousRoom.instances.filter { it.persistent }
-                newRoom.instances.addAll(persistentInstances)
+                handlePersistentRoomInstanceHandover(previousRoom, newRoom)
 
                 if (previousRoom.persistent) {
                     // If the current room is persistent, we'll store it in our map instead of destroying the instance
@@ -235,6 +230,15 @@ class StarfaitRunner(
         }
 
         this.keyboard.tick()
+    }
+
+    fun handlePersistentRoomInstanceHandover(previousRoom: RunnerRoom, newRoom: RunnerRoom) {
+        forEachInstance {
+            it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END, null)
+        }
+
+        val persistentInstances = previousRoom.instances.filter { it.persistent }
+        newRoom.instances.addAll(persistentInstances)
     }
 
     fun dispatchKeyboard(eventType: Int, targetArray: Array<Boolean>) {

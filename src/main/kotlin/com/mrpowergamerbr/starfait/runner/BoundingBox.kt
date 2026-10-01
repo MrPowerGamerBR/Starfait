@@ -3,7 +3,8 @@ package com.mrpowergamerbr.starfait.runner
 import kotlin.math.max
 import kotlin.math.min
 
-data class BoundingBox(
+@ConsistentCopyVisibility
+data class BoundingBox private constructor(
     val left: Float,
     val right: Float,
     val top: Float,

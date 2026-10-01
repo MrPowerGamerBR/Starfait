@@ -207,12 +207,13 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
             dispatchEvent(EventType.DESTROY, 0, null)
     }
 
+    // See GameMaker-HTML5's Compute_BoundingBox
     fun getBoundingBox(): BoundingBox {
         // bbox_*: "Please note that when the instance has no sprite assigned the value returned will be the same as the instance Y position."
         val maskIndex = (if (this.maskIndex >= 0.0f) this.maskIndex else this.spriteIndex).toInt()
 
         if (0 > maskIndex) {
-            return BoundingBox(
+            return BoundingBox.fromWorldCoordinates(
                 this.x,
                 this.x,
                 this.y,
@@ -232,10 +233,10 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
         val bboxTopAbsolute = this.y + scaledBBoxTopAndOffset
         val bboxBottomAbsolute = this.y + scaledBBoxBottomAndOffset
 
-        return BoundingBox(
+        return BoundingBox.fromWorldCoordinates(
             bboxLeftAbsolute,
-            bboxRightAbsolute,
             bboxTopAbsolute,
+            bboxRightAbsolute,
             bboxBottomAbsolute
         )
     }

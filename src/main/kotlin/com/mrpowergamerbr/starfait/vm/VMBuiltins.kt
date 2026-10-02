@@ -744,6 +744,38 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerIntFunction InstanceReferenceType.NOONE
         }
 
+        registerIntFunction("collision_line", 7) { args ->
+            val self = vm.currentSelfInstance
+            val x1 = args[0].convertToReal().toFloat()
+            val y1 = args[1].convertToReal().toFloat()
+            val x2 = args[2].convertToReal().toFloat()
+            val y2 = args[3].convertToReal().toFloat()
+            val obj = args[4].convertToInt32()
+            val usePreciseCollisionCheck = args[5].convertToBoolean()
+            val notme = args[6].convertToBoolean()
+
+            runner.forEachInstance { instance ->
+                val matches = instance.matchesObjectOrInstanceId(
+                    obj,
+                    excludeInstance = if (notme) self else null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true
+                )
+
+                if (matches) {
+                    if (instance.getBoundingBox().intersectsLine(x1, y1, x2, y2)) {
+                        return@registerIntFunction instance.id
+                    }
+                }
+            }
+
+            return@registerIntFunction InstanceReferenceType.NOONE
+        }
+
         registerRealFunction("abs", 1) { args -> args[0].convertToReal().absoluteValue }
 
         registerStubbedFunction("audio_is_playing", 1, false)

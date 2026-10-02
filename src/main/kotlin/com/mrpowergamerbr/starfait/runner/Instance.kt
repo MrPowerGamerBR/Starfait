@@ -198,7 +198,9 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     }
 
     fun markAsDestroyed(fireDestroyEvent: Boolean) {
-        check(!this.destroyed) { "Instance is already destroyed!" }
+        // If it is destroyed, we must ensure that we are NOT going to dispatch any of the destroy events
+        if (this.destroyed)
+            return
 
         this.destroyed = true
 

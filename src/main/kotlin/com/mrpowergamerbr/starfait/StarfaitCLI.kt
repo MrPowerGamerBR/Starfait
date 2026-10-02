@@ -3,15 +3,14 @@ package com.mrpowergamerbr.starfait
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.boolean
 import com.github.ajalt.clikt.parameters.types.file
+import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
-import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.Background
 import com.mrpowergamerbr.starfait.wad.Code
@@ -24,10 +23,7 @@ import com.mrpowergamerbr.starfait.wad.Script
 import com.mrpowergamerbr.starfait.wad.Sound
 import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.StringPointer
-import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import com.mrpowergamerbr.starfait.wad.Variable
-import java.awt.BasicStroke
-import java.awt.Color
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.reflect.KProperty1
@@ -55,6 +51,8 @@ class StarfaitCLI : CliktCommand() {
     val enableCollisionRendering by option().flag(default = false)
     val recordInputs by option().file()
     val playbackInputs by option().file()
+    val screenshot by option().file()
+    val screenshotAtFrame by option().int().multiple()
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -184,7 +182,9 @@ class StarfaitCLI : CliktCommand() {
             seed,
             enableCollisionRendering,
             recordInputs,
-            playbackInputs
+            playbackInputs,
+            screenshot,
+            screenshotAtFrame.toSet()
         )
         window.start()
 

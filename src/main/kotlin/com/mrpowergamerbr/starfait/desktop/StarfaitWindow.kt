@@ -32,9 +32,16 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import kotlinx.serialization.json.Json
 import org.lwjgl.opengl.GL
+import org.lwjgl.opengl.GL11.GL_BACK
 import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
+import org.lwjgl.opengl.GL11.GL_PACK_ALIGNMENT
+import org.lwjgl.opengl.GL11.GL_RGBA
+import org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE
 import org.lwjgl.opengl.GL11.glClear
 import org.lwjgl.opengl.GL11.glClearColor
+import org.lwjgl.opengl.GL11.glPixelStorei
+import org.lwjgl.opengl.GL11.glReadBuffer
+import org.lwjgl.opengl.GL11.glReadPixels
 import org.lwjgl.sdl.SDLError.SDL_GetError
 import org.lwjgl.sdl.SDLEvents.SDL_EVENT_KEY_DOWN
 import org.lwjgl.sdl.SDLEvents.SDL_EVENT_KEY_UP
@@ -96,7 +103,10 @@ import org.lwjgl.sdl.SDLVideo.SDL_WINDOW_OPENGL
 import org.lwjgl.sdl.SDL_Event
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import java.awt.image.BufferedImage
 import java.io.File
+import javax.imageio.ImageIO
+import kotlin.math.absoluteValue
 import kotlin.use
 
 class StarfaitWindow(
@@ -104,7 +114,9 @@ class StarfaitWindow(
     val seed: Long,
     val enableCollisionRendering: Boolean,
     val recordInputsFile: File?,
-    val playbackInputsFile: File?
+    val playbackInputsFile: File?,
+    val screenshot: File?,
+    val screenshotFrames: Set<Int>
 ) {
     var frameCount = 0
 
@@ -220,6 +232,33 @@ class StarfaitWindow(
                     val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
                     if (waitTime > 0)
                         Thread.sleep(waitTime)
+
+                    if (frameCount in screenshotFrames && screenshot != null) {
+                        val output = File(screenshot.parentFile, screenshot.name.format(frameCount))
+
+                        val pixels = IntArray(640 * 480)
+                        glPixelStorei(GL_PACK_ALIGNMENT, 1)
+                        glReadBuffer(GL_BACK)
+                        glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+
+                        val image = BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB)
+
+                        for ((index, pixel) in pixels.withIndex()) {
+                            val x = index % 640
+                            // Yes it needs to be 479 because the pixels range from 0 to 479
+                            val y = 479 - (index / 640)
+
+                            val a = (pixel shr 24) and 0xFF
+                            val b = (pixel shr 16) and 0xFF
+                            val g = (pixel shr 8) and 0xFF
+                            val r = pixel and 0xFF
+                            val argb = (a shl 24) or (r shl 16) or (g shl 8) or b
+
+                            image.setRGB(x, y, argb)
+                        }
+
+                        ImageIO.write(image, "png", output)
+                    }
 
                     frameCount++
 

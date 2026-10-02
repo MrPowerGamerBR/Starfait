@@ -153,7 +153,7 @@ class StarfaitRunner(
             it.yPrevious = it.y
         }
 
-        dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.BEGIN)
+        dispatchEventToAllInstancesObjectIndexOrder(EventType.STEP, EventType.StepSubType.BEGIN)
 
         // Alarms are checked PER ALARM ID, not per instance!
         repeat(MAX_ALARMS) { alarmId ->
@@ -177,7 +177,7 @@ class StarfaitRunner(
         dispatchKeyboard(EventType.KEY_PRESS, keyboard.keyPressed)
         dispatchKeyboard(EventType.KEY_RELEASE, keyboard.keyReleased)
 
-        dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.NORMAL)
+        dispatchEventToAllInstancesObjectIndexOrder(EventType.STEP, EventType.StepSubType.NORMAL)
 
         forEachInstance { instance ->
             instance.adaptSpeed()
@@ -188,7 +188,7 @@ class StarfaitRunner(
 
         dispatchOutsideRoom()
         dispatchCollisions()
-        dispatchEventToAllInstances(EventType.STEP, EventType.StepSubType.END)
+        dispatchEventToAllInstancesObjectIndexOrder(EventType.STEP, EventType.StepSubType.END)
 
         currentRoom.updateViews()
 
@@ -298,6 +298,12 @@ class StarfaitRunner(
         }
     }
 
+    fun dispatchEventToAllInstancesObjectIndexOrder(eventType: Int, eventSubtype: Int) {
+        forEachInstanceObjectIndex { instance ->
+            instance.dispatchEvent(eventType, eventSubtype, null)
+        }
+    }
+
     fun dispatchEventToAllInstances(eventType: Int, eventSubtype: Int) {
         forEachInstance { instance ->
             instance.dispatchEvent(eventType, eventSubtype, null)
@@ -311,6 +317,22 @@ class StarfaitRunner(
                 continue
 
             action(instance)
+        }
+    }
+
+    // This is baaaaaad and needs to be optimized later
+    // Some events like step, alarms, keyboards, mouse, joystick, outside room/intersect, collisions... are iterated based on the objectIndex, NOT the instance list!
+    inline fun forEachInstanceObjectIndex(action: (Instance) -> Unit) {
+        for ((index, obj) in gameWAD.objt.objects.withIndex()) {
+            // Duplicate list to avoid ConcurrentModificationExceptions
+            // This also needs to be iterated oldest first, when two instances have the same objectIndex
+            for (instance in this.currentRoom.instances.toList()) {
+                if (instance.destroyed)
+                    continue
+
+                if (instance.objectIndex == index)
+                    action(instance)
+            }
         }
     }
 

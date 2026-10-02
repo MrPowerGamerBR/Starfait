@@ -32,17 +32,17 @@ class StarfaitDisassembler(val gameWAD: GameWAD) {
                         InstructionDataType.DOUBLE -> TODO()
                         InstructionDataType.FLOAT -> TODO()
                         InstructionDataType.INT32 -> {
-                            println("  operand (int32): ${reader.readInt()}")
+                            println("  operand ($type1DataType): ${reader.readInt()}")
                         }
                         InstructionDataType.INT64 -> TODO()
                         InstructionDataType.BOOLEAN -> TODO()
                         InstructionDataType.VARIABLE -> {
                             val variableOperand = VariableReferenceOperand(reader.readInt())
-                            println("  operand (variable): ${variableOperand.variableIndex()} (has array index? ${variableOperand.hasArrayIndex()}, has instance ID from stack? ${variableOperand.hasInstanceIdOnStack()})")
+                            println("  operand ($type1DataType): ${variableOperand.variableIndex()} (has array index? ${variableOperand.hasArrayIndex()}, has instance ID from stack? ${variableOperand.hasInstanceIdOnStack()})")
                         }
                         InstructionDataType.STRING -> {
                             val index = reader.readInt()
-                            println("  operand (string): $index -> \"${gameWAD.strg.stringsByIndex[index]}\"")
+                            println("  operand ($type1DataType): $index -> \"${gameWAD.strg.stringsByIndex[index]}\"")
                         }
                         InstructionDataType.INT16 -> TODO()
                     }
@@ -50,12 +50,12 @@ class StarfaitDisassembler(val gameWAD: GameWAD) {
                 8 -> {
                     when (type1DataType) {
                         InstructionDataType.DOUBLE -> {
-                            println("  operand (int64): ${reader.readDouble()}")
+                            println("  operand ($type1DataType): ${reader.readDouble()}")
                         }
                         InstructionDataType.FLOAT -> TODO()
                         InstructionDataType.INT32 -> TODO()
                         InstructionDataType.INT64 -> {
-                            println("  operand (int64): ${reader.readLong()}")
+                            println("  operand ($type1DataType): ${reader.readLong()}")
                         }
                         InstructionDataType.BOOLEAN -> TODO()
                         InstructionDataType.VARIABLE -> TODO()

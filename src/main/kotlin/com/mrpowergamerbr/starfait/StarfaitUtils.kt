@@ -115,7 +115,7 @@ object StarfaitUtils {
                         value = gameWAD.strg.strings[value]
                     }
 
-                    var addDash = isListElement == true && isFirstElement
+                    val addDash = isListElement == true && isFirstElement
                     println(("  ".repeat(depth - if (addDash) 1 else 0) + if (addDash) "- " else "") + it.name + ": " + value)
                     isFirstElement = false
                 }

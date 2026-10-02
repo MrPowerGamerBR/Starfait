@@ -49,6 +49,7 @@ class StarfaitCLI : CliktCommand() {
     val screenshot by option().file()
     val screenshotAtFrame by option().int().multiple()
     val exitAtFrame by option().int()
+    val pauseAtFrame by option().int().multiple()
     val headless by option().flag(default = false)
     val replaceRoom by option().multiple()
     val dumpState by option().file()
@@ -207,6 +208,7 @@ class StarfaitCLI : CliktCommand() {
             screenshot,
             screenshotAtFrame.toSet(),
             exitAtFrame,
+            pauseAtFrame.toSet(),
             headless,
             replaceRoom.map {
                 it.split("=").let { (room1NameOrId, room2NameOrId) ->

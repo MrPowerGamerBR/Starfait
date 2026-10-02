@@ -115,11 +115,12 @@ class StarfaitWindow(
     val screenshot: File?,
     val screenshotFrames: Set<Int>,
     val exitAtFrame: Int?,
+    val pauseAtFrames: Set<Int>,
     val headless: Boolean,
     val replaceRooms: Map<Int, Int>,
     val dumpStateFile: File?,
     val dumpStateAtFrames: Set<Int>,
-    val traceFrameDuration: List<IntRange>
+    val traceFrameDuration: List<IntRange>,
 ) {
     companion object {
         private val JsonPrettyPrint = Json {
@@ -174,6 +175,11 @@ class StarfaitWindow(
                 val started = System.currentTimeMillis()
                 var stepOneFrame = false
 
+                if (!isPaused && frameCount in pauseAtFrames) {
+                    println("Platform: Automatically paused at frame $frameCount")
+                    isPaused = true
+                }
+
                 while (SDL_PollEvent(event)) {
                     if (event.type() == SDL_EVENT_QUIT)
                         running = false
@@ -201,11 +207,11 @@ class StarfaitWindow(
 
                         if (event.key().key() == 'p'.code) {
                             isPaused = !isPaused
-                            println("Toggled pause")
+                            println("Platform: Toggled pause")
                         }
 
                         if (event.key().key() == 'o'.code) {
-                            println("Stepped one frame")
+                            println("Platform: Stepped one frame")
                             stepOneFrame = true
                         }
 
@@ -216,7 +222,7 @@ class StarfaitWindow(
                 if (!isPaused || stepOneFrame) {
                     for (range in traceFrameDuration) {
                         if (frameCount in range) {
-                            println("Runner: Frame $frameCount Start")
+                            println("Platform: Frame $frameCount Start")
                         }
                     }
 
@@ -288,7 +294,7 @@ class StarfaitWindow(
 
                     for (range in traceFrameDuration) {
                         if (frameCount in range) {
-                            println("Runner: Frame $frameCount End (${finished - started}ms)")
+                            println("Platform: Frame $frameCount End (${finished - started}ms)")
                         }
                     }
 
@@ -307,7 +313,7 @@ class StarfaitWindow(
     fun dumpRunnerStateAsJsonToFile(runner: StarfaitRunner, dumpStateFile: File) {
         val output = File(dumpStateFile.parentFile, dumpStateFile.name.format(frameCount))
         output.writeText(JsonPrettyPrint.encodeToString(StateDumper.dumpRunnerStateAsJson(runner)))
-        println("Runner: Dumped runner state!")
+        println("Platform: Dumped runner state!")
     }
 
     fun convertSDLKeycodeToGMLVK(key: Int): Int = when (key) {

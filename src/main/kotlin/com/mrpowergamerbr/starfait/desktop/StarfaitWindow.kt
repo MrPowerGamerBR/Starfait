@@ -173,12 +173,6 @@ class StarfaitWindow(
                 val started = System.currentTimeMillis()
                 var stepOneFrame = false
 
-                for (range in traceFrameDuration) {
-                    if (frameCount in range) {
-                        println("Runner: Frame $frameCount Start")
-                    }
-                }
-
                 while (SDL_PollEvent(event)) {
                     if (event.type() == SDL_EVENT_QUIT)
                         running = false
@@ -215,6 +209,12 @@ class StarfaitWindow(
                 }
 
                 if (!isPaused || stepOneFrame) {
+                    for (range in traceFrameDuration) {
+                        if (frameCount in range) {
+                            println("Runner: Frame $frameCount Start")
+                        }
+                    }
+                    
                     // Before we execute it, track whatever keys were pressed/released
                     if (playbackInputFrames != null) {
                         // If we have frames set...

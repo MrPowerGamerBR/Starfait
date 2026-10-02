@@ -220,6 +220,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 }
             )
         }
+        registerVariable("background_color", { _, _ -> RValue.Int32(runner.currentRoom.backgroundColor.value) }, { _, value, _ -> runner.currentRoom.backgroundColor = GMLColor(value.convertToInt32()) })
         // TODO: Pretty sure this is writeable
         registerReadOnlyVariable("argument") { _, arrayIndex ->
             vm.currentCallFrame.arguments[arrayIndex!!]

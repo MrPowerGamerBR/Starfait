@@ -1,20 +1,21 @@
 package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.GMLColor
+import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
 
-class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
-    var width = 0
-    var height = 0
-    var speed = 0
-    var backgroundColor = GMLColor(0)
-    var persistent = false
-    val instances = mutableListOf<Instance>()
-    val views = mutableListOf<RunnerView>()
-    val backgrounds = mutableListOf<RunnerBackground>()
-    val tiles = mutableListOf<RunnerTile>()
+class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
+    @DumpRunnerField var width = 0
+    @DumpRunnerField var height = 0
+    @DumpRunnerField var speed = 0
+    @DumpRunnerField var backgroundColor = GMLColor(0)
+    @DumpRunnerField var persistent = false
+    @DumpRunnerField val instances = mutableListOf<Instance>()
+    @DumpRunnerField val views = mutableListOf<RunnerView>()
+    @DumpRunnerField val backgrounds = mutableListOf<RunnerBackground>()
+    @DumpRunnerField val tiles = mutableListOf<RunnerTile>()
 
     fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
         this.x = instance.x.toFloat()
@@ -59,35 +60,35 @@ class RunnerRoom(val runner: StarfaitRunner, val roomId: Int) {
     }
 
     class RunnerView(
-        var viewX: Int,
-        var viewY: Int,
-        var viewWidth: Int,
-        var viewHeight: Int,
-        var portX: Int,
-        var portY: Int,
-        var portWidth: Int,
-        var portHeight: Int,
-        var visible: Boolean,
-        var objectId: Int,
+        @DumpRunnerField var viewX: Int,
+        @DumpRunnerField var viewY: Int,
+        @DumpRunnerField var viewWidth: Int,
+        @DumpRunnerField var viewHeight: Int,
+        @DumpRunnerField var portX: Int,
+        @DumpRunnerField var portY: Int,
+        @DumpRunnerField var portWidth: Int,
+        @DumpRunnerField var portHeight: Int,
+        @DumpRunnerField var visible: Boolean,
+        @DumpRunnerField var objectId: Int,
     )
 
     class RunnerBackground(
-        var enabled: Boolean,
-        var x: Int,
-        var y: Int,
-        var backgroundIndex: Int
+        @DumpRunnerField var enabled: Boolean,
+        @DumpRunnerField var x: Int,
+        @DumpRunnerField var y: Int,
+        @DumpRunnerField var backgroundIndex: Int
     )
 
     class RunnerTile(
-        var x: Int,
-        var y: Int,
-        var backgroundIndex: Int,
-        var sourceX: Int,
-        var sourceY: Int,
-        var width: Int,
-        var height: Int,
-        var depth: Int,
-        var id: Int,
-        var scaleX: Float,
+        @DumpRunnerField var x: Int,
+        @DumpRunnerField var y: Int,
+        @DumpRunnerField var backgroundIndex: Int,
+        @DumpRunnerField var sourceX: Int,
+        @DumpRunnerField var sourceY: Int,
+        @DumpRunnerField var width: Int,
+        @DumpRunnerField var height: Int,
+        @DumpRunnerField var depth: Int,
+        @DumpRunnerField var id: Int,
+        @DumpRunnerField var scaleX: Float,
     )
 }

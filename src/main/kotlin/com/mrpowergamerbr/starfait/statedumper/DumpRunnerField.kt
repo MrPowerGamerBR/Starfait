@@ -1,0 +1,3 @@
+package com.mrpowergamerbr.starfait.statedumper
+
+annotation class DumpRunnerField

@@ -48,6 +48,8 @@ class StarfaitCLI : CliktCommand() {
     val exitAtFrame by option().int()
     val headless by option().flag(default = false)
     val replaceRoom by option().multiple()
+    val dumpState by option().file()
+    val dumpStateAtFrame by option().int().multiple()
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -206,7 +208,9 @@ class StarfaitCLI : CliktCommand() {
 
                     Pair(room1Id, room2Id)
                 }
-            }.toMap()
+            }.toMap(),
+            dumpState,
+            dumpStateAtFrame.toSet()
         )
         window.start()
 

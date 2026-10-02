@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.MathUtils
+import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
 import com.mrpowergamerbr.starfait.wad.GameObject
 import kotlin.collections.filter
@@ -12,39 +13,39 @@ import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : ObjectBase(runner.vm) {
-    var x = 0.0f
-    var y = 0.0f
-    var xPrevious = 0.0f
-    var yPrevious = 0.0f
-    var xStart = 0.0f
-    var yStart = 0.0f
-    var imageSpeed = 1.0f
-    var imageXScale = 1.0f
-    var imageYScale = 1.0f
-    var imageAlpha = 1.0f
-    var imageIndex = 0.0f
-    var spriteIndex = 0.0f
-    var maskIndex = -1.0f
-    var depth = 0.0f
-    var imageBlend = -1.0f
-    var imageAngle = 0.0f
-    var pathSpeed = 0.0f
-    var pathPosition = 0.0f
+class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRunnerField var objectIndex: Int) : ObjectBase(runner.vm) {
+    @DumpRunnerField var x = 0.0f
+    @DumpRunnerField var y = 0.0f
+    @DumpRunnerField var xPrevious = 0.0f
+    @DumpRunnerField var yPrevious = 0.0f
+    @DumpRunnerField var xStart = 0.0f
+    @DumpRunnerField var yStart = 0.0f
+    @DumpRunnerField var imageSpeed = 1.0f
+    @DumpRunnerField var imageXScale = 1.0f
+    @DumpRunnerField var imageYScale = 1.0f
+    @DumpRunnerField var imageAlpha = 1.0f
+    @DumpRunnerField var imageIndex = 0.0f
+    @DumpRunnerField var spriteIndex = 0.0f
+    @DumpRunnerField var maskIndex = -1.0f
+    @DumpRunnerField var depth = 0.0f
+    @DumpRunnerField var imageBlend = -1.0f
+    @DumpRunnerField var imageAngle = 0.0f
+    @DumpRunnerField var pathSpeed = 0.0f
+    @DumpRunnerField var pathPosition = 0.0f
 
-    var hspeed: Float
+    @DumpRunnerField var hspeed: Float
         get() = _hspeed
         set(value) { if (_hspeed == value) return; _hspeed = value; computeSpeed1() }
 
-    var vspeed: Float
+    @DumpRunnerField var vspeed: Float
         get() = _vspeed
         set(value) { if (_vspeed == value) return; _vspeed = value; computeSpeed1() }
 
-    var speed: Float
+    @DumpRunnerField var speed: Float
         get() = _speed
         set(value) { if (_speed == value) return; _speed = value; computeSpeed2() }
 
-    var direction: Float
+    @DumpRunnerField var direction: Float
         get() = _direction
         set(value) {
             var v = value
@@ -54,20 +55,20 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
             computeSpeed2()
         }
 
-    var friction = 0.0f
-    var gravity = 0.0f
-    var gravityDirection = 270.0f
-    var persistent = false
-    var solid = false
-    var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
-    var visible = true
-    var destroyed = false
+    @DumpRunnerField var friction = 0.0f
+    @DumpRunnerField var gravity = 0.0f
+    @DumpRunnerField var gravityDirection = 270.0f
+    @DumpRunnerField var persistent = false
+    @DumpRunnerField var solid = false
+    @DumpRunnerField var alarms = Array(StarfaitRunner.MAX_ALARMS) { -1 }
+    @DumpRunnerField var visible = true
+    @DumpRunnerField var destroyed = false
         private set
 
     /**
      * Whether the instance was outside the room on the last check, the outside room event only fires when the instance *leaves* the room
      */
-    var outsideRoom = false
+    @DumpRunnerField var outsideRoom = false
 
     private var _hspeed = 0.0f
     private var _vspeed = 0.0f
@@ -77,7 +78,7 @@ class Instance(val runner: StarfaitRunner, var id: Int, var objectIndex: Int) : 
 
     val gameObject: GameObject
         get() = runner.gameWAD.objt.objects[this.objectIndex]
-    val objectName: String
+    @DumpRunnerField val objectName: String
         get() = runner.gameWAD.strg.getString(gameObject.name)
 
     fun adaptSpeed() {

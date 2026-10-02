@@ -144,7 +144,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
 
             val subtypeEvents = mutableListOf<GameObject.Action>()
 
-            // Get the first matched event
+            // Get the first matched event of the collided object, including all parents
             for (id in allParentsOfCollidedObject) {
                 if (subtypeEvents.isNotEmpty())
                     break
@@ -153,6 +153,19 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
                     events
                         .filter { it.subtype == id }
                         .flatMap { it.actions }
+                )
+            }
+
+            // If we still haven't found, then we'll walk through the events of the object parent to know if it has the event
+            while (subtypeEvents.isEmpty()) {
+                if (0 > gameObject.parentId)
+                    break
+
+                gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
+                subtypeEvents.addAll(
+                    gameObject.events[eventType]
+                    .filter { it.subtype == eventSubtype }
+                    .flatMap { it.actions }
                 )
             }
 

@@ -1,7 +1,6 @@
 package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.RecordedFrame
-import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DELETE
@@ -32,9 +31,6 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.statedumper.StateDumper
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.GL_BACK
 import org.lwjgl.opengl.GL11.GL_PACK_ALIGNMENT
@@ -107,7 +103,6 @@ import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.reflect.KProperty1
 import kotlin.use
 
 class StarfaitWindow(
@@ -122,7 +117,8 @@ class StarfaitWindow(
     val headless: Boolean,
     val replaceRooms: Map<Int, Int>,
     val dumpStateFile: File?,
-    val dumpStateAtFrames: Set<Int>
+    val dumpStateAtFrames: Set<Int>,
+    val traceFrameDuration: List<IntRange>
 ) {
     companion object {
         private val JsonPrettyPrint = Json {
@@ -176,6 +172,12 @@ class StarfaitWindow(
 
                 val started = System.currentTimeMillis()
                 var stepOneFrame = false
+
+                for (range in traceFrameDuration) {
+                    if (frameCount in range) {
+                        println("Runner: Frame $frameCount Start")
+                    }
+                }
 
                 while (SDL_PollEvent(event)) {
                     if (event.type() == SDL_EVENT_QUIT)
@@ -279,6 +281,12 @@ class StarfaitWindow(
                         val output = File(dumpStateFile.parentFile, dumpStateFile.name.format(frameCount))
 
                         output.writeText(JsonPrettyPrint.encodeToString(StateDumper.dumpRunnerStateAsJson(runner)))
+                    }
+
+                    for (range in traceFrameDuration) {
+                        if (frameCount in range) {
+                            println("Runner: Frame $frameCount End (${finished - started}ms)")
+                        }
                     }
 
                     frameCount++

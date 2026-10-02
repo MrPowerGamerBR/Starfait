@@ -4,15 +4,15 @@ import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.vm.InstructionDataType
 import com.mrpowergamerbr.starfait.vm.Op
 import com.mrpowergamerbr.starfait.vm.OpWord
-import com.mrpowergamerbr.starfait.vm.VariableReferenceOperand
+import com.mrpowergamerbr.starfait.vm.VMStack
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import java.nio.ByteBuffer
 
 class StarfaitDisassembler(val gameWAD: GameWAD) {
-    fun disassembleAndPrint(bytecodeStream: ByteBuffer) {
-        val reader = StarfaitByteBuffer.fromByteBuffer(bytecodeStream)
+    companion object {
+        fun readAndDisassembleOp(gameWAD: GameWAD, bytecodeStream: ByteBuffer, stack: VMStack?): String {
+            val reader = StarfaitByteBuffer.fromByteBuffer(bytecodeStream)
 
-        while (reader.hasRemaining()) {
             val start = reader.position
             val word = OpWord(reader.readInt())
 
@@ -21,51 +21,61 @@ class StarfaitDisassembler(val gameWAD: GameWAD) {
             val type2 = word.type2()
             val extra = word.extra()
 
-            val type1DataType = InstructionDataType.byId(type1)
+            val type1DataTypeName = try { InstructionDataType.byId(type1) } catch (e: IllegalStateException) { "UNKNOWN" }
+            val type2DataTypeName = try { InstructionDataType.byId(type2) } catch (e: IllegalStateException) { "UNKNOWN" }
 
-            println("($start) [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()})")
+            val operand4 = if (word.operandSize() == 4) reader.readInt() else null
+            val operand8 = if (word.operandSize() == 8) reader.readLong() else null
 
-            when (word.operandSize()) {
-                0 -> {}
-                4 -> {
-                    when (type1DataType) {
-                        InstructionDataType.DOUBLE -> TODO()
-                        InstructionDataType.FLOAT -> TODO()
-                        InstructionDataType.INT32 -> {
-                            println("  operand ($type1DataType): ${reader.readInt()}")
-                        }
-                        InstructionDataType.INT64 -> TODO()
-                        InstructionDataType.BOOLEAN -> TODO()
-                        InstructionDataType.VARIABLE -> {
-                            val variableOperand = VariableReferenceOperand(reader.readInt())
-                            println("  operand ($type1DataType): ${variableOperand.variableIndex()} (has array index? ${variableOperand.hasArrayIndex()}, has instance ID from stack? ${variableOperand.hasInstanceIdOnStack()})")
-                        }
-                        InstructionDataType.STRING -> {
-                            val index = reader.readInt()
-                            println("  operand ($type1DataType): $index -> \"${gameWAD.strg.stringsByIndex[index]}\"")
-                        }
-                        InstructionDataType.INT16 -> TODO()
+            val additionalParams = mutableMapOf<String, Any>()
+
+            val string = buildString {
+                append("($start) [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()} ($type1DataTypeName), type2: ${type2.toHexString()} ($type2DataTypeName), extra: ${extra.toHexString()})")
+
+                when (opcode) {
+                    Op.CALL -> {
+                        val func = gameWAD.func.functions[operand4!!]
+                        additionalParams["argCount"] = extra
+                        additionalParams["func"] = gameWAD.strg.getString(func.name)
                     }
                 }
-                8 -> {
-                    when (type1DataType) {
-                        InstructionDataType.DOUBLE -> {
-                            println("  operand ($type1DataType): ${reader.readDouble()}")
+
+                if (additionalParams.isNotEmpty()) {
+                    var isFirst = false
+                    append(" {")
+                    additionalParams.forEach { (name, value) ->
+                        if (isFirst) {
+                            append(",")
+                        } else {
+                            isFirst = true
                         }
-                        InstructionDataType.FLOAT -> TODO()
-                        InstructionDataType.INT32 -> TODO()
-                        InstructionDataType.INT64 -> {
-                            println("  operand ($type1DataType): ${reader.readLong()}")
-                        }
-                        InstructionDataType.BOOLEAN -> TODO()
-                        InstructionDataType.VARIABLE -> TODO()
-                        InstructionDataType.STRING -> TODO()
-                        InstructionDataType.INT16 -> TODO()
+                        append("$name=$value")
                     }
+                    append("}")
                 }
+
+                if (stack != null) {
+                    append(" [stack=${stack.top} [")
+                    for (i in 0 until stack.top) {
+                        if (i != 0)
+                            append(", ")
+                        val value = stack.values[i]
+                        append(value.toStringTyped())
+                    }
+                    append("]]")
+                }
+
+                appendLine()
             }
+            return string
+        }
+    }
 
-            reader.position = start + 4 + word.operandSize()
+    fun disassembleAndPrint(bytecodeStream: ByteBuffer) {
+        val reader = StarfaitByteBuffer.fromByteBuffer(bytecodeStream)
+
+        while (reader.hasRemaining()) {
+            print(readAndDisassembleOp(gameWAD, bytecodeStream, null))
         }
     }
 }

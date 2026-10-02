@@ -47,7 +47,7 @@ sealed class StackValue {
 
     class Int32(val value: Int) : StackValue() {
         override val dataType = InstructionDataType.INT32
-        override fun toStringTyped() = "int32($value)"
+        override fun toStringTyped() = "${dataType.name.lowercase()}($value)"
 
         override fun convertToVariable() = RValue.Int32(value)
         override fun convertToReal() = value.toDouble()
@@ -58,7 +58,7 @@ sealed class StackValue {
 
     class Int64(val value: Long) : StackValue() {
         override val dataType = InstructionDataType.INT64
-        override fun toStringTyped() = "int64($value)"
+        override fun toStringTyped() = "${dataType.name.lowercase()}($value)"
 
         override fun convertToVariable() = RValue.Int64(value)
         override fun convertToInt32() = value.toInt()
@@ -67,7 +67,7 @@ sealed class StackValue {
 
     class Double(val value: kotlin.Double) : StackValue() {
         override val dataType = InstructionDataType.DOUBLE
-        override fun toStringTyped() = "double($value)"
+        override fun toStringTyped() = "${dataType.name.lowercase()}($value)"
 
         override fun convertToVariable() = RValue.Real(value)
         override fun convertToReal() = value
@@ -75,7 +75,7 @@ sealed class StackValue {
 
     class Variable(val value: RValue) : StackValue() {
         override val dataType = InstructionDataType.VARIABLE
-        override fun toStringTyped() = "variable(${value.toStringTyped()})"
+        override fun toStringTyped() = "${dataType.name.lowercase()}(${value.toStringTyped()})"
 
         override fun convertToVariable() = value
         override fun convertToGMLString() = value.convertToGMLString()
@@ -87,7 +87,7 @@ sealed class StackValue {
 
     class String(val value: kotlin.String) : StackValue() {
         override val dataType = InstructionDataType.STRING
-        override fun toStringTyped() = "string(\"$value\")"
+        override fun toStringTyped() = "${dataType.name.lowercase()}(\"$value\")"
 
         override fun convertToVariable() = RValue.String(value)
         override fun convertToGMLString() = value
@@ -95,7 +95,7 @@ sealed class StackValue {
 
     class Boolean(val value: kotlin.Boolean) : StackValue() {
         override val dataType = InstructionDataType.BOOLEAN
-        override fun toStringTyped() = "boolean($value)"
+        override fun toStringTyped() = "${dataType.name.lowercase()}($value)"
 
         override fun convertToVariable() = RValue.Boolean(value)
         override fun convertToBoolean() = value

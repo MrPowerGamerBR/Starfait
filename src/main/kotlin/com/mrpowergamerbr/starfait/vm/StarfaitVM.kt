@@ -3,6 +3,7 @@ package com.mrpowergamerbr.starfait.vm
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.StarfaitUtils
+import com.mrpowergamerbr.starfait.disasm.StarfaitDisassembler
 import com.mrpowergamerbr.starfait.runner.GlobalObject
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
@@ -97,17 +98,10 @@ class StarfaitVM(
 
             val scriptName = this.currentCallFrameCodeName
             if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName) || gmlScriptsOpcodesToBeTraced.contains(currentCallFrame.self.objectName)) {
-                print("VM: [$scriptName] ($start) [0x${word.value.toHexString()}] ${Op.getOpcodeName(opcode)} (type1: ${type1.toHexString()}, type2: ${type2.toHexString()}, extra: ${extra.toHexString()}) [stack=${stack.top} [")
-
-                for (i in 0 until stack.top) {
-                    if (i != 0)
-                        print(", ")
-                    val value = stack.values[i]
-                    print(value.toStringTyped())
-                    print(" [dataType=${value.dataType}]")
-                }
-                print("]]")
-                println()
+                val beforeDisassembling = reader.position
+                reader.position = start
+                print("VM: ${StarfaitDisassembler.readAndDisassembleOp(gameWAD, bytecodeStream, stack)}")
+                reader.position = beforeDisassembling
             }
 
             when (opcode) {

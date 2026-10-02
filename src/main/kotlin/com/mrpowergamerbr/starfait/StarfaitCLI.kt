@@ -170,7 +170,7 @@ class StarfaitCLI : CliktCommand() {
             val disassembler = StarfaitDisassembler(gameWAD)
             StarfaitUtils.remapReferences(gameWAD)
 
-            val codeToBeDisassembled = gameWAD.code.codes.filter { disassemble.contains("*") || gameWAD.strg.getString(it.name) == disassemble.first() }
+            val codeToBeDisassembled = gameWAD.code.codes.filter { disassemble.contains("*") || gameWAD.strg.getString(it.name) in disassemble }
 
             for (code in codeToBeDisassembled) {
                 println("CODE ${gameWAD.strg.getString(code.name)}:")

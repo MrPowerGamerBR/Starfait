@@ -122,7 +122,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     /**
      * Dispatches an event to this instance
      *
-     * @return true if the instance had a event liostener for it
+     * @return true if the instance had an event listener for it
      */
     fun dispatchEvent(gameObject: GameObject, eventType: Int, eventSubtype: Int, other: Instance?): Boolean {
         var gameObject = gameObject

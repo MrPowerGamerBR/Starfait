@@ -12,7 +12,8 @@ class StarfaitRunner(
     val gameWAD: GameWAD,
     val vm: StarfaitVM,
     val renderer: Renderer,
-    val seed: Long
+    val seed: Long,
+    val replaceRooms: Map<Int, Int>
 ) {
     companion object {
         // You can check that by creating a room with a single instance where the instance's code is just "show_debug_message(id)"
@@ -23,7 +24,7 @@ class StarfaitRunner(
     lateinit var currentRoom: RunnerRoom
     val operatingSystem = YYOperatingSystem.WINDOWS
     var currentInstanceId = BASE_INSTANCE_ID
-    var pendingRoom: PendingRoom? = null
+    private var pendingRoom: PendingRoom? = null
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
     var drawSetColor = GMLColor(0xFFFFFF)
@@ -356,5 +357,10 @@ class StarfaitRunner(
 
     fun getGameObjectFromInstance(instance: Instance): GameObject {
         return gameWAD.objt.objects[instance.objectIndex]
+    }
+
+    fun setPendingRoom(roomId: Int) {
+        val roomId = replaceRooms[roomId] ?: roomId
+        pendingRoom = PendingRoom(roomId, gameWAD.room.rooms[roomId])
     }
 }

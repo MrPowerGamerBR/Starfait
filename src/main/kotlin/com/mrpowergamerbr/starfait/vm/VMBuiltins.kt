@@ -330,18 +330,16 @@ class VMBuiltins(val vm: StarfaitVM) {
             val newRoomIndexInRoomOrder = vm.gameWAD.gen8.roomOrder.indexOf(runner.currentRoom.roomId) + 1
             val newRoomIndex = vm.gameWAD.gen8.roomOrder[newRoomIndexInRoomOrder]
             val room = vm.gameWAD.room.rooms[newRoomIndex]
-            runner.pendingRoom = PendingRoom(newRoomIndex, room)
+            runner.setPendingRoom(newRoomIndex)
         }
         registerVoidFunction("room_goto_previous", 0) { args ->
             val newRoomIndexInRoomOrder = vm.gameWAD.gen8.roomOrder.indexOf(runner.currentRoom.roomId) - 1
             val newRoomIndex = vm.gameWAD.gen8.roomOrder[newRoomIndexInRoomOrder]
-            val room = vm.gameWAD.room.rooms[newRoomIndex]
-            runner.pendingRoom = PendingRoom(newRoomIndex, room)
+            runner.setPendingRoom(newRoomIndex)
         }
         registerVoidFunction("room_goto", 1) { args ->
             val newRoomIndex = args[0].convertToInt32()
-            val room = vm.gameWAD.room.rooms[newRoomIndex]
-            runner.pendingRoom = PendingRoom(newRoomIndex, room)
+            runner.setPendingRoom(newRoomIndex)
         }
         registerIntFunction("room_next", 1) { args ->
             val roomIndex = args[0].convertToInt32()

@@ -114,7 +114,8 @@ class StarfaitWindow(
     val screenshot: File?,
     val screenshotFrames: Set<Int>,
     val exitAtFrame: Int?,
-    val headless: Boolean
+    val headless: Boolean,
+    val replaceRooms: Map<Int, Int>
 ) {
     var frameCount = 0
 
@@ -137,7 +138,7 @@ class StarfaitWindow(
         SDL_GL_SetSwapInterval(1) // vsync
 
         val renderer = OpenGLRenderer(vm.gameWAD)
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, seed)
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, seed, replaceRooms)
         renderer.runner = runner
         vm.runner = runner
         vm.runner.enableCollisionRendering = enableCollisionRendering
@@ -173,17 +174,11 @@ class StarfaitWindow(
 
                     if (event.type() == SDL_EVENT_KEY_UP) {
                         if (event.key().key() == SDLK_PAGEUP) {
-                            runner.pendingRoom = PendingRoom(
-                                runner.currentRoom.roomId - 1,
-                                vm.gameWAD.room.rooms[runner.currentRoom.roomId - 1]
-                            )
+                            runner.setPendingRoom(runner.currentRoom.roomId - 1)
                         }
 
                         if (event.key().key() == SDLK_PAGEDOWN) {
-                            runner.pendingRoom = PendingRoom(
-                                runner.currentRoom.roomId + 1,
-                                vm.gameWAD.room.rooms[runner.currentRoom.roomId + 1]
-                            )
+                            runner.setPendingRoom(runner.currentRoom.roomId + 1)
                         }
 
                         if (event.key().key() == SDLK_F5) {

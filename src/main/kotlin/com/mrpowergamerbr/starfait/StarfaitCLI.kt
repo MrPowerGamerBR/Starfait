@@ -7,26 +7,17 @@ import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.boolean
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
-import com.mrpowergamerbr.starfait.wad.Background
-import com.mrpowergamerbr.starfait.wad.Code
-import com.mrpowergamerbr.starfait.wad.Font
+import com.mrpowergamerbr.starfait.wad.*
 import com.mrpowergamerbr.starfait.wad.Function
-import com.mrpowergamerbr.starfait.wad.GameObject
-import com.mrpowergamerbr.starfait.wad.GameWAD
-import com.mrpowergamerbr.starfait.wad.Room
-import com.mrpowergamerbr.starfait.wad.Script
-import com.mrpowergamerbr.starfait.wad.Sound
-import com.mrpowergamerbr.starfait.wad.Sprite
-import com.mrpowergamerbr.starfait.wad.StringPointer
-import com.mrpowergamerbr.starfait.wad.Variable
 import java.io.File
 import javax.imageio.ImageIO
+import kotlin.collections.map
+import kotlin.let
 import kotlin.reflect.KProperty1
 
 class StarfaitCLI : CliktCommand() {
@@ -56,6 +47,7 @@ class StarfaitCLI : CliktCommand() {
     val screenshotAtFrame by option().int().multiple()
     val exitAtFrame by option().int()
     val headless by option().flag(default = false)
+    val replaceRoom by option().multiple()
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -189,7 +181,32 @@ class StarfaitCLI : CliktCommand() {
             screenshot,
             screenshotAtFrame.toSet(),
             exitAtFrame,
-            headless
+            headless,
+            replaceRoom.map {
+                it.split("=").let { (room1NameOrId, room2NameOrId) ->
+                    var room1Id: Int? = null
+                    var room2Id: Int? = null
+
+                    for ((index, room) in gameWAD.room.rooms.withIndex()) {
+                        if (room1NameOrId.toIntOrNull() == index || room1NameOrId == gameWAD.strg.getString(room.name)) {
+                            room1Id = index
+                            break
+                        }
+                    }
+
+                    for ((index, room) in gameWAD.room.rooms.withIndex()) {
+                        if (room2NameOrId.toIntOrNull() == index || room2NameOrId == gameWAD.strg.getString(room.name)) {
+                            room2Id = index
+                            break
+                        }
+                    }
+
+                    requireNotNull(room1Id)
+                    requireNotNull(room2Id)
+
+                    Pair(room1Id, room2Id)
+                }
+            }.toMap()
         )
         window.start()
 

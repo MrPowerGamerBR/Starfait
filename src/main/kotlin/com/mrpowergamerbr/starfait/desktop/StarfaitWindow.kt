@@ -95,6 +95,7 @@ import org.lwjgl.sdl.SDLVideo.SDL_GL_MakeCurrent
 import org.lwjgl.sdl.SDLVideo.SDL_GL_SetAttribute
 import org.lwjgl.sdl.SDLVideo.SDL_GL_SetSwapInterval
 import org.lwjgl.sdl.SDLVideo.SDL_GL_SwapWindow
+import org.lwjgl.sdl.SDLVideo.SDL_WINDOW_HIDDEN
 import org.lwjgl.sdl.SDLVideo.SDL_WINDOW_OPENGL
 import org.lwjgl.sdl.SDL_Event
 import org.lwjgl.system.MemoryStack
@@ -112,7 +113,8 @@ class StarfaitWindow(
     val playbackInputsFile: File?,
     val screenshot: File?,
     val screenshotFrames: Set<Int>,
-    val exitAtFrame: Int?
+    val exitAtFrame: Int?,
+    val headless: Boolean
 ) {
     var frameCount = 0
 
@@ -123,7 +125,9 @@ class StarfaitWindow(
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
 
-        val window = SDL_CreateWindow("Starfait", vm.gameWAD.gen8.initialApplicationWidth, vm.gameWAD.gen8.initialApplicationHeight, SDL_WINDOW_OPENGL)
+        var windowFlags = SDL_WINDOW_OPENGL
+        if (headless) windowFlags = windowFlags or SDL_WINDOW_HIDDEN
+        val window = SDL_CreateWindow("Starfait", vm.gameWAD.gen8.initialApplicationWidth, vm.gameWAD.gen8.initialApplicationHeight, windowFlags)
         check(window != MemoryUtil.NULL) { "SDL_CreateWindow failed: ${SDL_GetError()}" }
 
         val context = SDL_GL_CreateContext(window)

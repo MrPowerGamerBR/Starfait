@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.boolean
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
@@ -54,6 +55,7 @@ class StarfaitCLI : CliktCommand() {
     val screenshot by option().file()
     val screenshotAtFrame by option().int().multiple()
     val exitAtFrame by option().int()
+    val headless by option().flag(default = false)
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -186,7 +188,8 @@ class StarfaitCLI : CliktCommand() {
             playbackInputs,
             screenshot,
             screenshotAtFrame.toSet(),
-            exitAtFrame
+            exitAtFrame,
+            headless
         )
         window.start()
 

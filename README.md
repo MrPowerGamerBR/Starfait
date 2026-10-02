@@ -21,7 +21,7 @@ So I've decided to go with Kotlin instead. :3
 
 ## Then why not Butterscotch?
 
-Because I wanted to understand better how the GameMaker VM worked, and to do that I wanted to write a project from scratch to do the coding for me. What I found out is that you only *truly* understand the code if you actually write it yourself, even if [you review all changes that the LLM made](https://x.com/DabsMalone/status/2105300996716957837).
+Because I wanted to understand better how the GameMaker VM worked, and to do that I wanted to write a project from scratch to do the coding for me. What I found out is that you only *truly* understand the code if you actually write it yourself, even [if you review all changes that the LLM made](https://x.com/DabsMalone/status/2105300996716957837).
 
 Don't get me wrong, I do think that these tools help speed up development a LOT and I do use them, but you need to have a balance between "coding everything by hand" and "let's just make the LLM write everything for me".
 

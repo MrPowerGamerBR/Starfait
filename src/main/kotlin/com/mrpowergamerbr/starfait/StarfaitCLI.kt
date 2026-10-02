@@ -8,6 +8,7 @@ import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.boolean
+import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.long
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
@@ -52,6 +53,8 @@ class StarfaitCLI : CliktCommand() {
     val traceVariableReads by option()
     val traceVariableWrites by option()
     val enableCollisionRendering by option().flag(default = false)
+    val recordInputs by option().file()
+    val playbackInputs by option().file()
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -176,7 +179,13 @@ class StarfaitCLI : CliktCommand() {
         )
         vm.remapReferences()
 
-        val window = StarfaitWindow(vm, seed, enableCollisionRendering)
+        val window = StarfaitWindow(
+            vm,
+            seed,
+            enableCollisionRendering,
+            recordInputs,
+            playbackInputs
+        )
         window.start()
 
         // runner.start()

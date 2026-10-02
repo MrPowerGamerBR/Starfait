@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.desktop
 
+import com.mrpowergamerbr.starfait.RecordedFrame
 import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
@@ -29,6 +30,7 @@ import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_SUBTRACT
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_UP
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
+import kotlinx.serialization.json.Json
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
 import org.lwjgl.opengl.GL11.glClear
@@ -94,9 +96,18 @@ import org.lwjgl.sdl.SDLVideo.SDL_WINDOW_OPENGL
 import org.lwjgl.sdl.SDL_Event
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import java.io.File
 import kotlin.use
 
-class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRendering: Boolean) {
+class StarfaitWindow(
+    val vm: StarfaitVM,
+    val seed: Long,
+    val enableCollisionRendering: Boolean,
+    val recordInputsFile: File?,
+    val playbackInputsFile: File?
+) {
+    var frameCount = 0
+
     fun start() {
         check(SDL_Init(SDL_INIT_VIDEO)) { "SDL_Init failed: ${SDL_GetError()}" }
 
@@ -123,6 +134,10 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRend
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
 
         var isPaused = false
+
+        val playbackInputFrames = playbackInputsFile?.readLines()?.mapIndexed { it, string -> it to Json.decodeFromString<RecordedFrame>(string) }?.toMap()
+
+        recordInputsFile?.delete()
 
         MemoryStack.stackPush().use { stack ->
             val event = SDL_Event.malloc(stack)
@@ -173,6 +188,29 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRend
                 }
 
                 if (!isPaused || stepOneFrame) {
+                    // Before we execute it, track whatever keys were pressed/released
+                    if (playbackInputFrames != null) {
+                        // If we have frames set...
+                        val playbackInputFrame = playbackInputFrames[frameCount]
+
+                        if (playbackInputFrame != null) {
+                            playbackInputFrame.keyDown.forEach { runner.keyboard.onKeyDown(it) }
+                            playbackInputFrame.keyUp.forEach { runner.keyboard.onKeyUp(it) }
+                        }
+                    }
+
+                    if (recordInputsFile != null) {
+                        recordInputsFile.appendText(
+                            Json.encodeToString(
+                                RecordedFrame(
+                                    // What an horrible hack!
+                                    runner.keyboard.keyPressed.mapIndexed { index, bool -> if (bool) index else -1 }.filter { it != -1 }.toSet(),
+                                    runner.keyboard.keyReleased.mapIndexed { index, bool -> if (bool) index else -1 }.filter { it != -1 }.toSet(),
+                                )
+                            ) + "\n"
+                        )
+                    }
+
                     renderer.frame {
                         runner.step()
                     }
@@ -182,6 +220,8 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRend
                     val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
                     if (waitTime > 0)
                         Thread.sleep(waitTime)
+
+                    frameCount++
 
                     SDL_GL_SwapWindow(window)
                 }

@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "2.3.10"
+    kotlin("plugin.serialization") version "2.3.10"
     application
 }
 
@@ -17,6 +18,9 @@ val jomlVersion = "1.10.9"
 val lwjglNatives = "natives-linux"
 
 dependencies {
+    implementation("com.github.ajalt.clikt:clikt:5.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0-RC")
+
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
 
     implementation("org.lwjgl:lwjgl")
@@ -29,7 +33,6 @@ dependencies {
     implementation("org.lwjgl:lwjgl-stb::$lwjglNatives")
     implementation("org.joml:joml:$jomlVersion")
 
-    implementation("com.github.ajalt.clikt:clikt:5.1.0")
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))
 }

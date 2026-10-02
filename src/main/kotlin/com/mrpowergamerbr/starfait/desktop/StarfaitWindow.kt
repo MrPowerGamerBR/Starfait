@@ -54,6 +54,7 @@ import org.lwjgl.sdl.SDLKeycode.SDLK_DOWN
 import org.lwjgl.sdl.SDLKeycode.SDLK_END
 import org.lwjgl.sdl.SDLKeycode.SDLK_ESCAPE
 import org.lwjgl.sdl.SDLKeycode.SDLK_F1
+import org.lwjgl.sdl.SDLKeycode.SDLK_F11
 import org.lwjgl.sdl.SDLKeycode.SDLK_F12
 import org.lwjgl.sdl.SDLKeycode.SDLK_F5
 import org.lwjgl.sdl.SDLKeycode.SDLK_HOME
@@ -194,6 +195,10 @@ class StarfaitWindow(
                             runner.enableCollisionRendering = !runner.enableCollisionRendering
                         }
 
+                        if (event.key().key() == SDLK_F11 && dumpStateFile != null) {
+                            dumpRunnerStateAsJsonToFile(runner, dumpStateFile)
+                        }
+
                         if (event.key().key() == 'p'.code) {
                             isPaused = !isPaused
                             println("Toggled pause")
@@ -214,7 +219,7 @@ class StarfaitWindow(
                             println("Runner: Frame $frameCount Start")
                         }
                     }
-                    
+
                     // Before we execute it, track whatever keys were pressed/released
                     if (playbackInputFrames != null) {
                         // If we have frames set...
@@ -278,9 +283,7 @@ class StarfaitWindow(
                     }
 
                     if (frameCount in dumpStateAtFrames && dumpStateFile != null) {
-                        val output = File(dumpStateFile.parentFile, dumpStateFile.name.format(frameCount))
-
-                        output.writeText(JsonPrettyPrint.encodeToString(StateDumper.dumpRunnerStateAsJson(runner)))
+                        dumpRunnerStateAsJsonToFile(runner, dumpStateFile)
                     }
 
                     for (range in traceFrameDuration) {
@@ -299,6 +302,12 @@ class StarfaitWindow(
         SDL_GL_DestroyContext(context)
         SDL_DestroyWindow(window)
         SDL_Quit()
+    }
+
+    fun dumpRunnerStateAsJsonToFile(runner: StarfaitRunner, dumpStateFile: File) {
+        val output = File(dumpStateFile.parentFile, dumpStateFile.name.format(frameCount))
+        output.writeText(JsonPrettyPrint.encodeToString(StateDumper.dumpRunnerStateAsJson(runner)))
+        println("Runner: Dumped runner state!")
     }
 
     fun convertSDLKeycodeToGMLVK(key: Int): Int = when (key) {

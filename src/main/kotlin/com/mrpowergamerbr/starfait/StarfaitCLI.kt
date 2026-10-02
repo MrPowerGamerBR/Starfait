@@ -12,6 +12,7 @@ import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.disasm.StarfaitDisassembler
+import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.*
 import com.mrpowergamerbr.starfait.wad.Function
@@ -35,6 +36,7 @@ class StarfaitCLI : CliktCommand() {
     val printFunctions by option()
     val printTexturePages by option()
     val printSprites by option()
+    val printObjectTree by option()
     val dumpTiles by option()
     val traceOpcodes by option()
     val traceFunctionCalls by option()
@@ -128,6 +130,39 @@ class StarfaitCLI : CliktCommand() {
 
         if (printSprites != null) {
             dump(gameWAD, "Sprite", gameWAD.sprt.sprites, Sprite::name, printSprites!!)
+            return
+        }
+
+        if (printObjectTree != null) {
+            val split = printObjectTree!!.split(",")
+            for (obj in gameWAD.objt.objects) {
+                val name = obj.name.let { gameWAD.strg.getString(it) }
+
+                if (split.contains("*") || split.contains(name)) {
+                    val objectTree = mutableListOf<GameObject>()
+                    var currentObject = obj
+
+                    while (true) {
+                        objectTree.add(currentObject)
+
+                        val parentId = currentObject.parentId
+                        if (parentId == StarfaitRunner.HAS_NO_PARENT_ID)
+                            break
+
+                        currentObject = gameWAD.objt.objects[parentId]
+                    }
+
+                    var isFirst = true
+                    for (entry in objectTree) {
+                        if (!isFirst) {
+                            print(" -> ")
+                        }
+                        print(gameWAD.strg.getString(entry.name))
+                        isFirst = false
+                    }
+                    println()
+                }
+            }
             return
         }
 

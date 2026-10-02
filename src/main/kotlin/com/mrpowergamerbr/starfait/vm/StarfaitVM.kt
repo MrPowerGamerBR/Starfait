@@ -19,7 +19,8 @@ class StarfaitVM(
     val alarmsToBeTraced: Set<String>,
     val eventsToBeTraced: Set<String>,
     val traceVariableReads: Set<String>,
-    val traceVariableWrites: Set<String>
+    val traceVariableWrites: Set<String>,
+    val traceCodeExecution: Set<String>
 ) {
     lateinit var runner: StarfaitRunner
     val stack = VMStack()
@@ -58,6 +59,9 @@ class StarfaitVM(
         eventSubtype: Int,
         arguments: Array<RValue>
     ): RValue? {
+        if (traceCodeExecution.contains("*") || traceCodeExecution.contains(gameWAD.strg.getString(code.name)))
+            println("VM: [${currentOrNullCallFrame?.code?.name?.let { gameWAD.strg.getString(it) }}] Executing code ${gameWAD.strg.getString(code.name)}")
+
         val callFrame = CallFrame(this, code, currentInstance, otherInstance, eventObject, eventType, eventSubtype, arguments, stack.top)
         this.callFrameStack.addLast(callFrame)
         this.currentOrNullCallFrame = callFrame
@@ -100,7 +104,7 @@ class StarfaitVM(
             if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName) || gmlScriptsOpcodesToBeTraced.contains(currentCallFrame.self.objectName)) {
                 val beforeDisassembling = reader.position
                 reader.position = start
-                print("VM: ${StarfaitDisassembler.readAndDisassembleOp(gameWAD, bytecodeStream, stack)}")
+                print("VM: [$currentCallFrameCodeName] ${StarfaitDisassembler.readAndDisassembleOp(gameWAD, bytecodeStream, stack)}")
                 reader.position = beforeDisassembling
             }
 

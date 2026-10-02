@@ -43,6 +43,7 @@ class StarfaitCLI : CliktCommand() {
     val traceVariableReads by option()
     val traceVariableWrites by option()
     val traceFrameDuration by option().multiple()
+    val traceCodeExecution by option()
     val enableCollisionRendering by option().flag(default = false)
     val recordInputs by option().file()
     val playbackInputs by option().file()
@@ -196,6 +197,7 @@ class StarfaitCLI : CliktCommand() {
             eventsToBeTraced = traceEvents?.split(",")?.toSet().orEmpty(),
             traceVariableReads = traceVariableReads?.split(",")?.toSet().orEmpty(),
             traceVariableWrites = traceVariableWrites?.split(",")?.toSet().orEmpty(),
+            traceCodeExecution = traceCodeExecution?.split(",")?.toSet().orEmpty()
         )
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 

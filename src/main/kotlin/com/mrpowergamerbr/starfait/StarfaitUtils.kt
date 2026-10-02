@@ -79,8 +79,8 @@ object StarfaitUtils {
         }
 
         return RemapResult(
-            allocatedRegularVariables,
-            allocatedBuiltinVariables
+            allocatedBuiltinVariables,
+            allocatedRegularVariables
         )
     }
 

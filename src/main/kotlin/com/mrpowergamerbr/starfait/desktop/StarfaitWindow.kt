@@ -233,10 +233,12 @@ class StarfaitWindow(
                     }
 
                     val finished = System.currentTimeMillis()
-                    val targetFramesPerSecond = 1000 / runner.currentRoom.speed.toDouble()
-                    val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
-                    if (waitTime > 0)
-                        Thread.sleep(waitTime)
+                    if (!headless) {
+                        val targetFramesPerSecond = 1000 / runner.currentRoom.speed.toDouble()
+                        val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
+                        if (waitTime > 0)
+                            Thread.sleep(waitTime)
+                    }
 
                     if (frameCount in screenshotFrames && screenshot != null) {
                         val output = File(screenshot.parentFile, screenshot.name.format(frameCount))

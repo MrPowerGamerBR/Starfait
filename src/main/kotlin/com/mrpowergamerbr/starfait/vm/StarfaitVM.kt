@@ -2,13 +2,13 @@ package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
+import com.mrpowergamerbr.starfait.StarfaitUtils
 import com.mrpowergamerbr.starfait.runner.GlobalObject
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
-import com.mrpowergamerbr.starfait.wad.Variable
 import java.nio.ByteBuffer
 
 class StarfaitVM(
@@ -20,10 +20,6 @@ class StarfaitVM(
     val traceVariableReads: Set<String>,
     val traceVariableWrites: Set<String>
 ) {
-    companion object {
-        private const val REGULAR_VARIABLES_BASE = 100_000
-    }
-
     lateinit var runner: StarfaitRunner
     val stack = VMStack()
     val global = GlobalObject(this)
@@ -319,7 +315,7 @@ class StarfaitVM(
             }
         }
 
-        val result = if (varId >= REGULAR_VARIABLES_BASE) {
+        val result = if (varId >= StarfaitUtils.REGULAR_VARIABLES_BASE) {
             variableContainer.getVariable(varId, arrayIndex)
         } else {
             // Builtin variable!
@@ -359,7 +355,7 @@ class StarfaitVM(
         for (variableContainer in variableContainers) {
             logVariableAccess(varId, variableContainer, arrayIndex, this.traceVariableWrites, poppedValue, true)
 
-            if (varId >= REGULAR_VARIABLES_BASE) {
+            if (varId >= StarfaitUtils.REGULAR_VARIABLES_BASE) {
                 variableContainer.setVariable(varId, poppedValue, arrayIndex)
             } else {
                 // Builtin variable!
@@ -857,73 +853,10 @@ class StarfaitVM(
         callFrame.self = environmentFrame.instances[environmentFrame.cursor]
     }
 
-    /**
-     * By default, each variable and function reference in the code references a delta offset on the `extra` field to the next reference of the variable.
-     *
-     * The remapper walks through all VARI variables and remaps the delta offsets to be VARI indices.
-     */
-    fun remapReferences() {
-        // I'm not sure WHY the YoYo Runner does this!!
-        val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode)
-        val allocatedBuiltinVariables = mutableListOf<Variable>()
-        val allocatedRegularVariables = mutableListOf<Variable>()
-
-        for (variable in gameWAD.vari.variables) {
-            if (variable.firstAddress != -1) {
-                // Here's the thing:
-                // For builtin variables, we store it sequentially, starting from 0
-                // For regular variables, we store it sequentially, starting from REGULAR_VARIABLES_BASE
-                // This way we can differentiate directly on the operand itself, and we can store the handlers densely
-                var variableHandlerId: Int
-                if (variable.varId == -6) {
-                    val index = allocatedBuiltinVariables.size
-                    allocatedBuiltinVariables.add(variable)
-                    variableHandlerId = index
-                } else {
-                    val index = allocatedRegularVariables.size
-                    allocatedRegularVariables.add(variable)
-                    variableHandlerId = index + REGULAR_VARIABLES_BASE
-                }
-
-                // This points to the INSTRUCTION address, NOT the operand address, which is why we do +4
-                var operandAddress = (variable.firstAddress - gameWAD.code.postAddressPosition) + 4
-
-                repeat(variable.occurrenceCount) {
-                    reader.position = operandAddress
-
-                    val operand = VariableReferenceOperand(reader.readInt())
-                    val delta = operand.delta()
-
-                    reader.position = operandAddress
-                    reader.writeInt((operand.value and 0xF0000000.toInt()) or (variableHandlerId and 0x0FFFFFFF))
-
-                    operandAddress += delta
-                }
-            }
-        }
-
-        for ((index, function) in gameWAD.func.functions.withIndex()) {
-            if (function.firstAddress != -1) {
-                // This points to the INSTRUCTION address, NOT the operand address, which is why we do +4
-                var operandAddress = (function.firstAddress - gameWAD.code.postAddressPosition) + 4
-
-                repeat(function.occurrenceCount) {
-                    reader.position = operandAddress
-
-                    val operand = FunctionReferenceOperand(reader.readInt())
-                    val delta = operand.delta()
-
-                    reader.position = operandAddress
-                    reader.writeInt(index) // For functions we don't need to "save" the nibble (w00t!)
-
-                    operandAddress += delta
-                }
-            }
-        }
-
+    fun associateBuiltins(remapResult: StarfaitUtils.RemapResult) {
         // Register the builtin variable handlers
-        builtinVariableHandlers = Array(allocatedBuiltinVariables.size) { index ->
-            val name = gameWAD.strg.getString(allocatedBuiltinVariables[index].name)
+        builtinVariableHandlers = Array(remapResult.allocatedBuiltinVariables.size) { index ->
+            val name = gameWAD.strg.getString(remapResult.allocatedBuiltinVariables[index].name)
 
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
@@ -934,7 +867,7 @@ class StarfaitVM(
         }
 
         // Register the regular variable names
-        regularVariableNames = Array(allocatedRegularVariables.size) { index -> gameWAD.strg.getString(allocatedRegularVariables[index].name) }
+        regularVariableNames = Array(remapResult.allocatedRegularVariables.size) { index -> gameWAD.strg.getString(remapResult.allocatedRegularVariables[index].name) }
     }
 
     fun getVariableIndexFromVariableName(name: String): Int {
@@ -943,8 +876,8 @@ class StarfaitVM(
     }
 
     fun getVariableNameFromVariableIndex(index: Int): String {
-        if (index >= REGULAR_VARIABLES_BASE) {
-            return regularVariableNames.getOrNull(index - REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
+        if (index >= StarfaitUtils.REGULAR_VARIABLES_BASE) {
+            return regularVariableNames.getOrNull(index - StarfaitUtils.REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
         } else {
             return builtinVariableHandlers[index].name
         }

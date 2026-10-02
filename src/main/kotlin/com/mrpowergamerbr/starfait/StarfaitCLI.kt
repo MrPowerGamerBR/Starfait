@@ -11,10 +11,12 @@ import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
+import com.mrpowergamerbr.starfait.disasm.StarfaitDisassembler
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.*
 import com.mrpowergamerbr.starfait.wad.Function
 import java.io.File
+import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 import kotlin.collections.map
 import kotlin.let
@@ -50,6 +52,7 @@ class StarfaitCLI : CliktCommand() {
     val replaceRoom by option().multiple()
     val dumpState by option().file()
     val dumpStateAtFrame by option().int().multiple()
+    val disassemble by option().multiple()
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -163,6 +166,26 @@ class StarfaitCLI : CliktCommand() {
             return
         }
 
+        if (disassemble.isNotEmpty()) {
+            val disassembler = StarfaitDisassembler(gameWAD)
+            StarfaitUtils.remapReferences(gameWAD)
+
+            val codeToBeDisassembled = gameWAD.code.codes.filter { disassemble.contains("*") || gameWAD.strg.getString(it.name) == disassemble.first() }
+
+            for (code in codeToBeDisassembled) {
+                println("CODE ${gameWAD.strg.getString(code.name)}:")
+                disassembler.disassembleAndPrint(
+                    ByteBuffer.wrap(
+                        gameWAD.code.bytecode,
+                        // We do + on the offset because the offset is negative
+                        code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
+                        code.length.toInt() - code.offset
+                    )
+                )
+            }
+            return
+        }
+
         val vm = StarfaitVM(
             gameWAD,
             gmlScriptsOpcodesToBeTraced = traceOpcodes?.split(",")?.toSet().orEmpty(),
@@ -172,7 +195,7 @@ class StarfaitCLI : CliktCommand() {
             traceVariableReads = traceVariableReads?.split(",")?.toSet().orEmpty(),
             traceVariableWrites = traceVariableWrites?.split(",")?.toSet().orEmpty()
         )
-        vm.remapReferences()
+        vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
         val window = StarfaitWindow(
             vm,

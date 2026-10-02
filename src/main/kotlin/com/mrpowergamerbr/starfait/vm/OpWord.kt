@@ -8,4 +8,10 @@ value class OpWord(val value: Int) {
     fun extra() = value.toShort().toInt()
     fun comparisonFunction() = (value ushr 8) and 0xF
     fun branchOffset() = (value shl 9) shr 7
+    fun hasOperand() = (opcode() and 0x40) != 0
+    fun operandSize() = if (!hasOperand()) 0 else when (InstructionDataType.byId(type1())) {
+        InstructionDataType.DOUBLE, InstructionDataType.INT64 -> 8
+        InstructionDataType.INT16 -> 0
+        else -> 4
+    }
 }

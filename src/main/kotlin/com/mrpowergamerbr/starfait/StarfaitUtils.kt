@@ -1,6 +1,5 @@
 package com.mrpowergamerbr.starfait
 
-import com.mrpowergamerbr.starfait.vm.BuiltinVariable
 import com.mrpowergamerbr.starfait.vm.FunctionReferenceOperand
 import com.mrpowergamerbr.starfait.vm.VariableReferenceOperand
 import com.mrpowergamerbr.starfait.wad.DumpNested
@@ -89,13 +88,14 @@ object StarfaitUtils {
         val allocatedRegularVariables: List<Variable>,
     )
 
-    fun dump(gameWAD: GameWAD, starfaitObject: Any, depth: Int) {
+    fun dump(gameWAD: GameWAD, starfaitObject: Any, depth: Int, isListElement: Boolean?) {
         // We want to preserve the constructor order
         val constructorParametersName = starfaitObject::class
             .primaryConstructor!!
             .parameters
             .map { it.name }
 
+        var isFirstElement = true
         starfaitObject::class
             .memberProperties
             .sortedBy {
@@ -104,17 +104,20 @@ object StarfaitUtils {
             }
             .forEach {
                 var value = it.call(starfaitObject)
+
                 if (it.hasAnnotation<DumpNested>()) {
                     println("  ".repeat(depth) + it.name + "[]: ")
                     for (element in value as List<*>) {
-                        dump(gameWAD, element!!, depth + 1)
+                        dump(gameWAD, element!!, depth + 2, true)
                     }
                 } else {
                     if (value is StringPointer) {
                         value = gameWAD.strg.strings[value]
                     }
 
-                    println("  ".repeat(depth) + it.name + ": " + value)
+                    var addDash = isListElement == true && isFirstElement
+                    println(("  ".repeat(depth - if (addDash) 1 else 0) + if (addDash) "- " else "") + it.name + ": " + value)
+                    isFirstElement = false
                 }
             }
     }

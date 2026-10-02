@@ -64,7 +64,7 @@ class StarfaitCLI : CliktCommand() {
 
             if (match == name || match == "*") {
                 println("$type #$index:")
-                StarfaitUtils.dump(gameWAD, element, 1)
+                StarfaitUtils.dump(gameWAD, element, 1, null)
 
                 println()
             }

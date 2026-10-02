@@ -179,7 +179,9 @@ class StarfaitWindow(val vm: StarfaitVM, val seed: Long, val enableCollisionRend
 
                     val finished = System.currentTimeMillis()
                     val targetFramesPerSecond = 1000 / runner.currentRoom.speed.toDouble()
-                    Thread.sleep((targetFramesPerSecond - (finished - started)).toLong())
+                    val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
+                    if (waitTime > 0)
+                        Thread.sleep(waitTime)
 
                     SDL_GL_SwapWindow(window)
                 }

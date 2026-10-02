@@ -33,11 +33,9 @@ import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import kotlinx.serialization.json.Json
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.GL_BACK
-import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
 import org.lwjgl.opengl.GL11.GL_PACK_ALIGNMENT
 import org.lwjgl.opengl.GL11.GL_RGBA
 import org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE
-import org.lwjgl.opengl.GL11.glClear
 import org.lwjgl.opengl.GL11.glClearColor
 import org.lwjgl.opengl.GL11.glPixelStorei
 import org.lwjgl.opengl.GL11.glReadBuffer
@@ -85,8 +83,6 @@ import org.lwjgl.sdl.SDLKeycode.SDLK_RSHIFT
 import org.lwjgl.sdl.SDLKeycode.SDLK_SPACE
 import org.lwjgl.sdl.SDLKeycode.SDLK_TAB
 import org.lwjgl.sdl.SDLKeycode.SDLK_UP
-import org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_O
-import org.lwjgl.sdl.SDLScancode.SDL_SCANCODE_P
 import org.lwjgl.sdl.SDLVideo.SDL_CreateWindow
 import org.lwjgl.sdl.SDLVideo.SDL_DestroyWindow
 import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_MAJOR_VERSION
@@ -106,7 +102,6 @@ import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.math.absoluteValue
 import kotlin.use
 
 class StarfaitWindow(
@@ -116,7 +111,8 @@ class StarfaitWindow(
     val recordInputsFile: File?,
     val playbackInputsFile: File?,
     val screenshot: File?,
-    val screenshotFrames: Set<Int>
+    val screenshotFrames: Set<Int>,
+    val exitAtFrame: Int?
 ) {
     var frameCount = 0
 
@@ -155,6 +151,11 @@ class StarfaitWindow(
             val event = SDL_Event.malloc(stack)
             var running = true
             while (running) {
+                if (frameCount == exitAtFrame) {
+                    running = false
+                    continue
+                }
+
                 val started = System.currentTimeMillis()
                 var stepOneFrame = false
 

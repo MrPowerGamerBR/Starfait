@@ -53,6 +53,7 @@ class StarfaitCLI : CliktCommand() {
     val playbackInputs by option().file()
     val screenshot by option().file()
     val screenshotAtFrame by option().int().multiple()
+    val exitAtFrame by option().int()
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -184,7 +185,8 @@ class StarfaitCLI : CliktCommand() {
             recordInputs,
             playbackInputs,
             screenshot,
-            screenshotAtFrame.toSet()
+            screenshotAtFrame.toSet(),
+            exitAtFrame
         )
         window.start()
 

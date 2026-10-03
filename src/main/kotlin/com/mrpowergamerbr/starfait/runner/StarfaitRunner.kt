@@ -331,7 +331,7 @@ class StarfaitRunner(
                             if (selfInstance == otherInstance)
                                 continue
 
-                            if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode))
+                            if (!selfInstance.isCollidingWith(otherInstance, true))
                                 continue
 
                             // Solid is ONLY handled if any of the instances has a collision event against the other instance!
@@ -356,7 +356,7 @@ class StarfaitRunner(
                                 otherInstance.y += otherInstance.vspeed
 
                                 // If collision is not resolved then set to previous position
-                                if (selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode)) {
+                                if (selfInstance.isCollidingWith(otherInstance, true)) {
                                     selfInstance.revertToPreviousPosition()
                                     otherInstance.revertToPreviousPosition()
                                 }

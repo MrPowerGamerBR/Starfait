@@ -20,6 +20,9 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
     fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
         this.x = instance.x.toFloat()
         this.y = instance.y.toFloat()
+        this.imageXScale = instance.scaleX
+        this.imageYScale = instance.scaleY
+        this.imageAngle = instance.rotation
     }
 
     fun createAndSpawnInstance(gameObjectIndex: Int, builder: Instance.() -> (Unit)): Instance {

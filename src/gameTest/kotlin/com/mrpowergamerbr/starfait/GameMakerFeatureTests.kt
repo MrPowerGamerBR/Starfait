@@ -3,8 +3,11 @@ package com.mrpowergamerbr.starfait
 import com.mrpowergamerbr.starfait.renderer.noop.NoopRenderer
 import com.mrpowergamerbr.starfait.runner.BufferedGameOutput
 import com.mrpowergamerbr.starfait.runner.CollisionPair
+import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import com.mrpowergamerbr.starfait.vm.RValue
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
+import com.mrpowergamerbr.starfait.vm.VariableContainer
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -69,6 +72,26 @@ object GameMakerFeatureTests {
         )
     }
 
+    @Test
+    fun `test precise collisions`() = runTestGame(
+        "precise-collisions",
+        0,
+        1
+    ) {
+        withRunnerAtFrame(0) {
+            it.instanceByIdAndName(100001, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100002, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100003, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100004, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100005, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100000, "obj_loritta").assertVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100006, "obj_loritta").assertVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100007, "obj_loritta").assertVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100008, "obj_loritta2").assertVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100009, "obj_loritta2").assertVariable(it.vm, "colliding", RValue.Boolean(true))
+        }
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))
@@ -119,10 +142,23 @@ object GameMakerFeatureTests {
     }
 
     fun StarfaitRunner.firstInstanceByName(name: String) = this.currentRoom.instances.first { it.objectName == name }
+    fun StarfaitRunner.instanceById(instanceId: Int) = this.currentRoom.instances.first { it.id == instanceId }
+    fun StarfaitRunner.instanceByIdAndName(instanceId: Int, name: String): Instance {
+        val matchedInstance = instanceById(instanceId)
+        assertEquals(matchedInstance.objectName, name)
+        return matchedInstance
+    }
+
     fun GameWAD.objectIndexByObjectName(objectName: String): Int {
         val index = this.objt.objects.indexOfFirst { this.strg.getString(it.name) == objectName }
         if (index == -1)
             error("Couldn't find object index for object name \"$objectName\"!")
         return index
+    }
+
+    fun VariableContainer.assertVariable(vm: StarfaitVM, name: String, expected: RValue) {
+        val varId = vm.getVariableIndexFromVariableName(name)
+        val actual = this.getVariable(varId, null)
+        assertEquals(expected.convertToBoolean(), actual.convertToBoolean())
     }
 }

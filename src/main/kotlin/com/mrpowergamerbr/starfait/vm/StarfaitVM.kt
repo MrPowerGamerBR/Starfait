@@ -28,6 +28,7 @@ class StarfaitVM(
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     lateinit var regularVariableNames: Array<String>
+    lateinit var variableNameToId: Map<String, Int>
 
     // "codeName#functionName"
     val loggedUnknownFunctions = mutableSetOf<String>()
@@ -866,11 +867,20 @@ class StarfaitVM(
 
         // Register the regular variable names
         regularVariableNames = Array(remapResult.allocatedRegularVariables.size) { index -> gameWAD.strg.getString(remapResult.allocatedRegularVariables[index].name) }
+
+        val variableNameToId = mutableMapOf<String, Int>()
+        for ((index, variable) in remapResult.allocatedBuiltinVariables.withIndex()) {
+            variableNameToId[gameWAD.strg.getString(variable.name)] = index + StarfaitUtils.REGULAR_VARIABLES_BASE
+        }
+
+        for ((index, variable) in remapResult.allocatedRegularVariables.withIndex()) {
+            variableNameToId[gameWAD.strg.getString(variable.name)] = index + StarfaitUtils.REGULAR_VARIABLES_BASE
+        }
+        this.variableNameToId = variableNameToId
     }
 
     fun getVariableIndexFromVariableName(name: String): Int {
-        val variable = gameWAD.vari.variables.firstOrNull { gameWAD.strg.getString(it.name) == name } ?: return -1
-        return variable.varId
+        return variableNameToId[name] ?: error("I don't know about a variable with name \"$name\"!")
     }
 
     fun getVariableNameFromVariableIndex(index: Int): String {

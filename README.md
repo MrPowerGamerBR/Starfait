@@ -27,7 +27,9 @@ Don't get me wrong, I do think that these tools help speed up development a LOT 
 
 Starfait is not "Butterscotch: Kotlin Edition", Starfait's implementation diverges from Butterscotch in various ways. Because when you research and understand what you want to do, you figure out better ways of implementing things, whereas relying solely on a LLM without understanding the concepts you end up just accepting whatever the LLM outputs, because what you will do? If you don't understand it, you don't know if the output is actually good!
 
-Because Starfait's main star is the VM, the runner part is more sloppy than the VM, that is, some parts of the runner are implemented with LLMs because most of the runner work is essentially "read GameMaker-HTML5's source code and translate it to Kotlin" which is Not Fun™ for me. The VM is not something that's publicly available from YoYo Games so understanding it how it works is important to me, meanwhile if you want to understand how the GameMaker runner works or how specific built-ins are implemented, you can see how GameMaker-HTML5 works, differences between the HTML5 to the C++ runners notwithstanding.
+Because Starfait's main star is the VM, the runner part is sloppier than the VM, that is, parts of the runner are implemented with LLMs because most of the runner work is "read GameMaker-HTML5's source code and translate it to Kotlin" which is Not Fun™ for me.
+
+If you want to understand how the GameMaker runner works or how specific built-ins are implemented, you can see how GameMaker-HTML5 works, differences between the HTML5 to the C++ runners notwithstanding.
 
 ## Why not support ALL games?
 

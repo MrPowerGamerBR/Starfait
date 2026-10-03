@@ -43,6 +43,8 @@ class StarfaitVM(
         get() = currentOrNullCallFrame ?: error("No current call frame!")
     val currentCallFrameCodeName: String
         get() = gameWAD.strg.getString(currentCallFrame.code.name)
+    val currentOrNullCallFrameCodeName: String?
+        get() = currentOrNullCallFrame?.code?.name?.let { gameWAD.strg.getString(it) }
     val currentSelfInstance: Instance
         get() = currentOrNullCallFrame?.self ?: error("No current call frame, so we can't get the current instance!")
 
@@ -61,7 +63,7 @@ class StarfaitVM(
         arguments: Array<RValue>
     ): RValue? {
         if (traceCodeExecution.contains("*") || traceCodeExecution.contains(gameWAD.strg.getString(code.name)))
-            println("VM: [${currentOrNullCallFrame?.code?.name?.let { gameWAD.strg.getString(it) }}] Executing code ${gameWAD.strg.getString(code.name)}")
+            println("VM: [$currentOrNullCallFrameCodeName] Executing code ${gameWAD.strg.getString(code.name)}")
 
         val callFrame = CallFrame(this, code, currentInstance, otherInstance, eventObject, eventType, eventSubtype, arguments, stack.top)
         this.callFrameStack.addLast(callFrame)

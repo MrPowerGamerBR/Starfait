@@ -29,7 +29,7 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
         val gameInstance = Instance(runner, runner.currentInstanceId++, gameObjectIndex)
         val gameObject = gameInstance.gameObject
 
-        println("Runner: Spawning instance ${gameInstance.id} with object ${gameInstance.objectIndex} (${gameInstance.objectName}) at (${gameInstance.x}, ${gameInstance.y})")
+        println("Runner: [${runner.vm.currentOrNullCallFrameCodeName}] Spawning instance ${gameInstance.id} with object ${gameInstance.objectIndex} (${gameInstance.objectName}) at (${gameInstance.x}, ${gameInstance.y})")
 
         // Initialize with the object's default values
         gameInstance.visible = gameObject.visible

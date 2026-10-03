@@ -952,5 +952,12 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerStubbedFunction("ini_read_real", 3, 0.0)
         registerStubbedFunction("audio_sound_get_gain", 1, 0.0)
+
+        registerFunction("object_get_name", 1) { args ->
+            var objectIndex = args[0].convertToInt32()
+            // When testing in GameMaker: Studio 1.4.9999 it seems that it DOES NOT throw on a invalid object, it just returns undefined
+            val gameObject = vm.gameWAD.objt.objects.getOrNull(objectIndex) ?: return@registerFunction RValue.Undefined
+            RValue.String(vm.gameWAD.strg.getString(gameObject.name))
+        }
     }
 }

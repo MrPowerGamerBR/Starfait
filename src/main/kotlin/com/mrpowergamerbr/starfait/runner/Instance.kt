@@ -2,18 +2,10 @@ package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.EventKey
 import com.mrpowergamerbr.starfait.MathUtils
-import com.mrpowergamerbr.starfait.StarfaitUtils
 import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
 import com.mrpowergamerbr.starfait.wad.GameObject
-import kotlin.collections.filter
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRunnerField var objectIndex: Int) : ObjectBase(runner.vm) {
     @DumpRunnerField var x = 0.0f
@@ -333,22 +325,129 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
 
         val sprite = runner.gameWAD.sprt.sprites[maskIndex]
 
-        val scaledBBoxLeftAndOffset = (sprite.bboxLeft - sprite.originX) * this.imageXScale
-        val scaledBBoxRightAndOffset = (sprite.bboxRight - sprite.originX + if (runner.collisionCompatibilityMode) 1 else 0) * this.imageXScale
-        val scaledBBoxTopAndOffset = (sprite.bboxTop - sprite.originY) * this.imageYScale
-        val scaledBBoxBottomAndOffset = (sprite.bboxBottom - sprite.originY + if (runner.collisionCompatibilityMode) 1 else 0) * this.imageYScale
+        if (imageAngle == 0f) {
+            val width = (sprite.bboxRight + 1) - sprite.bboxLeft
+            val height = (sprite.bboxBottom + 1) - sprite.bboxTop
 
-        val bboxLeftAbsolute = this.x + scaledBBoxLeftAndOffset
-        val bboxRightAbsolute = this.x + scaledBBoxRightAndOffset
-        val bboxTopAbsolute = this.y + scaledBBoxTopAndOffset
-        val bboxBottomAbsolute = this.y + scaledBBoxBottomAndOffset
+            var bboxLeft: Float
+            var bboxRight: Float
 
-        return BoundingBox.fromWorldCoordinates(
-            bboxLeftAbsolute,
-            bboxTopAbsolute,
-            bboxRightAbsolute,
-            bboxBottomAbsolute
-        )
+            if (runner.collisionCompatibilityMode) {
+                bboxLeft = MathUtils.delphiRound(this.x + this.imageXScale * (sprite.bboxLeft - sprite.originX)).toFloat()
+                bboxRight = MathUtils.delphiRound(bboxLeft + (this.imageXScale * width)).toFloat()
+            } else {
+                bboxLeft = (this.x + this.imageXScale * (sprite.bboxLeft - sprite.originX))
+                bboxRight = (bboxLeft + (this.imageXScale * width))
+            }
+
+            val _bboxLeft = bboxLeft
+            val _bboxRight = bboxRight
+
+            bboxLeft = min(_bboxLeft, _bboxRight)
+            bboxRight = max(_bboxLeft, _bboxRight)
+
+            var bboxTop: Float
+            var bboxBottom: Float
+
+            if (runner.collisionCompatibilityMode) {
+                bboxTop = MathUtils.delphiRound(this.y + this.imageYScale * (sprite.bboxTop - sprite.originY)).toFloat()
+                bboxBottom = MathUtils.delphiRound(bboxTop + (this.imageYScale * height)).toFloat()
+            } else {
+                bboxTop = (this.y + this.imageYScale * (sprite.bboxTop - sprite.originY))
+                bboxBottom = (bboxTop + (this.imageYScale * height))
+            }
+
+            val _bboxTop = bboxTop
+            val _bboxBottom = bboxBottom
+
+            bboxTop = min(_bboxTop, _bboxBottom)
+            bboxBottom = max(_bboxTop, _bboxBottom)
+
+            if (runner.collisionCompatibilityMode) {
+                bboxRight -= 1
+                bboxBottom -= 1
+            }
+
+            return BoundingBox.fromWorldCoordinates(
+                bboxLeft,
+                bboxTop,
+                bboxRight,
+                bboxBottom
+            )
+        } else {
+            // TODO: This looks ugly!!! But that's YoYo's fault because this code is straight lifted from GameMaker-HTML5
+            //  Maybe make it more idiomatic later?
+            // base on sprite bbox, and these can't change, so will always be in order, left<right and top<bottom
+            val xmin = this.imageXScale * (sprite.bboxLeft - sprite.originX)
+            val xmax = this.imageXScale * (sprite.bboxRight - sprite.originX + 1)
+
+            val ymin = this.imageYScale * (sprite.bboxTop - sprite.originY)
+            val ymax = this.imageYScale * (sprite.bboxBottom - sprite.originY + 1)
+
+            val cc = cos(this.imageAngle * PI / 180.0)
+            val ss = sin(this.imageAngle * PI / 180.0)
+
+            // factor out "common" calculations...
+            var cc_xmax = cc * xmax
+            var cc_xmin = cc * xmin
+            var ss_ymax = ss * ymax
+            var ss_ymin = ss * ymin
+            var t: Double
+            if (cc_xmax < cc_xmin) {
+                t = cc_xmin
+                cc_xmin = cc_xmax
+                cc_xmax = t
+            }
+            if (ss_ymax < ss_ymin) {
+                t = ss_ymin
+                ss_ymin = ss_ymax
+                ss_ymax = t
+            }
+
+            val bboxLeft: Double
+            val bboxRight: Double
+
+            if (runner.collisionCompatibilityMode) {
+                bboxLeft = floor((this.x + cc_xmin + ss_ymin) + 0.5)
+                bboxRight = floor((this.x + cc_xmax + ss_ymax) - 0.5)
+            } else {
+                bboxLeft = (this.x + cc_xmin + ss_ymin)
+                bboxRight = (this.x + cc_xmax + ss_ymax)
+            }
+
+            // factor out "common" calculations...
+            var cc_ymax = cc * ymax
+            var cc_ymin = cc * ymin
+            var ss_xmax = ss * xmax
+            var ss_xmin = ss * xmin
+            if (cc_ymax < cc_ymin) {
+                t = cc_ymin
+                cc_ymin = cc_ymax
+                cc_ymax = t
+            }
+            if (ss_xmax < ss_xmin) {
+                t = ss_xmin
+                ss_xmin = ss_xmax
+                ss_xmax = t
+            }
+
+            var bboxTop: Double
+            var bboxBottom: Double
+            if (runner.collisionCompatibilityMode) {
+                bboxTop = floor((this.y + cc_ymin - ss_xmax) + 0.5)
+                bboxBottom = floor((this.y + cc_ymax - ss_xmin) - 0.5)
+            } else {
+                bboxTop = ((this.y + cc_ymin - ss_xmax))
+                bboxBottom = ((this.y + cc_ymax - ss_xmin))
+            }
+
+            return BoundingBox.fromWorldCoordinates(
+                bboxLeft.toFloat(),
+                bboxTop.toFloat(),
+                bboxRight.toFloat(),
+                bboxBottom.toFloat()
+            )
+        }
     }
 
     fun matchesObjectOrInstanceId(

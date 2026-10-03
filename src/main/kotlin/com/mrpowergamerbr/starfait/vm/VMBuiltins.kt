@@ -4,7 +4,6 @@ import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.runner.BoundingBox
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
-import com.mrpowergamerbr.starfait.runner.PendingRoom
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import kotlin.math.absoluteValue

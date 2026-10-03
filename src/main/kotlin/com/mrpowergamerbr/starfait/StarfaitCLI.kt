@@ -66,7 +66,7 @@ class StarfaitCLI : CliktCommand() {
         for ((index, element) in list.withIndex()) {
             val name = nameSource?.invoke(element)?.let { gameWAD.strg.getString(it) }
 
-            if (match == name || match == "*") {
+            if (match == name || index == match.toIntOrNull() || match == "*") {
                 println("$type #$index:")
                 StarfaitUtils.dump(gameWAD, element, 1, null)
 

@@ -82,6 +82,12 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         get() = runner.gameWAD.objt.objects[this.objectIndex]
     @DumpRunnerField val objectName: String
         get() = runner.gameWAD.strg.getString(gameObject.name)
+    @DumpRunnerField val spriteName: String?
+        get() = if (spriteIndex >= 0.0f) {
+            runner.gameWAD.strg.getString(runner.gameWAD.sprt.sprites[spriteIndex.toInt()].name)
+        } else {
+            null
+        }
 
     fun adaptSpeed() {
         if (this.friction != 0.0f) {

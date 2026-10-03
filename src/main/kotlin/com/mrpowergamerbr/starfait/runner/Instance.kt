@@ -32,8 +32,14 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     @DumpRunnerField var depth = 0.0f
     @DumpRunnerField var imageBlend = -1.0f
     @DumpRunnerField var imageAngle = 0.0f
-    @DumpRunnerField var pathSpeed = 0.0f
+    @DumpRunnerField var pathIndex = -1
     @DumpRunnerField var pathPosition = 0.0f
+    @DumpRunnerField var pathSpeed = 0.0f
+    @DumpRunnerField var pathScale = 1.0f
+    @DumpRunnerField var pathOrientation = 0.0f
+    @DumpRunnerField var pathEndAction = 0
+    @DumpRunnerField var pathXStart = 0.0f
+    @DumpRunnerField var pathYStart = 0.0f
 
     @DumpRunnerField var hspeed: Float
         get() = _hspeed
@@ -97,6 +103,123 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
             this.hspeed += this.gravity * MathUtils.clampFloat(cos(radians).toDouble()).toFloat()
             this.vspeed -= this.gravity * MathUtils.clampFloat(sin(radians).toDouble()).toFloat()
         }
+    }
+
+    // See GameMaker-HTML5's yyInstance.js Assign_Path
+    fun assignPath(ind: Int, speed: Float, scale: Float, orient: Float, absolute: Boolean, endact: Int) {
+        // First validate the path exists, and assign the index.
+        this.pathIndex = -1
+        val pPath = runner.paths.getOrNull(ind) ?: return
+        if (0.0f >= pPath.length) return
+        if (0.0f > scale) return
+        this.pathIndex = ind
+
+        this.pathSpeed = speed
+        this.pathPosition = if (this.pathSpeed >= 0.0f) 0.0f else 1.0f
+
+        this.pathScale = scale
+
+        this.pathOrientation = orient
+        this.pathEndAction = endact
+        if (absolute) {
+            val pNode = pPath.getPosition(if (this.pathSpeed >= 0.0f) 0.0f else 1.0f)
+            this.x = pNode.x
+            this.y = pNode.y
+
+            val pNode0 = pPath.getPosition(0.0f)
+            this.pathXStart = pNode0.x
+            this.pathYStart = pNode0.y
+        } else {
+            this.pathXStart = this.x
+            this.pathYStart = this.y
+        }
+    }
+
+    // See GameMaker-HTML5's yyInstance.js Adapt_Path, with the end actions of the bytecode 16 runner (libyoyo.so.c CInstance::Adapt_Path)
+    fun adaptPath() {
+        // check whether the path exists
+        val pPath = runner.paths.getOrNull(this.pathIndex) ?: return
+        if (0.0f >= pPath.length) return
+
+        // get the new path position
+        val orient = Math.toRadians(this.pathOrientation.toDouble()).toFloat()
+
+        val sp = pPath.getPosition(this.pathPosition).speed / (100 * this.pathScale)
+        this.pathPosition += this.pathSpeed * sp / pPath.length
+
+        // handle end actions if required
+        val pNode0 = pPath.getPosition(0.0f)
+        if ((this.pathPosition >= 1.0f) || (0.0f >= this.pathPosition)) {
+            when (this.pathEndAction) {
+                // stop moving
+                PathEndAction.STOP -> {
+                    // Unlike GameMaker-HTML5, the native runner rewinds to the start when going backwards, which matters for Undertale's blt_handbullet
+                    if (0.0f > this.pathSpeed) {
+                        this.pathPosition = 0.0f
+                        this.pathIndex = -1
+                    } else if (this.pathSpeed != 0.0f) {
+                        this.pathPosition = 1.0f
+                        this.pathIndex = -1
+                    }
+                }
+
+                // continue from start position
+                PathEndAction.RESTART -> {
+                    if (0.0f > this.pathPosition) {
+                        this.pathPosition++
+                    } else {
+                        this.pathPosition--
+                    }
+                }
+
+                // continue from current position
+                PathEndAction.CONTINUE -> {
+                    val pNode1 = pPath.getPosition(1.0f)
+                    val xx = pNode1.x - pNode0.x
+                    val yy = pNode1.y - pNode0.y
+                    val xdif = this.pathScale * (xx * cos(orient) + yy * sin(orient))
+                    val ydif = this.pathScale * (yy * cos(orient) - xx * sin(orient))
+
+                    if (0.0f > this.pathPosition) {
+                        this.pathXStart -= xdif
+                        this.pathYStart -= ydif
+                        this.pathPosition++
+                    } else {
+                        this.pathXStart += xdif
+                        this.pathYStart += ydif
+                        this.pathPosition--
+                    }
+                }
+
+                // reverse
+                PathEndAction.REVERSE -> TODO("path_action_reverse is not implemented")
+
+                // stop moving
+                else -> {
+                    this.pathPosition = 1.0f
+                    this.pathIndex = -1
+                }
+            }
+        }
+
+        // find the new position in the room
+        val pNode = pPath.getPosition(this.pathPosition)
+        val xx = pNode.x - pNode0.x // relative
+        val yy = pNode.y - pNode0.y
+
+        val newx = this.pathXStart + this.pathScale * (xx * cos(orient) + yy * sin(orient))
+        val newy = this.pathYStart + this.pathScale * (yy * cos(orient) - xx * sin(orient))
+
+        // trick to set the direction
+        this.hspeed = newx - this.x
+        this.vspeed = newy - this.y
+
+        // normal speed should not be used
+        this.speed = 0.0f
+
+        // Set the new position
+        this.x = newx
+        this.y = newy
     }
 
     fun setAlarm(alarm: Int, time: Int) {

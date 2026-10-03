@@ -83,7 +83,9 @@ class StarfaitByteBuffer private constructor(private val byteBuffer: ByteBuffer)
     }
 
     fun readIntBoolean(): Boolean {
-        return readInt() != 0
+        val value = readInt()
+        require(value == 0 || value == 1) { "Cannot convert $value to a boolean!" }
+        return value != 0
     }
 
     fun readAddresses(): List<Int> {

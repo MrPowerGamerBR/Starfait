@@ -24,6 +24,7 @@ class StarfaitRunner(
     }
 
     lateinit var currentRoom: RunnerRoom
+    val paths = gameWAD.path.paths.map { RunnerPath(it) }
     val operatingSystem = YYOperatingSystem.WINDOWS
     var currentInstanceId = BASE_INSTANCE_ID
     private var pendingRoom: PendingRoom? = null
@@ -186,6 +187,7 @@ class StarfaitRunner(
 
         forEachInstance { instance ->
             instance.adaptSpeed()
+            instance.adaptPath()
 
             instance.x += instance.hspeed
             instance.y += instance.vspeed

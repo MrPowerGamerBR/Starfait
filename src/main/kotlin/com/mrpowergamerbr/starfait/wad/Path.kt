@@ -2,7 +2,7 @@ package com.mrpowergamerbr.starfait.wad
 
 class Path(
     val name: StringPointer,
-    val kind: Int,
+    val kind: PathKind,
     val closed: Boolean,
     val precision: Int,
     val points: List<Point>
@@ -12,4 +12,9 @@ class Path(
         val y: Float,
         val speed: Float
     )
+
+    enum class PathKind(val value: Int) {
+        LINEAR(0),
+        CURVED(1)
+    }
 }

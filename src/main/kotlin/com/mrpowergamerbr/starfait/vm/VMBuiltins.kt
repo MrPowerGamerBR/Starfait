@@ -830,6 +830,15 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawSetColor)
         }
 
+        // See GameMaker-HTML5's Function_Path.js
+        registerVoidFunction("path_start", 4) { args ->
+            vm.currentSelfInstance.assignPath(args[0].convertToInt32(), args[1].convertToReal().toFloat(), 1.0f, 0.0f, args[3].convertToBoolean(), args[2].convertToInt32())
+        }
+
+        registerVoidFunction("path_end", 0) { _ ->
+            vm.currentSelfInstance.assignPath(-1, 0.0f, 1.0f, 0.0f, false, 0)
+        }
+
         registerVoidFunction("move_towards_point", 3) { args ->
             val x = args[0].convertToReal()
             val y = args[1].convertToReal()

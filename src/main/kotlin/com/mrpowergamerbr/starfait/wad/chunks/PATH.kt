@@ -36,7 +36,7 @@ class PATH(val paths: List<Path>) {
                 paths.add(
                     Path(
                         name = name,
-                        kind = kind,
+                        kind = if (kind == 0) Path.PathKind.LINEAR else Path.PathKind.CURVED,
                         closed = closed,
                         precision = precision,
                         points = points

@@ -43,7 +43,24 @@ class StarfaitRunner(
     val debugRectangles = mutableListOf<BoundingBox>()
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true
+
+    /**
+     * Flattened map of events, indexed by [EventKey].
+     *
+     * The flattened map is used to avoid looking up parent objects to figure out which event the object *actually* has, that is:
+     * If you have an obj_main1 with a Create event, and obj_main2 inherits obj_main1, the flattened map will contain the Create event for obj_main2!
+     *
+     * Subevents (like collision events) are NOT flattened! (See [collisionPairs])
+     */
     val flattenedEvents = mutableMapOf<EventKey, List<GameObject.Action>>()
+
+    /**
+     * Collision pairs, sorted in ascending order.
+     *
+     * This has all the possible collisions that the game has registered collision events, including if the object has inherited collision events, that is:
+     * If you have an obj_main2 that inherits obj_main1, and obj_main1 has a collision event, and obj_player has an event against obj_main1,
+     * the collision pair will contain the collision event for obj_main1 and obj_main2.
+     */
     val collisionPairs = mutableListOf<CollisionPair>()
 
     fun start() {

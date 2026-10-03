@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait
 
 import com.mrpowergamerbr.starfait.renderer.noop.NoopRenderer
 import com.mrpowergamerbr.starfait.runner.BufferedGameOutput
+import com.mrpowergamerbr.starfait.runner.CollisionPair
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameWAD
@@ -30,6 +31,29 @@ object GameMakerFeatureTests {
         0,
         1
     ) {
+        withRunnerAtFrame(0) {
+            // How it is configured:
+            // obj_collision1 has collision events to obj_collision2 and obj_collision3
+            // obj_collision2 has collision events to obj_collision1 and obj_collision3
+            // obj_collision3 has collision events to obj_collision2 and obj_collision3
+            //
+            // So if we iterate it, we need to have a list of
+            // obj_collision1 -> [obj_collision2, obj_collision3]
+            // obj_collision2 -> [obj_collision3]
+            // (the obj_collision3 doesn't have one by itself because the only possible collision for it already exists)
+            val objCollision1 = it.gameWAD.objectIndexByObjectName("obj_collision1")
+            val objCollision2 = it.gameWAD.objectIndexByObjectName("obj_collision2")
+            val objCollision3 = it.gameWAD.objectIndexByObjectName("obj_collision3")
+
+            val requiredCollisionPairs = listOf(
+                CollisionPair.of(objCollision1, objCollision2),
+                CollisionPair.of(objCollision1, objCollision3),
+                CollisionPair.of(objCollision2, objCollision3)
+            )
+
+            assertEquals(requiredCollisionPairs.sortedWith(compareBy(CollisionPair::objectIndex1).thenBy(CollisionPair::objectIndex2)), it.collisionPairs)
+        }
+
         checkGameLogEndsWith(
             0,
             """
@@ -95,4 +119,10 @@ object GameMakerFeatureTests {
     }
 
     fun StarfaitRunner.firstInstanceByName(name: String) = this.currentRoom.instances.first { it.objectName == name }
+    fun GameWAD.objectIndexByObjectName(objectName: String): Int {
+        val index = this.objt.objects.indexOfFirst { this.strg.getString(it.name) == objectName }
+        if (index == -1)
+            error("Couldn't find object index for object name \"$objectName\"!")
+        return index
+    }
 }

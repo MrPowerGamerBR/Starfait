@@ -870,7 +870,7 @@ class StarfaitVM(
 
         val variableNameToId = mutableMapOf<String, Int>()
         for ((index, variable) in remapResult.allocatedBuiltinVariables.withIndex()) {
-            variableNameToId[gameWAD.strg.getString(variable.name)] = index + StarfaitUtils.REGULAR_VARIABLES_BASE
+            variableNameToId[gameWAD.strg.getString(variable.name)] = index
         }
 
         for ((index, variable) in remapResult.allocatedRegularVariables.withIndex()) {

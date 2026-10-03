@@ -185,7 +185,9 @@ class StarfaitWindow(
                         running = false
 
                     if (event.type() == SDL_EVENT_KEY_DOWN) {
-                        runner.keyboard.onKeyDown(convertSDLKeycodeToGMLVK(event.key().key()))
+                        val gmlVkKey = convertSDLKeycodeToGMLVK(event.key().key())
+                        if (gmlVkKey != -1)
+                            runner.keyboard.onKeyDown(gmlVkKey)
                     }
 
                     if (event.type() == SDL_EVENT_KEY_UP) {
@@ -215,7 +217,9 @@ class StarfaitWindow(
                             stepOneFrame = true
                         }
 
-                        runner.keyboard.onKeyUp(convertSDLKeycodeToGMLVK(event.key().key()))
+                        val gmlVkKey = convertSDLKeycodeToGMLVK(event.key().key())
+                        if (gmlVkKey != -1)
+                            runner.keyboard.onKeyUp(gmlVkKey)
                     }
                 }
 

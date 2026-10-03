@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
-import com.mrpowergamerbr.starfait.EventKey
+import com.mrpowergamerbr.starfait.runner.EventKey
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType

@@ -1,8 +1,10 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
+import com.mrpowergamerbr.starfait.runner.StarfaitRunner.Companion.HAS_NO_PARENT_ID
 import com.mrpowergamerbr.starfait.wad.DnDArgument
 import com.mrpowergamerbr.starfait.wad.GameObject
+import com.mrpowergamerbr.starfait.wad.GameObjectWithIndex
 
 class OBJT(val objects: List<GameObject>) {
     companion object {
@@ -144,5 +146,22 @@ class OBJT(val objects: List<GameObject>) {
 
             return OBJT(objects)
         }
+    }
+
+    fun getGameObjectTree(objectIndex: Int, obj: GameObject): List<GameObjectWithIndex> {
+        val objectTree = mutableListOf<GameObjectWithIndex>()
+        var currentObject = GameObjectWithIndex(objectIndex, obj)
+
+        while (true) {
+            objectTree.add(currentObject)
+
+            val parentId = currentObject.gameObject.parentId
+            if (parentId == HAS_NO_PARENT_ID)
+                break
+
+            currentObject = GameObjectWithIndex(parentId, this.objects[parentId])
+        }
+
+        return objectTree
     }
 }

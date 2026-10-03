@@ -1,12 +1,13 @@
 package com.mrpowergamerbr.starfait.runner
 
-import com.mrpowergamerbr.starfait.EventKey
+import com.mrpowergamerbr.starfait.runner.EventKey
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
+import kotlin.comparisons.compareBy
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -43,9 +44,11 @@ class StarfaitRunner(
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true
     val flattenedEvents = mutableMapOf<EventKey, List<GameObject.Action>>()
+    val collisionPairs = mutableListOf<CollisionPair>()
 
     fun start() {
         generateFlattenedEvents()
+        generateCollisionPairs()
 
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]
@@ -289,54 +292,62 @@ class StarfaitRunner(
         }
     }
 
-    // GameMaker-HTML5's "./scripts/Events.js" HandleCollision
     fun dispatchCollisions() {
-        data class ProcessedKey(val instance1: Int, val instance2: Int)
-        val processedKeys = mutableSetOf<ProcessedKey>()
+        // Contrary to popular belief: It seems that GameMaker-HTML5 does NOT model collision dispatch like the C++ YoYo Runner
+        // So that's why this is a bit different
+        // The tl;dr is: You MUST iterate by the objectIndex (ascending order)
+        for (pair in this.collisionPairs) {
+            // Duplicate list to avoid ConcurrentModificationExceptions
+            val stableList = this.currentRoom.instances.toList()
 
-        forEachInstanceObjectIndex { selfInstance ->
-            forEachInstanceObjectIndex { otherInstance ->
-                val key = ProcessedKey(min(selfInstance.id, otherInstance.id), max(selfInstance.id, otherInstance.id))
-                if (processedKeys.contains(key))
-                    return@forEachInstanceObjectIndex
+            for (selfInstance in stableList) {
+                if (selfInstance.destroyed)
+                    continue
 
-                // We can't collide with self
-                if (selfInstance == otherInstance)
-                    return@forEachInstanceObjectIndex
+                if (selfInstance.objectIndex == pair.objectIndex1) {
+                    for (otherInstance in stableList) {
+                        if (otherInstance.destroyed)
+                            continue
 
-                if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode))
-                    return@forEachInstanceObjectIndex
+                        if (otherInstance.objectIndex == pair.objectIndex2) {
+                            // We can't collide with self
+                            if (selfInstance == otherInstance)
+                                continue
 
-                // Solid is ONLY handled if any of the instances has a collision event against the other instance!
-                val hasCollisionEventSelfAgainstOther = flattenedEvents[EventKey(selfInstance.objectIndex, EventType.COLLISION, otherInstance.objectIndex)]?.isNotEmpty()
-                val hasCollisionEventOtherAgainstSelf = flattenedEvents[EventKey(otherInstance.objectIndex, EventType.COLLISION, selfInstance.objectIndex)]?.isNotEmpty()
-                val eitherSolid = (hasCollisionEventOtherAgainstSelf == true || hasCollisionEventSelfAgainstOther == true) && (selfInstance.solid || otherInstance.solid)
+                            if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode))
+                                continue
 
-                if (eitherSolid) {
-                    selfInstance.revertToPreviousPosition()
-                    otherInstance.revertToPreviousPosition()
-                }
+                            // Solid is ONLY handled if any of the instances has a collision event against the other instance!
+                            val hasCollisionEventSelfAgainstOther = flattenedEvents[EventKey(selfInstance.objectIndex, EventType.COLLISION, otherInstance.objectIndex)]?.isNotEmpty()
+                            val hasCollisionEventOtherAgainstSelf = flattenedEvents[EventKey(otherInstance.objectIndex, EventType.COLLISION, selfInstance.objectIndex)]?.isNotEmpty()
+                            val eitherSolid = (hasCollisionEventOtherAgainstSelf == true || hasCollisionEventSelfAgainstOther == true) && (selfInstance.solid || otherInstance.solid)
 
-                selfInstance.dispatchEvent(EventType.COLLISION, otherInstance.objectIndex, otherInstance)
-                otherInstance.dispatchEvent(EventType.COLLISION, selfInstance.objectIndex, selfInstance)
+                            if (eitherSolid) {
+                                selfInstance.revertToPreviousPosition()
+                                otherInstance.revertToPreviousPosition()
+                            }
 
-                if (collisionCompatibilityMode && eitherSolid) {
-                    // We do not call the end-of-path event again
-                    selfInstance.adaptPath()
-                    otherInstance.adaptPath()
-                    selfInstance.x += selfInstance.hspeed
-                    selfInstance.y += selfInstance.vspeed
-                    otherInstance.x += otherInstance.hspeed
-                    otherInstance.y += otherInstance.vspeed
+                            selfInstance.dispatchEvent(EventType.COLLISION, otherInstance.objectIndex, otherInstance)
+                            otherInstance.dispatchEvent(EventType.COLLISION, selfInstance.objectIndex, selfInstance)
 
-                    // If collision is not resolved then set to previous position
-                    if (selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode)) {
-                        selfInstance.revertToPreviousPosition()
-                        otherInstance.revertToPreviousPosition()
+                            if (collisionCompatibilityMode && eitherSolid) {
+                                // We do not call the end-of-path event again
+                                selfInstance.adaptPath()
+                                otherInstance.adaptPath()
+                                selfInstance.x += selfInstance.hspeed
+                                selfInstance.y += selfInstance.vspeed
+                                otherInstance.x += otherInstance.hspeed
+                                otherInstance.y += otherInstance.vspeed
+
+                                // If collision is not resolved then set to previous position
+                                if (selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode)) {
+                                    selfInstance.revertToPreviousPosition()
+                                    otherInstance.revertToPreviousPosition()
+                                }
+                            }
+                        }
                     }
                 }
-
-                processedKeys.add(key)
             }
         }
     }
@@ -432,21 +443,10 @@ class StarfaitRunner(
     /**
      * Flattens events
      */
-    fun generateFlattenedEvents() {
+    private fun generateFlattenedEvents() {
         // The Flattening:tm:
         for ((objectIndex, obj) in gameWAD.objt.objects.withIndex()) {
-            val objectTree = mutableListOf<GameObject>()
-            var currentObject = obj
-
-            while (true) {
-                objectTree.add(currentObject)
-
-                val parentId = currentObject.parentId
-                if (parentId == HAS_NO_PARENT_ID)
-                    break
-
-                currentObject = gameWAD.objt.objects[parentId]
-            }
+            val objectTree = gameWAD.objt.getGameObjectTree(objectIndex, obj).map { it.gameObject }
 
             // It seems that SOMETIMES GameMaker events are out of bounds
             // Even though that we are only targeting 1.4.1804 (for Undertale), their events have IDs 11 (TRIGGER) and 12 (CLEANUP) which are only used in GM:S 2
@@ -469,5 +469,30 @@ class StarfaitRunner(
                 }
             }
         }
+    }
+
+    private fun generateCollisionPairs() {
+        // We first use a set to avoid duplicates, then we convert to a ArrayList for fast iteration (yippee)
+        val collisionPairs = mutableSetOf<CollisionPair>()
+
+        for ((selfGameObjectIndex, selfGameObject) in gameWAD.objt.objects.withIndex()) {
+            // Which events do we have?
+            for ((otherGameObjectIndex, otherGameObject) in gameWAD.objt.objects.withIndex()) {
+                val objectTree = gameWAD.objt.getGameObjectTree(otherGameObjectIndex, otherGameObject)
+
+                // We now iterate all the ancestors, if ANY of them have a collision event, we register the pair
+                for ((ancestorGameObjectIndex, _) in objectTree) {
+                    // Check if we actually have a collision event
+                    val hasCollisionEvent = this.flattenedEvents[EventKey(selfGameObjectIndex, EventType.COLLISION, ancestorGameObjectIndex)]?.isNotEmpty() == true
+
+                    if (hasCollisionEvent) {
+                        collisionPairs.add(CollisionPair.of(selfGameObjectIndex, otherGameObjectIndex))
+                        break
+                    }
+                }
+            }
+        }
+
+        this.collisionPairs.addAll(collisionPairs.toList().sortedWith(compareBy(CollisionPair::objectIndex1).thenBy(CollisionPair::objectIndex2)))
     }
 }

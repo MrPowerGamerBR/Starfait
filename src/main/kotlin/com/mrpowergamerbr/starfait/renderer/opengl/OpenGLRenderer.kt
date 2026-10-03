@@ -1,7 +1,8 @@
-package com.mrpowergamerbr.starfait.desktop
+package com.mrpowergamerbr.starfait.renderer.opengl
 
 import com.mrpowergamerbr.starfait.GMLColor
-import com.mrpowergamerbr.starfait.desktop.shaders.MinimalShader
+import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
+import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.Renderer
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
@@ -15,28 +16,11 @@ import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
 import org.joml.Matrix4f
-import org.lwjgl.opengl.GL11.GL_BLEND
-import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
-import org.lwjgl.opengl.GL11.GL_FLOAT
-import org.lwjgl.opengl.GL11.GL_NEAREST
-import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
-import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
-import org.lwjgl.opengl.GL11.GL_TRIANGLES
-import org.lwjgl.opengl.GL11.glBlendFunc
-import org.lwjgl.opengl.GL11.glClear
-import org.lwjgl.opengl.GL11.glClearColor
-import org.lwjgl.opengl.GL11.glDrawArrays
-import org.lwjgl.opengl.GL11.glEnable
-import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
-import org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW
-import org.lwjgl.opengl.GL15.glBindBuffer
-import org.lwjgl.opengl.GL15.glBufferData
-import org.lwjgl.opengl.GL15.glBufferSubData
-import org.lwjgl.opengl.GL15.glGenBuffers
-import org.lwjgl.opengl.GL20.glEnableVertexAttribArray
-import org.lwjgl.opengl.GL20.glVertexAttribPointer
-import org.lwjgl.opengl.GL30.glBindVertexArray
-import org.lwjgl.opengl.GL30.glGenVertexArrays
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL15
+import org.lwjgl.opengl.GL20
+import org.lwjgl.opengl.GL30
+import kotlin.text.iterator
 
 class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     companion object {
@@ -56,33 +40,33 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     val batch = FloatArray(FIELDS_PER_ELEMENT * MAX_BATCH_ELEMENTS)
     var activeBatchTexture: Texture? = null
     var currentIndex = 0
-    val vao = glGenVertexArrays()
-    val vbo = glGenBuffers()
+    val vao = GL30.glGenVertexArrays()
+    val vbo = GL15.glGenBuffers()
     val white1x1Texture = textureManager.load1x1WhiteTexture()
-    val textures = gameWAD.txtr.textures.map { this.textureManager.loadTexture(it.blob, GL_NEAREST) }
+    val textures = gameWAD.txtr.textures.map { this.textureManager.loadTexture(it.blob, GL11.GL_NEAREST) }
 
     init {
         // For transparency in sprites
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        GL11.glEnable(GL11.GL_BLEND)
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-        glBindVertexArray(vao)
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        GL30.glBindVertexArray(vao)
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
 
-        glBufferData(GL_ARRAY_BUFFER, Float.SIZE_BYTES * FIELDS_PER_ELEMENT.toLong() * MAX_BATCH_ELEMENTS, GL_DYNAMIC_DRAW)
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, Float.SIZE_BYTES * FIELDS_PER_ELEMENT.toLong() * MAX_BATCH_ELEMENTS, GL15.GL_DYNAMIC_DRAW)
 
         // aPosition
         // stride is from the START of the current "section"!
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 0L)
-        glEnableVertexAttribArray(0)
+        GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 0L)
+        GL20.glEnableVertexAttribArray(0)
 
         // aTexCoord
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
-        glEnableVertexAttribArray(1)
+        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
+        GL20.glEnableVertexAttribArray(1)
 
         // aBlendColor
-        glVertexAttribPointer(2, 4, GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
-        glEnableVertexAttribArray(2)
+        GL20.glVertexAttribPointer(2, 4, GL11.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
+        GL20.glEnableVertexAttribArray(2)
     }
 
     override fun drawInstance(instance: Instance) {
@@ -220,8 +204,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     override fun frame(block: () -> Unit) {
         // TODO: Respect the room's drawBackgroundColor
         val color = runner.currentRoom.backgroundColor
-        glClearColor(color.redF, color.greenF, color.blueF, 1.0f)
-        glClear(GL_COLOR_BUFFER_BIT)
+        GL11.glClearColor(color.redF, color.greenF, color.blueF, 1.0f)
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
 
         block()
 
@@ -356,8 +340,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     }
 
     fun flush(runner: StarfaitRunner) {
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferSubData(GL_ARRAY_BUFFER, 0, batch)
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
+        GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, 0, batch)
 
         // This is wrong, we should run ALL the draw events for EACH view
         val firstVisibleView = runner.currentRoom.views.firstOrNull { it.visible }
@@ -372,8 +356,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             minimalShader.uTexture.set(0, activeBatchTexture)
 
         minimalShader.bind {
-            glBindVertexArray(vao)
-            glDrawArrays(GL_TRIANGLES, 0, currentIndex / TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT)
+            GL30.glBindVertexArray(vao)
+            GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, currentIndex / TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT)
         }
 
         this.currentIndex = 0

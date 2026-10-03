@@ -1,4 +1,4 @@
-package com.mrpowergamerbr.starfait.desktop.shaders
+package com.mrpowergamerbr.starfait.renderer.opengl.shaders
 
 import net.perfectdreams.harmony.gl.shaders.GameShader
 

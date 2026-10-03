@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.RecordedFrame
+import com.mrpowergamerbr.starfait.renderer.opengl.OpenGLRenderer
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DELETE

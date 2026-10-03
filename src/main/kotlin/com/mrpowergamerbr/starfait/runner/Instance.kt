@@ -1,6 +1,8 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.EventKey
 import com.mrpowergamerbr.starfait.MathUtils
+import com.mrpowergamerbr.starfait.StarfaitUtils
 import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -142,13 +144,16 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
 
             // Get the first matched event of the collided object, including all parents
             for (id in allParentsOfCollidedObject) {
-                subtypeEvents = runner.flattenedEvents[gameObjectIndex][eventType][id] ?: emptyList()
+                subtypeEvents = runner.flattenedEvents[EventKey(gameObjectIndex, eventType, id)] ?: emptyList()
             }
 
-            subtypeEvents ?: emptyList()
+            subtypeEvents
         } else {
-            runner.flattenedEvents[gameObjectIndex][eventType][eventSubtype] ?: emptyList()
+            runner.flattenedEvents[EventKey(gameObjectIndex, eventType, eventSubtype)]
         }
+
+        if (subtypeEvents.isNullOrEmpty())
+            return false
 
         val previousRelative = this.runner.vm.dragAndDropRelativeValues
         this.runner.vm.dragAndDropRelativeValues = false
@@ -164,9 +169,9 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
 
             this.runner.vm.executeCode(code, this, other, gameObject, eventType, eventSubtype, emptyArray())
         }
-        this.runner.vm.dragAndDropRelativeValues = previousRelative
 
-        return subtypeEvents.isNotEmpty()
+        this.runner.vm.dragAndDropRelativeValues = previousRelative
+        return true
     }
 
     fun markAsDestroyed(fireDestroyEvent: Boolean) {

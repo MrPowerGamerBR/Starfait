@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.EventKey
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -37,10 +38,10 @@ class StarfaitRunner(
     val debugRectangles = mutableListOf<BoundingBox>()
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true
-    lateinit var flattenedEvents: Array<Array<Map<Int, List<GameObject.Action>>>>
+    val flattenedEvents = mutableMapOf<EventKey, List<GameObject.Action>>()
 
     fun start() {
-        flattenedEvents = createFlattenedEvents()
+        generateFlattenedEvents()
 
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]
@@ -393,12 +394,9 @@ class StarfaitRunner(
     /**
      * Flattens events
      */
-    fun createFlattenedEvents(): Array<Array<Map<Int, List<GameObject.Action>>>> {
+    fun generateFlattenedEvents() {
         // The Flattening:tm:
-
-        // objectIndex -> eventType -> eventSubtype -> actions
-        val objectEvents = Array<Array<Map<Int, List<GameObject.Action>>>>(gameWAD.objt.objects.size) { objectIndex ->
-            val obj = gameWAD.objt.objects[objectIndex]
+        for ((objectIndex, obj) in gameWAD.objt.objects.withIndex()) {
             val objectTree = mutableListOf<GameObject>()
             var currentObject = obj
 
@@ -412,34 +410,26 @@ class StarfaitRunner(
                 currentObject = gameWAD.objt.objects[parentId]
             }
 
-            Array(EventType.MAX_EVENT_ID_STORAGE) { eventType ->
-                val eventTypeMap = mutableMapOf<Int, List<GameObject.Action>>()
-
+            // It seems that SOMETIMES GameMaker events are out of bounds
+            // Even though that we are only targeting 1.4.1804 (for Undertale), their events have IDs 11 (TRIGGER) and 12 (CLEANUP) which are only used in GM:S 2
+            for (eventType in 0..EventType.MAX_EVENT_ID) {
                 // Top (child events) ALWAYS trumps parent events!
                 for (entry in objectTree) {
                     val subevents = entry.events[eventType]
-                    
+
                     if (subevents.isEmpty())
                         continue
 
-                    // It seems that SOMETIMES GameMaker events are out of bounds
-                    // Even though that we are only targeting 1.4.1804 (for Undertale), their events have IDs 11 (TRIGGER) and 12 (CLEANUP) which are only used in GM:S 2
-                    if (eventType > EventType.MAX_EVENT_ID)
-                        continue
-
                     for (eventSubtype in subevents) {
-                        if (!eventTypeMap.containsKey(eventSubtype.subtype)) {
+                        val key = EventKey(objectIndex, eventType, eventSubtype.subtype)
+
+                        if (!flattenedEvents.containsKey(key)) {
                             // The current event tree does not have it! Let's put it
-                            eventTypeMap[eventSubtype.subtype] = eventSubtype.actions
-                            continue
+                            flattenedEvents[key] = eventSubtype.actions
                         }
                     }
                 }
-
-                eventTypeMap
             }
         }
-
-        return objectEvents
     }
 }

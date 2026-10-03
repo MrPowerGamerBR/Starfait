@@ -267,6 +267,8 @@ class StarfaitRunner(
             this.pendingRoom = null
         }
 
+        this.currentRoom.instances.removeAll { it.destroyed }
+
         this.keyboard.tick()
     }
 

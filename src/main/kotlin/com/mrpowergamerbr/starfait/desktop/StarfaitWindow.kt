@@ -111,7 +111,7 @@ class StarfaitWindow(
     val seed: Long,
     val enableCollisionRendering: Boolean,
     val recordInputsFile: File?,
-    val playbackInputsFile: File?,
+    val playbackInputFrames: Map<Int, RecordedFrame>?,
     val screenshot: File?,
     val screenshotFrames: Set<Int>,
     val exitAtFrame: Int?,
@@ -158,8 +158,6 @@ class StarfaitWindow(
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
 
         var isPaused = false
-
-        val playbackInputFrames = playbackInputsFile?.readLines()?.mapIndexed { it, string -> it to Json.decodeFromString<RecordedFrame>(string) }?.toMap()
 
         recordInputsFile?.delete()
 

@@ -16,6 +16,7 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.*
 import com.mrpowergamerbr.starfait.wad.Function
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
@@ -52,6 +53,7 @@ class StarfaitCLI : CliktCommand() {
     val screenshot by option().file()
     val screenshotAtFrame by option().int().multiple()
     val exitAtFrame by option().int()
+    val exitWhenPlaybackEnds by option().flag(default = false)
     val pauseAtFrame by option().int().multiple()
     val headless by option().flag(default = false)
     val replaceRoom by option().multiple()
@@ -236,12 +238,23 @@ class StarfaitCLI : CliktCommand() {
         )
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
+        var exitAtFrame = exitAtFrame
+        val playbackInputFrames: Map<Int, RecordedFrame>?
+
+        if (playbackInputs != null) {
+            val frames = playbackInputs!!.readLines().mapIndexed { it, string -> it to Json.decodeFromString<RecordedFrame>(string) }.toMap()
+            exitAtFrame = if (exitWhenPlaybackEnds) frames.keys.size else null
+            playbackInputFrames = frames
+        } else {
+            playbackInputFrames = null
+        }
+
         val window = StarfaitWindow(
             vm,
             seed,
             enableCollisionRendering,
             recordInputs,
-            playbackInputs,
+            playbackInputFrames,
             screenshot,
             screenshotAtFrame.toSet(),
             exitAtFrame,

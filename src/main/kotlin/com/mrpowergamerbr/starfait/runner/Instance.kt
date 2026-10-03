@@ -34,6 +34,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     @DumpRunnerField var imageAngle = 0.0f
     @DumpRunnerField var pathIndex = -1
     @DumpRunnerField var pathPosition = 0.0f
+    @DumpRunnerField var pathPositionPrevious = 0.0f
     @DumpRunnerField var pathSpeed = 0.0f
     @DumpRunnerField var pathScale = 1.0f
     @DumpRunnerField var pathOrientation = 0.0f
@@ -103,6 +104,12 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
             this.hspeed += this.gravity * MathUtils.clampFloat(cos(radians).toDouble()).toFloat()
             this.vspeed -= this.gravity * MathUtils.clampFloat(sin(radians).toDouble()).toFloat()
         }
+    }
+
+    fun revertToPreviousPosition() {
+        this.x = this.xPrevious
+        this.y = this.yPrevious
+        this.pathPosition = this.pathPositionPrevious
     }
 
     // See GameMaker-HTML5's yyInstance.js Assign_Path

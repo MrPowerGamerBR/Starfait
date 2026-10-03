@@ -157,6 +157,7 @@ class StarfaitRunner(
         forEachInstance {
             it.xPrevious = it.x
             it.yPrevious = it.y
+            it.pathPositionPrevious = it.pathPosition
         }
 
         dispatchEventToAllInstancesObjectIndexOrder(EventType.STEP, EventType.StepSubType.BEGIN)
@@ -285,22 +286,42 @@ class StarfaitRunner(
         }
     }
 
+    // GameMaker-HTML5's "./scripts/Events.js" HandleCollision
     fun dispatchCollisions() {
         forEachInstance { selfInstance ->
-            val selfBBox = selfInstance.getBoundingBox()
-
             forEachInstance { otherInstance ->
                 // We can't collide with self
                 if (selfInstance == otherInstance)
                     return@forEachInstance
 
-                val otherBBox = otherInstance.getBoundingBox()
-
-                if (!selfBBox.isCollidingWith(otherBBox))
+                if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox()))
                     return@forEachInstance
+
+                val eitherSolid = selfInstance.solid || otherInstance.solid
+
+                if (eitherSolid) {
+                    selfInstance.revertToPreviousPosition()
+                    otherInstance.revertToPreviousPosition()
+                }
 
                 selfInstance.dispatchEvent(EventType.COLLISION, otherInstance.objectIndex, otherInstance)
                 otherInstance.dispatchEvent(EventType.COLLISION, selfInstance.objectIndex, selfInstance)
+
+                if (collisionCompatibilityMode && eitherSolid) {
+                    // We do not call the end-of-path event again
+                    selfInstance.adaptPath()
+                    otherInstance.adaptPath()
+                    selfInstance.x += selfInstance.hspeed
+                    selfInstance.y += selfInstance.vspeed
+                    otherInstance.x += otherInstance.hspeed
+                    otherInstance.y += otherInstance.vspeed
+
+                    // If collision is not resolved then set to previous position
+                    if (selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox())) {
+                        selfInstance.revertToPreviousPosition()
+                        otherInstance.revertToPreviousPosition()
+                    }
+                }
             }
         }
     }

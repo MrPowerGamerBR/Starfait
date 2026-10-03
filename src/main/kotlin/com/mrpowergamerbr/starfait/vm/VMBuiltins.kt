@@ -486,9 +486,10 @@ class VMBuiltins(val vm: StarfaitVM) {
             val callFrame = vm.currentCallFrame
             val currentInstance = callFrame.self
 
-            var gameObject = this.runner.gameWAD.objt.objects[callFrame.eventObject.parentId]
+            val parentId = callFrame.eventObject.parentId
+            var gameObject = this.runner.gameWAD.objt.objects[parentId]
 
-            currentInstance.dispatchEvent(gameObject, callFrame.eventType, callFrame.eventSubtype, callFrame.other)
+            currentInstance.dispatchEvent(parentId, gameObject, callFrame.eventType, callFrame.eventSubtype, callFrame.other)
         }
 
         registerVoidFunction("event_user", 1) { args ->

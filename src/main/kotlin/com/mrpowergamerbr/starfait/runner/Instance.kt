@@ -116,7 +116,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
      * @return true if the instance had a event liostener for it
      */
     fun dispatchEvent(eventType: Int, eventSubtype: Int, other: Instance?): Boolean {
-        return dispatchEvent(this.gameObject, eventType, eventSubtype, other)
+        return dispatchEvent(this.objectIndex, this.gameObject, eventType, eventSubtype, other)
     }
 
     /**
@@ -124,12 +124,8 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
      *
      * @return true if the instance had an event listener for it
      */
-    fun dispatchEvent(gameObject: GameObject, eventType: Int, eventSubtype: Int, other: Instance?): Boolean {
-        var gameObject = gameObject
-        val events = gameObject.events[eventType]
-
+    fun dispatchEvent(gameObjectIndex: Int, gameObject: GameObject, eventType: Int, eventSubtype: Int, other: Instance?): Boolean {
         val subtypeEvents = if (eventType == EventType.COLLISION) {
-            // TODO: This SUCKS even more
             val allParentsOfCollidedObject = mutableListOf<Int>()
 
             var targetGameObjectId = eventSubtype
@@ -142,53 +138,16 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
                 targetGameObjectId = targetGameObject.parentId
             }
 
-            val subtypeEvents = mutableListOf<GameObject.Action>()
+            var subtypeEvents = listOf<GameObject.Action>()
 
             // Get the first matched event of the collided object, including all parents
             for (id in allParentsOfCollidedObject) {
-                if (subtypeEvents.isNotEmpty())
-                    break
-
-                subtypeEvents.addAll(
-                    events
-                        .filter { it.subtype == id }
-                        .flatMap { it.actions }
-                )
+                subtypeEvents = runner.flattenedEvents[gameObjectIndex][eventType][id] ?: emptyList()
             }
 
-            // If we still haven't found, then we'll walk through the events of the object parent to know if it has the event
-            while (subtypeEvents.isEmpty()) {
-                if (0 > gameObject.parentId)
-                    break
-
-                gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
-                subtypeEvents.addAll(
-                    gameObject.events[eventType]
-                    .filter { it.subtype == eventSubtype }
-                    .flatMap { it.actions }
-                )
-            }
-
-            subtypeEvents
+            subtypeEvents ?: emptyList()
         } else {
-            var subtypeEvents = events
-                .filter { it.subtype == eventSubtype }
-                .flatMap { it.actions }
-
-            // TODO: This SUCKS, we really should precalculate all events ahead of time on boot
-            var attempts = 0
-            while (subtypeEvents.isEmpty()) {
-                if (0 > gameObject.parentId)
-                    break
-
-                gameObject = runner.gameWAD.objt.objects[gameObject.parentId]
-                subtypeEvents = gameObject.events[eventType]
-                    .filter { it.subtype == eventSubtype }
-                    .flatMap { it.actions }
-                attempts++
-            }
-
-            subtypeEvents
+            runner.flattenedEvents[gameObjectIndex][eventType][eventSubtype] ?: emptyList()
         }
 
         val previousRelative = this.runner.vm.dragAndDropRelativeValues

@@ -37,8 +37,11 @@ class StarfaitRunner(
     val debugRectangles = mutableListOf<BoundingBox>()
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true
+    lateinit var flattenedEvents: Array<Array<Map<Int, List<GameObject.Action>>>>
 
     fun start() {
+        flattenedEvents = createFlattenedEvents()
+
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]
 
@@ -385,5 +388,58 @@ class StarfaitRunner(
     fun setPendingRoom(roomId: Int) {
         val roomId = replaceRooms[roomId] ?: roomId
         pendingRoom = PendingRoom(roomId, gameWAD.room.rooms[roomId])
+    }
+
+    /**
+     * Flattens events
+     */
+    fun createFlattenedEvents(): Array<Array<Map<Int, List<GameObject.Action>>>> {
+        // The Flattening:tm:
+
+        // objectIndex -> eventType -> eventSubtype -> actions
+        val objectEvents = Array<Array<Map<Int, List<GameObject.Action>>>>(gameWAD.objt.objects.size) { objectIndex ->
+            val obj = gameWAD.objt.objects[objectIndex]
+            val objectTree = mutableListOf<GameObject>()
+            var currentObject = obj
+
+            while (true) {
+                objectTree.add(currentObject)
+
+                val parentId = currentObject.parentId
+                if (parentId == HAS_NO_PARENT_ID)
+                    break
+
+                currentObject = gameWAD.objt.objects[parentId]
+            }
+
+            Array(EventType.MAX_EVENT_ID_STORAGE) { eventType ->
+                val eventTypeMap = mutableMapOf<Int, List<GameObject.Action>>()
+
+                // Top (child events) ALWAYS trumps parent events!
+                for (entry in objectTree) {
+                    val subevents = entry.events[eventType]
+                    
+                    if (subevents.isEmpty())
+                        continue
+
+                    // It seems that SOMETIMES GameMaker events are out of bounds
+                    // Even though that we are only targeting 1.4.1804 (for Undertale), their events have IDs 11 (TRIGGER) and 12 (CLEANUP) which are only used in GM:S 2
+                    if (eventType > EventType.MAX_EVENT_ID)
+                        continue
+
+                    for (eventSubtype in subevents) {
+                        if (!eventTypeMap.containsKey(eventSubtype.subtype)) {
+                            // The current event tree does not have it! Let's put it
+                            eventTypeMap[eventSubtype.subtype] = eventSubtype.actions
+                            continue
+                        }
+                    }
+                }
+
+                eventTypeMap
+            }
+        }
+
+        return objectEvents
     }
 }

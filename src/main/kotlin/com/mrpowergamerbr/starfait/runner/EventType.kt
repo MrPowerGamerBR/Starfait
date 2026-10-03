@@ -51,10 +51,17 @@ object EventType {
         @Event const val DRAW = 0
     }
 
+    val MAX_EVENT_ID: Int
+    val MAX_EVENT_ID_STORAGE: Int
     private val eventTypesToName = mutableMapOf<Int, String>()
     private val eventSubtypesToName = mutableMapOf<EventNameKey, String>()
 
     init {
+        MAX_EVENT_ID = EventType::class.members
+            .filter { it.hasAnnotation<EventType.Event>() }
+            .maxOf { it.call() as Int }
+        MAX_EVENT_ID_STORAGE = MAX_EVENT_ID + 1
+
         EventType::class.members
             .filter { it.hasAnnotation<EventType.Event>() }
             .forEach {

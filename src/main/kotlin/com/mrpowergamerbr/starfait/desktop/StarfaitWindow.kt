@@ -308,6 +308,8 @@ class StarfaitWindow(
         SDL_GL_DestroyContext(context)
         SDL_DestroyWindow(window)
         SDL_Quit()
+
+        println("Bye! :3 (Executed $frameCount frames)")
     }
 
     fun dumpRunnerStateAsJsonToFile(runner: StarfaitRunner, dumpStateFile: File) {

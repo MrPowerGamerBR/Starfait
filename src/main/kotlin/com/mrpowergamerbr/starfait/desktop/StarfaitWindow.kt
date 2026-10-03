@@ -29,6 +29,7 @@ import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_RSHIFT
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_SUBTRACT
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_UP
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import com.mrpowergamerbr.starfait.runner.StdoutGameOutput
 import com.mrpowergamerbr.starfait.statedumper.StateDumper
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import kotlinx.serialization.json.Json
@@ -150,7 +151,7 @@ class StarfaitWindow(
         SDL_GL_SetSwapInterval(1) // vsync
 
         val renderer = OpenGLRenderer(vm.gameWAD)
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, seed, replaceRooms)
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, StdoutGameOutput(), seed, replaceRooms)
         renderer.runner = runner
         vm.runner = runner
         vm.runner.enableCollisionRendering = enableCollisionRendering

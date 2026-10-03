@@ -1,9 +1,11 @@
 package com.mrpowergamerbr.starfait
 
 import com.mrpowergamerbr.starfait.renderer.noop.NoopRenderer
+import com.mrpowergamerbr.starfait.runner.BufferedGameOutput
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -14,11 +16,32 @@ object GameMakerFeatureTests {
         0,
         100
     ) {
-        withRunnerStateAtFrame(50) {
-            assert(it.firstInstanceByName("obj_mover1").x == 32.0f)
+        withRunnerAtFrame(50) {
+            assertEquals(32.0f, it.firstInstanceByName("obj_mover1").x)
             assert(it.firstInstanceByName("obj_mover2").x != 32.0f)
-            assert(it.firstInstanceByName("obj_mover3").x == 32.0f)
+            assertEquals(32.0f, it.firstInstanceByName("obj_mover3").x)
         }
+    }
+
+    @Test
+    fun `test collision order`() = runTestGame(
+        "collision-order",
+        0,
+        1
+    ) {
+        checkGameLogEndsWith(
+            0,
+            """
+                    FRAME START (0)
+                    I'm obj_collision1 (0) and I'm colliding with obj_collision3 (1)!
+                    I'm obj_collision3 (1) and I'm colliding with obj_collision1 (0)!
+                    I'm obj_collision1 (0) and I'm colliding with obj_collision2 (2)!
+                    I'm obj_collision2 (2) and I'm colliding with obj_collision1 (0)!
+                    I'm obj_collision3 (1) and I'm colliding with obj_collision2 (2)!
+                    I'm obj_collision2 (2) and I'm colliding with obj_collision3 (1)!
+                    FRAME END
+            """.trimIndent()
+        )
     }
 
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
@@ -39,25 +62,34 @@ object GameMakerFeatureTests {
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
         val renderer = NoopRenderer
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, seed, emptyMap())
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, BufferedGameOutput(), seed, emptyMap())
         vm.runner = runner
         runner.start()
 
         repeat(exitAtFrame) {
             runner.step()
 
-            val callback = config.dumpedStates[it]
-            if (callback != null) {
-                callback(runner)
+            config.runnerCallbacks[it]?.invoke(runner)
+            config.gameLogExpectedEndsWith[it]?.let { expectedEndsWithString ->
+                val outputBuffer = (runner.output as BufferedGameOutput).output
+                val outputOnlyExpectedLines = outputBuffer.lines().dropLast(1).takeLast(expectedEndsWithString.lines().size).joinToString("\n")
+
+                // We drop the last line because it is an empty \n
+                assert(outputOnlyExpectedLines.endsWith(expectedEndsWithString)) { "Expected game log to end with \n---\n$expectedEndsWithString\n---\n...but it ended with \n---\n$outputOnlyExpectedLines\n---" }
             }
         }
     }
 
     class TestConfig {
-        var dumpedStates = mutableMapOf<Int, (StarfaitRunner) -> (Unit)>()
+        var runnerCallbacks = mutableMapOf<Int, (StarfaitRunner) -> (Unit)>()
+        var gameLogExpectedEndsWith = mutableMapOf<Int, String>()
 
-        fun withRunnerStateAtFrame(dumpStateAtFrame: Int, callback: (StarfaitRunner) -> (Unit)) {
-            dumpedStates[dumpStateAtFrame] = callback
+        fun withRunnerAtFrame(dumpStateAtFrame: Int, callback: (StarfaitRunner) -> (Unit)) {
+            runnerCallbacks[dumpStateAtFrame] = callback
+        }
+
+        fun checkGameLogEndsWith(checkLogAtFrame: Int, expectedEndsWithString: String) {
+            gameLogExpectedEndsWith[checkLogAtFrame] = expectedEndsWithString
         }
     }
 

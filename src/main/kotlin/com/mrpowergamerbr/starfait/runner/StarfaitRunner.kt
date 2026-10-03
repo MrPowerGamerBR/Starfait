@@ -7,12 +7,15 @@ import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 
 class StarfaitRunner(
     val gameWAD: GameWAD,
     val vm: StarfaitVM,
     val renderer: Renderer,
+    val output: GameOutput,
     val seed: Long,
     val replaceRooms: Map<Int, Int>
 ) {
@@ -288,18 +291,26 @@ class StarfaitRunner(
 
     // GameMaker-HTML5's "./scripts/Events.js" HandleCollision
     fun dispatchCollisions() {
-        forEachInstance { selfInstance ->
-            forEachInstance { otherInstance ->
+        data class ProcessedKey(val instance1: Int, val instance2: Int)
+        val processedKeys = mutableSetOf<ProcessedKey>()
+
+        forEachInstanceObjectIndex { selfInstance ->
+            forEachInstanceObjectIndex { otherInstance ->
+                val key = ProcessedKey(min(selfInstance.id, otherInstance.id), max(selfInstance.id, otherInstance.id))
+                if (processedKeys.contains(key))
+                    return@forEachInstanceObjectIndex
+
                 // We can't collide with self
                 if (selfInstance == otherInstance)
-                    return@forEachInstance
+                    return@forEachInstanceObjectIndex
 
                 if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode))
-                    return@forEachInstance
+                    return@forEachInstanceObjectIndex
 
-                // Solid is ONLY handled if the selfInstance has a collision event against the other instance!
-                val hasCollisionEventAgainstOther = flattenedEvents[EventKey(selfInstance.objectIndex, EventType.COLLISION, otherInstance.objectIndex)]?.isNotEmpty()
-                val eitherSolid = hasCollisionEventAgainstOther == true && (selfInstance.solid || otherInstance.solid)
+                // Solid is ONLY handled if any of the instances has a collision event against the other instance!
+                val hasCollisionEventSelfAgainstOther = flattenedEvents[EventKey(selfInstance.objectIndex, EventType.COLLISION, otherInstance.objectIndex)]?.isNotEmpty()
+                val hasCollisionEventOtherAgainstSelf = flattenedEvents[EventKey(otherInstance.objectIndex, EventType.COLLISION, selfInstance.objectIndex)]?.isNotEmpty()
+                val eitherSolid = (hasCollisionEventOtherAgainstSelf == true || hasCollisionEventSelfAgainstOther == true) && (selfInstance.solid || otherInstance.solid)
 
                 if (eitherSolid) {
                     selfInstance.revertToPreviousPosition()
@@ -324,6 +335,8 @@ class StarfaitRunner(
                         otherInstance.revertToPreviousPosition()
                     }
                 }
+
+                processedKeys.add(key)
             }
         }
     }

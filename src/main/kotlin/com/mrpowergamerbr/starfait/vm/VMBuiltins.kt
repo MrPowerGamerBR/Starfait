@@ -306,7 +306,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             }
         }
 
-        registerVoidFunction("show_debug_message", null) { args -> println("Game: ${args[0].convertToGMLString()}") }
+        registerVoidFunction("show_debug_message", null) { args -> runner.output.showDebugMessage(args[0].convertToGMLString()) }
         registerFunction("string", 1) { args -> RValue.String(args[0].convertToGMLString()) }
         registerFunction("real", 1) { args -> RValue.Real(args[0].convertToReal()) }
 

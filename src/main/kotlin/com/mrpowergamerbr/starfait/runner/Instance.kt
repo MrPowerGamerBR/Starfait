@@ -111,6 +111,26 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         this.pathPosition = this.pathPositionPrevious
     }
 
+    // See GameMaker-HTML5's yyInstance.js Animate
+    fun animate() {
+        this.imageIndex += this.imageSpeed
+    }
+
+    // See GameMaker-HTML5's yyInstance.js UpdateImages
+    fun updateImage() {
+        if (0.0f > this.spriteIndex)
+            return
+
+        val num = runner.gameWAD.sprt.sprites[this.spriteIndex.toInt()].frames.size
+        if (this.imageIndex >= num) {
+            this.imageIndex -= num
+            dispatchEvent(EventType.OTHER, EventType.OtherSubType.ANIMATION_END, this)
+        } else if (0.0f > this.imageIndex) {
+            this.imageIndex += num
+            dispatchEvent(EventType.OTHER, EventType.OtherSubType.ANIMATION_END, this)
+        }
+    }
+
     // See GameMaker-HTML5's yyInstance.js Assign_Path
     fun assignPath(ind: Int, speed: Float, scale: Float, orient: Float, absolute: Boolean, endact: Int) {
         // First validate the path exists, and assign the index.

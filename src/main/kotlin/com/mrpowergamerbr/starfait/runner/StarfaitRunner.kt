@@ -181,7 +181,10 @@ class StarfaitRunner(
             it.xPrevious = it.x
             it.yPrevious = it.y
             it.pathPositionPrevious = it.pathPosition
+            it.animate()
         }
+
+        forEachInstance { it.updateImage() }
 
         dispatchEventToAllInstancesObjectIndexOrder(EventType.STEP, EventType.StepSubType.BEGIN)
 

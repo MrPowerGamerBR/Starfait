@@ -157,7 +157,7 @@ object GameMakerFeatureTests {
     }
 
     fun VariableContainer.assertVariable(vm: StarfaitVM, name: String, expected: RValue) {
-        val varId = vm.getVariableIndexFromVariableName(name)
+        val varId = vm.getVariableSlotFromVariableName(name)
         val actual = this.getVariable(varId, null)
         assertEquals(expected.convertToBoolean(), actual.convertToBoolean())
     }

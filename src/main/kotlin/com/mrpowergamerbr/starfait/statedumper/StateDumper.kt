@@ -82,7 +82,7 @@ object StateDumper {
         if (instance is VariableContainer) {
             builder.putJsonObject("variables") {
                 for ((key, value) in instance.variables) {
-                    val variableName = instance.vm.getVariableNameFromVariableIndex(key)
+                    val variableName = instance.vm.getVariableNameFromVariableSlot(key)
                     put(variableName, transformIntoJsonElement(value, false))
                 }
             }

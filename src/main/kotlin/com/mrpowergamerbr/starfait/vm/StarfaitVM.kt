@@ -211,7 +211,7 @@ class StarfaitVM(
 
                 val arrayIndex = if (operand.hasArrayIndex()) stack.popInt32().value else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.popInt32().value else extra
-                val varId = operand.variableIndex()
+                val varId = operand.variableSlot()
 
                 // println("arrayIndex is $arrayIndex")
                 // println("instanceId is $instanceId")
@@ -228,7 +228,7 @@ class StarfaitVM(
         // handlePushBuiltin type1 is always "VARIABLE"
         val type = InstructionDataType.byId(type1)
         val operand = VariableReferenceOperand(reader.readInt())
-        val varId = operand.variableIndex()
+        val varId = operand.variableSlot()
 
         val builtinVariable = builtinVariableHandlers[varId]
 
@@ -256,7 +256,7 @@ class StarfaitVM(
                 // println("array index? $arrayIndex")
                 // println("instanceID? $instanceId")
 
-                val localVariable = this.currentCallFrame.getVariable(operand.variableIndex(), arrayIndex)
+                val localVariable = this.currentCallFrame.getVariable(operand.variableSlot(), arrayIndex)
                 stack.pushVariable(localVariable)
             }
             InstructionDataType.STRING -> stack.pushString(gameWAD.strg.stringsByIndex[reader.readInt()])
@@ -276,7 +276,7 @@ class StarfaitVM(
             InstructionDataType.BOOLEAN -> TODO()
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
-                readVariableFromInstanceId(operand.variableIndex(), null, VariableScope.GLOBAL)
+                readVariableFromInstanceId(operand.variableSlot(), null, VariableScope.GLOBAL)
             }
             InstructionDataType.STRING -> stack.pushString(gameWAD.strg.stringsByIndex[reader.readInt()])
         }
@@ -307,10 +307,10 @@ class StarfaitVM(
 
         if (variableContainer == null) {
             if (instanceId >= StarfaitRunner.BASE_INSTANCE_ID) {
-                error("Unable to find any instance with ID $instanceId to read variable \"${getVariableNameFromVariableIndex(varId)}\"")
+                error("Unable to find any instance with ID $instanceId to read variable \"${getVariableNameFromVariableSlot(varId)}\"")
             } else {
                 val gameObjectName = gameWAD.strg.getString(gameWAD.objt.objects[instanceId].name)
-                error("Unable to find any instance for object \"$gameObjectName\" (Object Index: $instanceId) to read variable \"${getVariableNameFromVariableIndex(varId)}\"")
+                error("Unable to find any instance for object \"$gameObjectName\" (Object Index: $instanceId) to read variable \"${getVariableNameFromVariableSlot(varId)}\"")
             }
         }
 
@@ -366,11 +366,11 @@ class StarfaitVM(
         }
     }
 
-    private fun convertVariableContainerToHumanized(variableContainer: VariableContainer, includeVariableId: Boolean): String {
+    private fun convertVariableContainerToHumanized(variableContainer: VariableContainer, includeInstanceId: Boolean): String {
         return when (variableContainer) {
             is Instance -> buildString {
                 append(variableContainer.objectName)
-                if (includeVariableId)
+                if (includeInstanceId)
                     append("<${variableContainer.id}>")
             }
             is GlobalObject -> "global"
@@ -381,11 +381,11 @@ class StarfaitVM(
 
     private fun logVariableAccess(varId: Int, variableContainer: VariableContainer, arrayIndex: Int?, set: Set<String>, value: RValue, isWrite: Boolean) {
         if (set.isNotEmpty()) {
-            val variableName = getVariableNameFromVariableIndex(varId)
+            val variableName = getVariableNameFromVariableSlot(varId)
             val variableContainerName = convertVariableContainerToHumanized(variableContainer, false)
 
             if (set.contains(currentCallFrameCodeName) || set.contains(variableName) || set.contains(variableContainerName) || set.contains("$variableContainerName.$variableName") || set.contains("*")) {
-                print("VM: [$currentCallFrameCodeName] Variable ${if (isWrite) "Write" else "Read"} ${convertVariableContainerToHumanized(variableContainer, true)}.${getVariableNameFromVariableIndex(varId)}")
+                print("VM: [$currentCallFrameCodeName] Variable ${if (isWrite) "Write" else "Read"} ${convertVariableContainerToHumanized(variableContainer, true)}.${getVariableNameFromVariableSlot(varId)}")
                 if (arrayIndex != null)
                     print("[$arrayIndex]")
                 println(" = ${value.toStringTyped()}")
@@ -406,7 +406,7 @@ class StarfaitVM(
                 // TODO: It also seems to be used for any kind of array write? Test later
                 val operand = VariableReferenceOperand(reader.readInt())
 
-                val varId = operand.variableIndex()
+                val varId = operand.variableSlot()
                 val poppedValue = stack.popVariable().value
                 val arrayIndex = if (operand.hasArrayIndex()) stack.popInt32AndUnwrap() else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.popInt32AndUnwrap() else extra
@@ -423,7 +423,7 @@ class StarfaitVM(
             InstructionDataType.VARIABLE -> {
                 val operand = VariableReferenceOperand(reader.readInt())
 
-                val varId = operand.variableIndex()
+                val varId = operand.variableSlot()
                 val arrayIndex = if (operand.hasArrayIndex()) stack.popInt32AndUnwrap() else null
                 val instanceId = if (operand.hasInstanceIdOnStack()) stack.popInt32AndUnwrap() else extra
 
@@ -879,15 +879,15 @@ class StarfaitVM(
         this.variableNameToId = variableNameToId
     }
 
-    fun getVariableIndexFromVariableName(name: String): Int {
+    fun getVariableSlotFromVariableName(name: String): Int {
         return variableNameToId[name] ?: error("I don't know about a variable with name \"$name\"!")
     }
 
-    fun getVariableNameFromVariableIndex(index: Int): String {
-        if (index >= StarfaitUtils.REGULAR_VARIABLES_BASE) {
-            return regularVariableNames.getOrNull(index - StarfaitUtils.REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
+    fun getVariableNameFromVariableSlot(slot: Int): String {
+        if (slot >= StarfaitUtils.REGULAR_VARIABLES_BASE) {
+            return regularVariableNames.getOrNull(slot - StarfaitUtils.REGULAR_VARIABLES_BASE) ?: return "<UnknownVariable>"
         } else {
-            return builtinVariableHandlers[index].name
+            return builtinVariableHandlers[slot].name
         }
     }
 }

@@ -140,11 +140,13 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
                 targetGameObjectId = targetGameObject.parentId
             }
 
-            var subtypeEvents = listOf<GameObject.Action>()
+            var subtypeEvents = emptyList<GameObject.Action>()
 
             // Get the first matched event of the collided object, including all parents
             for (id in allParentsOfCollidedObject) {
                 subtypeEvents = runner.flattenedEvents[EventKey(gameObjectIndex, eventType, id)] ?: emptyList()
+                if (subtypeEvents.isNotEmpty())
+                    break
             }
 
             subtypeEvents

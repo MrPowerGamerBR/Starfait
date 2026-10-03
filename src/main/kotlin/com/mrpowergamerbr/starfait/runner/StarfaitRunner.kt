@@ -297,7 +297,9 @@ class StarfaitRunner(
                 if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode))
                     return@forEachInstance
 
-                val eitherSolid = selfInstance.solid || otherInstance.solid
+                // Solid is ONLY handled if the selfInstance has a collision event against the other instance!
+                val hasCollisionEventAgainstOther = flattenedEvents[EventKey(selfInstance.objectIndex, EventType.COLLISION, otherInstance.objectIndex)]?.isNotEmpty()
+                val eitherSolid = hasCollisionEventAgainstOther == true && (selfInstance.solid || otherInstance.solid)
 
                 if (eitherSolid) {
                     selfInstance.revertToPreviousPosition()

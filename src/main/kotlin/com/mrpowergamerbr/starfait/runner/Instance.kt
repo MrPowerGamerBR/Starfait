@@ -241,7 +241,11 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
                 checkSpecialOther && queryId == InstanceReferenceType.OTHER -> vm.currentCallFrame.other == this
                 checkSpecialAll && queryId == InstanceReferenceType.ALL -> true
                 checkSpecialNoone && queryId == InstanceReferenceType.NOONE -> false
-                else -> error("Unsupported InstanceReferenceType ID $queryId!")
+                else -> {
+                    // THANKS TOBY FOX FOR SETTING SOME ABSURD INT64 VALUE!!
+                    println("Runner: Tried querying for unsupported InstanceReferenceType ID $queryId! This may be a bug, or it just may be a script doing something weird")
+                    false
+                }
             }
         }
 

@@ -318,9 +318,8 @@ class StarfaitRunner(
                                 continue
 
                             // Solid is ONLY handled if any of the instances has a collision event against the other instance!
-                            val hasCollisionEventSelfAgainstOther = flattenedEvents[EventKey(selfInstance.objectIndex, EventType.COLLISION, otherInstance.objectIndex)]?.isNotEmpty()
-                            val hasCollisionEventOtherAgainstSelf = flattenedEvents[EventKey(otherInstance.objectIndex, EventType.COLLISION, selfInstance.objectIndex)]?.isNotEmpty()
-                            val eitherSolid = (hasCollisionEventOtherAgainstSelf == true || hasCollisionEventSelfAgainstOther == true) && (selfInstance.solid || otherInstance.solid)
+                            // However, if we are here, it does mean that one of the two objects DO have a collision event (because of the collision pair)
+                            val eitherSolid = selfInstance.solid || otherInstance.solid
 
                             if (eitherSolid) {
                                 selfInstance.revertToPreviousPosition()

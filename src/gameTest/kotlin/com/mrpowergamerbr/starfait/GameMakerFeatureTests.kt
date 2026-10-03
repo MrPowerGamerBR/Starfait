@@ -20,6 +20,7 @@ object GameMakerFeatureTests {
             assertEquals(32.0f, it.firstInstanceByName("obj_mover1").x)
             assert(it.firstInstanceByName("obj_mover2").x != 32.0f)
             assertEquals(32.0f, it.firstInstanceByName("obj_mover3").x)
+            assertEquals(32.0f, it.firstInstanceByName("obj_mover4").x)
         }
     }
 

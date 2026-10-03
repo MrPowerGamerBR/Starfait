@@ -511,13 +511,13 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         val x2 = MathUtils.delphiRound(inst2.x).toDouble()
         val y2 = MathUtils.delphiRound(inst2.y).toDouble()
 
+        val angle1 = inst1.imageAngle.toDouble()
+        val angle2 = inst2.imageAngle.toDouble()
+
         val scale1x = 1.0 / inst1.imageXScale
         val scale1y = 1.0 / inst1.imageYScale
         val scale2x = 1.0 / inst2.imageXScale
         val scale2y = 1.0 / inst2.imageYScale
-
-        val angle1 = inst1.imageAngle.toDouble()
-        val angle2 = inst2.imageAngle.toDouble()
 
         // Compute overlapping bounding box
         val l = max(bb1.left, bb2.left).toDouble()
@@ -525,52 +525,65 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         val t = max(bb1.top, bb2.top).toDouble()
         val b = min(bb1.bottom, bb2.bottom).toDouble()
 
-        val noScaling = scale1x == 1.0 && scale2x == 1.0 && scale1y == 1.0 && scale2y == 1.0
-        val noRotation = angle1 == 0.0 && angle2 == 0.0
+        if (scale1x == 1.0 && scale2x == 1.0 && scale1y == 1.0 && scale2y == 1.0 && angle1 == 0.0 && angle2 == 0.0) {
+            // No rotation or scaling
+            var i = l
+            while (r >= i) {
+                var j = t
+                while (b >= j) {
+                    val xx1 = i - x1 + sprite1.originX
+                    val yy1 = j - y1 + sprite1.originY
+                    val xx2 = i - x2 + sprite2.originX
+                    val yy2 = j - y2 + sprite2.originY
 
-        val ss1 = sin(-angle1 * PI / 180.0)
-        val cc1 = cos(-angle1 * PI / 180.0)
-        val ss2 = sin(-angle2 * PI / 180.0)
-        val cc2 = cos(-angle2 * PI / 180.0)
+                    if (sprite1.containsMaskPixel(xx1, yy1, img1, false) && sprite2.containsMaskPixel(xx2, yy2, img2, false))
+                        return true
 
-        var i = l
-        while (r >= i) {
-            var j = t
-            while (b >= j) {
-                val xx1: Double
-                val yy1: Double
-                val xx2: Double
-                val yy2: Double
-
-                if (noRotation) {
-                    xx1 = (i - x1) * scale1x + sprite1.originX
-                    yy1 = (j - y1) * scale1y + sprite1.originY
-                    xx2 = (i - x2) * scale2x + sprite2.originX
-                    yy2 = (j - y2) * scale2y + sprite2.originY
-                } else {
-                    // "Do Everything" case - rotation AND scaling!
-                    xx1 = (cc1 * (i - x1) + ss1 * (j - y1)) * scale1x + sprite1.originX
-                    yy1 = (cc1 * (j - y1) - ss1 * (i - x1)) * scale1y + sprite1.originY
-                    xx2 = (cc2 * (i - x2) + ss2 * (j - y2)) * scale2x + sprite2.originX
-                    yy2 = (cc2 * (j - y2) - ss2 * (i - x2)) * scale2y + sprite2.originY
-                }
-
-                // Only the unscaled and unrotated case truncates instead of flooring
-                val floorInput = !(noScaling && noRotation)
-
-                if (xx1 < 0 || xx1 >= sprite1.width || yy1 < 0 || yy1 >= sprite1.height || (sprite1.hasCollisionMask && !sprite1.colMaskSet(xx1, yy1, img1, floorInput))) {
                     j += 1.0
-                    continue
                 }
-
-                if (xx2 < 0 || xx2 >= sprite2.width || yy2 < 0 || yy2 >= sprite2.height || (sprite2.hasCollisionMask && !sprite2.colMaskSet(xx2, yy2, img2, floorInput))) {
-                    j += 1.0
-                    continue
-                }
-
-                return true
+                i += 1.0
             }
-            i += 1.0
+        } else if (angle1 == 0.0 && angle2 == 0.0) {
+            // Scaling but no rotation
+            var i = l
+            while (r >= i) {
+                var j = t
+                while (b >= j) {
+                    val xx1 = (i - x1) * scale1x + sprite1.originX
+                    val yy1 = (j - y1) * scale1y + sprite1.originY
+                    val xx2 = (i - x2) * scale2x + sprite2.originX
+                    val yy2 = (j - y2) * scale2y + sprite2.originY
+
+                    if (sprite1.containsMaskPixel(xx1, yy1, img1, true) && sprite2.containsMaskPixel(xx2, yy2, img2, true))
+                        return true
+
+                    j += 1.0
+                }
+                i += 1.0
+            }
+        } else {
+            // "Do Everything" case - rotation AND scaling!
+            val ss1 = sin(-angle1 * PI / 180.0)
+            val cc1 = cos(-angle1 * PI / 180.0)
+            val ss2 = sin(-angle2 * PI / 180.0)
+            val cc2 = cos(-angle2 * PI / 180.0)
+
+            var i = l
+            while (r >= i) {
+                var j = t
+                while (b >= j) {
+                    val xx1 = (cc1 * (i - x1) + ss1 * (j - y1)) * scale1x + sprite1.originX
+                    val yy1 = (cc1 * (j - y1) - ss1 * (i - x1)) * scale1y + sprite1.originY
+                    val xx2 = (cc2 * (i - x2) + ss2 * (j - y2)) * scale2x + sprite2.originX
+                    val yy2 = (cc2 * (j - y2) - ss2 * (i - x2)) * scale2y + sprite2.originY
+
+                    if (sprite1.containsMaskPixel(xx1, yy1, img1, true) && sprite2.containsMaskPixel(xx2, yy2, img2, true))
+                        return true
+
+                    j += 1.0
+                }
+                i += 1.0
+            }
         }
 
         return false

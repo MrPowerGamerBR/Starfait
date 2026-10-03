@@ -22,7 +22,16 @@ class Sprite(
     // One collision mask per entry, each ((width + 7) / 8) * height bytes, one bit per pixel
     val collisionMasks: List<ByteArray>
 ) {
+    // Unlike GameMaker-HTML5, where only precise sprites get a mask built, the WAD stores masks for every sprite
+    // So "has a mask" is decided by the precise flag
     val hasCollisionMask get() = precise && collisionMasks.isNotEmpty()
+
+    // The bounds check and (if the sprite is precise) the mask check that OrigPreciseCollision does for each sprite on each pixel
+    fun containsMaskPixel(u: Double, v: Double, imageIndex: Int, floorInput: Boolean): Boolean {
+        if (0 > u || u >= width) return false
+        if (0 > v || v >= height) return false
+        return !hasCollisionMask || colMaskSet(u, v, imageIndex, floorInput)
+    }
 
     // See GameMaker-HTML5's "ColMaskSet"
     // The WAD stores masks over the whole sprite, instead of only over the bounding box

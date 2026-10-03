@@ -22,8 +22,22 @@ data class BoundingBox private constructor(
         )
     }
 
-    fun isCollidingWith(other: BoundingBox): Boolean {
-        return left < other.right && right > other.left && top < other.bottom && bottom > other.top
+    fun isCollidingWith(other: BoundingBox, collisionCompatibilityMode: Boolean): Boolean {
+        // This is from GameMaker-HTML5's "Collision_Instance"
+        // Why that is for "To avoid floating point inaccuracies"? I have no idea
+        var col_delta = 0.0 //To avoid floating point inaccuracies
+        if (collisionCompatibilityMode) {
+            col_delta = 1.0 //or in compat mode to go back to how it was
+        }
+
+        val bbox1 = this
+        val bbox2 = other
+
+        if (bbox1.left          >= (bbox2.right + col_delta))   return false;
+        if ((bbox1.right + col_delta)   <= bbox2.left)          return false;
+        if (bbox1.top           >= (bbox2.bottom + col_delta))  return false;
+        if ((bbox1.bottom + col_delta)  <= bbox2.top)           return false;
+        return true
     }
 
     fun contains(x: Float, y: Float): Boolean {

@@ -702,7 +702,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 if (matches) {
                     val bbox = instance.getBoundingBox()
 
-                    if (selfBBox.isCollidingWith(bbox)) {
+                    if (selfBBox.isCollidingWith(bbox, runner.collisionCompatibilityMode)) {
                         return@registerIntFunction instance.id
                     }
                 }

@@ -294,7 +294,7 @@ class StarfaitRunner(
                 if (selfInstance == otherInstance)
                     return@forEachInstance
 
-                if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox()))
+                if (!selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode))
                     return@forEachInstance
 
                 val eitherSolid = selfInstance.solid || otherInstance.solid
@@ -317,7 +317,7 @@ class StarfaitRunner(
                     otherInstance.y += otherInstance.vspeed
 
                     // If collision is not resolved then set to previous position
-                    if (selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox())) {
+                    if (selfInstance.getBoundingBox().isCollidingWith(otherInstance.getBoundingBox(), this.collisionCompatibilityMode)) {
                         selfInstance.revertToPreviousPosition()
                         otherInstance.revertToPreviousPosition()
                     }

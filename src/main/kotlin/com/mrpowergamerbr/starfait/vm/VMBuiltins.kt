@@ -702,7 +702,15 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("draw_sprite_ext", 9) { args ->
             warnFunctionSemiStub("draw_sprite_ext")
-            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].convertToInt32()], args[1].convertToInt32(), args[2].convertToReal().toFloat(), args[3].convertToReal().toFloat(), 1f, 1f, 1f)
+            runner.renderer.drawSprite(
+                vm.gameWAD.sprt.sprites[args[0].convertToInt32()],
+                args[1].convertToInt32(),
+                args[2].convertToReal().toFloat(),
+                args[3].convertToReal().toFloat(),
+                args[4].convertToReal().toFloat(),
+                args[5].convertToReal().toFloat(),
+                args[8].convertToReal().toFloat(),
+            )
         }
 
         registerStringFunction("chr", 1) { args -> args[0].convertToInt32().toChar().toString() }

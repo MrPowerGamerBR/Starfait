@@ -120,7 +120,7 @@ class StarfaitWindow(
     val pauseAtFrames: Set<Int>,
     val headless: Boolean,
     val replaceRooms: Map<Int, Int>,
-    val dumpStateFile: File?,
+    var dumpStateFile: File?,
     val dumpStateAtFrames: Set<Int>,
     val traceFrameDuration: List<IntRange>,
     val speed: Double
@@ -204,8 +204,15 @@ class StarfaitWindow(
                             runner.enableCollisionRendering = !runner.enableCollisionRendering
                         }
 
-                        if (event.key().key() == SDLK_F11 && dumpStateFile != null) {
-                            dumpRunnerStateAsJsonToFile(runner, dumpStateFile)
+                        if (event.key().key() == SDLK_F11) {
+                            if (dumpStateFile == null) {
+                                println("Platform: You haven't configured a dump state file! Write the file name of the dump state file:")
+                                dumpStateFile = File(readln())
+                            }
+
+                            if (dumpStateFile != null) {
+                                dumpRunnerStateAsJsonToFile(runner, dumpStateFile!!)
+                            }
                         }
 
                         if (event.key().key() == 'p'.code) {
@@ -294,7 +301,7 @@ class StarfaitWindow(
                     }
 
                     if (frameCount in dumpStateAtFrames && dumpStateFile != null) {
-                        dumpRunnerStateAsJsonToFile(runner, dumpStateFile)
+                        dumpRunnerStateAsJsonToFile(runner, dumpStateFile!!)
                     }
 
                     for (range in traceFrameDuration) {

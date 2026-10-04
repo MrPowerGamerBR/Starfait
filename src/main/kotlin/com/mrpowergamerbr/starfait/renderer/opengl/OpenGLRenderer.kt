@@ -16,6 +16,7 @@ import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
 import org.joml.Matrix4f
+import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
@@ -80,6 +81,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                 instance.y,
                 instance.imageXScale,
                 instance.imageYScale,
+                instance.imageAngle,
                 GMLColor(0xFFFFFF),
                 instance.imageAlpha
             )
@@ -88,7 +90,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         }
     }
 
-    override fun drawSprite(sprite: Sprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float) {
+    override fun drawSprite(sprite: Sprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
         // Only attempt to render instances that DO have a sprite index
         // See GameMaker-HTML5's yySprite.js Draw, which wraps the subimage: _ind = (~ ~_ind) % this.numb
         val framePointer = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
@@ -96,17 +98,39 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
 
         val texture = textures[tpag.textureIndex.toInt()]
 
+        val rad = Math.toRadians(rot.toDouble())
+
+        val matrix4f = Matrix4f()
+            .translate(x, y, 0f)
+            .rotateZ(-rad.toFloat())
+
         // Think of this like if it was a sprite, and the sprite may had included transparent borders, so the values below are in relation to that "canvas"
         // targetX, targetY = where the first non-opaque pixel is
+
+        // Those are relative to "local"
+        val left = ((tpag.targetX.toFloat() - sprite.originX) * xscale)
+        val right = (((tpag.targetX.toFloat() - sprite.originX + tpag.targetWidth.toInt()) * xscale))
+        val top = ((tpag.targetY.toFloat() - sprite.originY) * yscale)
+        val bottom = (((tpag.targetY.toFloat() - sprite.originY + tpag.targetHeight.toInt()) * yscale))
+
+        val x1y1Transformed = matrix4f.transformPosition(Vector3f(left, top, 0f), Vector3f())
+        val x2y2Transformed = matrix4f.transformPosition(Vector3f(right, top, 0f), Vector3f())
+        val x3y3Transformed = matrix4f.transformPosition(Vector3f(right, bottom, 0f), Vector3f())
+        val x4y4Transformed = matrix4f.transformPosition(Vector3f(left, bottom, 0f), Vector3f())
+
         drawQuad(
-            x + (tpag.targetX.toFloat() * xscale) - (sprite.originX * xscale),
-            y + (tpag.targetY.toFloat() * yscale) - (sprite.originY * yscale),
+            x1y1Transformed.x,
+            x1y1Transformed.y,
+            x2y2Transformed.x,
+            x2y2Transformed.y,
+            x3y3Transformed.x,
+            x3y3Transformed.y,
+            x4y4Transformed.x,
+            x4y4Transformed.y,
             tpag.sourceX.toFloat() / texture.width,
             tpag.sourceY.toFloat() / texture.height,
             (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-            tpag.targetWidth.toInt() * xscale,
-            tpag.targetHeight.toInt() * yscale,
             textures[tpag.textureIndex.toInt()],
             color,
             alpha
@@ -348,11 +372,30 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         texture: Texture,
         blend: GMLColor,
         alpha: Float
+    ) = drawQuad(x, y, x + width, y, x + width, y + height, x, y + height, u1, v1, u2, v2, texture, blend, alpha)
+
+    // Clockwise pattern for the coordinates
+    fun drawQuad(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        x3: Float,
+        y3: Float,
+        x4: Float,
+        y4: Float,
+        u1: Float,
+        v1: Float,
+        u2: Float,
+        v2: Float,
+        texture: Texture,
+        blend: GMLColor,
+        alpha: Float
     ) {
         flushIfNeeded(texture)
 
         // top-left
-        batch[currentIndex++] = x; batch[currentIndex++] = y;
+        batch[currentIndex++] = x1; batch[currentIndex++] = y1;
         batch[currentIndex++] = u1; batch[currentIndex++] = v1;
 
         batch[currentIndex++] = blend.redF
@@ -361,7 +404,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = alpha
 
         // bottom-right
-        batch[currentIndex++] = x + width; batch[currentIndex++] = y + height;
+        batch[currentIndex++] = x3; batch[currentIndex++] = y3;
         batch[currentIndex++] = u2; batch[currentIndex++] = v2;
 
         batch[currentIndex++] = blend.redF
@@ -370,7 +413,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = alpha
 
         // bottom-left
-        batch[currentIndex++] = x; batch[currentIndex++] = y + height;
+        batch[currentIndex++] = x4; batch[currentIndex++] = y4;
         batch[currentIndex++] = u1; batch[currentIndex++] = v2;
 
         batch[currentIndex++] = blend.redF
@@ -379,7 +422,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = alpha
 
         // top-left
-        batch[currentIndex++] = x; batch[currentIndex++] = y;
+        batch[currentIndex++] = x1; batch[currentIndex++] = y1;
         batch[currentIndex++] = u1; batch[currentIndex++] = v1;
 
         batch[currentIndex++] = blend.redF
@@ -388,7 +431,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = alpha
 
         // top-right
-        batch[currentIndex++] = x + width; batch[currentIndex++] = y;
+        batch[currentIndex++] = x2; batch[currentIndex++] = y2;
         batch[currentIndex++] = u2; batch[currentIndex++] = v1;
 
         batch[currentIndex++] = blend.redF
@@ -397,7 +440,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         batch[currentIndex++] = alpha
 
         // bottom-right
-        batch[currentIndex++] = x + width; batch[currentIndex++] = y + height;
+        batch[currentIndex++] = x3; batch[currentIndex++] = y3;
         batch[currentIndex++] = u2; batch[currentIndex++] = v2;
 
         batch[currentIndex++] = blend.redF

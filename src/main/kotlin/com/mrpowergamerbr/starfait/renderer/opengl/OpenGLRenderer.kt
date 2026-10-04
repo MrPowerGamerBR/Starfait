@@ -217,8 +217,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             tpag.sourceY.toFloat() / texture.height,
             (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-            width - tpag.targetX.toFloat(),
-            height - tpag.targetY.toFloat(),
+            width,
+            height,
             textures[tpag.textureIndex.toInt()],
             GMLColor(0xFFFFFF),
             alpha

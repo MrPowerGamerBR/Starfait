@@ -4,7 +4,7 @@ import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.Instance
-import com.mrpowergamerbr.starfait.runner.Renderer
+import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Font

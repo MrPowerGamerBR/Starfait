@@ -2,7 +2,7 @@ package com.mrpowergamerbr.starfait.renderer.noop
 
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.runner.Instance
-import com.mrpowergamerbr.starfait.runner.Renderer
+import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.Sprite

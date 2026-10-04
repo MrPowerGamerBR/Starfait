@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.GMLColor
+import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD

@@ -971,5 +971,21 @@ class VMBuiltins(val vm: StarfaitVM) {
             val dir = args[1].convertToReal()
             -sin(Math.toRadians(dir)) * len
         }
+
+        registerVoidFunction("draw_sprite_part", 8) { args ->
+            val spriteIndex = args[0].convertToInt32()
+            val subimg = args[1].convertToInt32()
+            val left = args[2].convertToReal().toFloat()
+            val top = args[3].convertToReal().toFloat()
+            val width = args[4].convertToReal().toFloat()
+            val height = args[5].convertToReal().toFloat()
+            val x = args[6].convertToReal().toFloat()
+            val y = args[7].convertToReal().toFloat()
+
+            val sprite = runner.gameWAD.sprt.sprites[spriteIndex]
+
+            // TODO: alpha?
+            runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1.0f)
+        }
     }
 }

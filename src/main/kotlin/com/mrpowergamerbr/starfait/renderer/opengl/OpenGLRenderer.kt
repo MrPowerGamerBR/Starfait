@@ -111,6 +111,72 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         )
     }
 
+    override fun drawSpritePart(
+        sprite: Sprite,
+        subimg: Int,
+        left: Float,
+        top: Float,
+        width: Float,
+        height: Float,
+        x: Float,
+        y: Float,
+        alpha: Float
+    ) {
+        val framePointer = sprite.frames[subimg % sprite.frames.size]
+        val tpag = runner.gameWAD.tpag.entries[framePointer]!!
+
+        val texture = textures[tpag.textureIndex.toInt()]
+        // See GameMaker-HTML5's yyWebGL.js WebGL_DrawPart_RELEASE
+        var partLeft = left
+        var partTop = top
+        var partWidth = width
+        var partHeight = height
+        var partX = x
+        var partY = y
+
+        val xOffset = tpag.targetX.toFloat()
+        val yOffset = tpag.targetY.toFloat()
+
+        // CLIP the drawing area.
+        if (xOffset > partLeft) {
+            val off = xOffset - partLeft
+            partX += off
+            partWidth -= off
+            partLeft = 0f
+        } else {
+            partLeft -= xOffset
+        }
+
+        if (yOffset > partTop) {
+            val off = yOffset - partTop
+            partY += off
+            partHeight -= off
+            partTop = 0f
+        } else {
+            partTop -= yOffset
+        }
+
+        val cropWidth = tpag.sourceWidth.toFloat()
+        val cropHeight = tpag.sourceHeight.toFloat()
+        if (partWidth > cropWidth - partLeft) partWidth = cropWidth - partLeft
+        if (partHeight > cropHeight - partTop) partHeight = cropHeight - partTop
+        if (0 >= partWidth || 0 >= partHeight) return
+
+        drawQuad(
+            partX,
+            partY,
+            (tpag.sourceX.toFloat() + partLeft) / texture.width,
+            (tpag.sourceY.toFloat() + partTop) / texture.height,
+            (tpag.sourceX.toFloat() + partLeft + partWidth) / texture.width,
+            (tpag.sourceY.toFloat() + partTop + partHeight) / texture.height,
+            partWidth,
+            partHeight,
+            texture,
+            GMLColor(0xFFFFFF),
+            alpha
+        )
+    }
+
     override fun drawBackground(texturePageEntry: TexturePageEntry, width: Float, height: Float) {
         val texture = textures[texturePageEntry.textureIndex.toInt()]
 

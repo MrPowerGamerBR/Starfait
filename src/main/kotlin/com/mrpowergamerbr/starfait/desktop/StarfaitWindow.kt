@@ -62,6 +62,7 @@ import org.lwjgl.sdl.SDLKeycode.SDLK_F10
 import org.lwjgl.sdl.SDLKeycode.SDLK_F11
 import org.lwjgl.sdl.SDLKeycode.SDLK_F12
 import org.lwjgl.sdl.SDLKeycode.SDLK_F5
+import org.lwjgl.sdl.SDLKeycode.SDLK_F6
 import org.lwjgl.sdl.SDLKeycode.SDLK_HOME
 import org.lwjgl.sdl.SDLKeycode.SDLK_INSERT
 import org.lwjgl.sdl.SDLKeycode.SDLK_KP_0
@@ -115,6 +116,7 @@ class StarfaitWindow(
     val vm: StarfaitVM,
     val seed: Long,
     val enableCollisionRendering: Boolean,
+    val drawInvisibleInstances: Boolean,
     val recordInputsFile: File?,
     val playbackInputFrames: Map<Int, RecordedFrame>?,
     val screenshot: File?,
@@ -159,6 +161,7 @@ class StarfaitWindow(
         renderer.runner = runner
         vm.runner = runner
         vm.runner.enableCollisionRendering = enableCollisionRendering
+        vm.runner.drawInvisibleInstances = drawInvisibleInstances
         runner.start()
 
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
@@ -205,6 +208,10 @@ class StarfaitWindow(
 
                         if (event.key().key() == SDLK_F5) {
                             runner.enableCollisionRendering = !runner.enableCollisionRendering
+                        }
+
+                        if (event.key().key() == SDLK_F6) {
+                            runner.drawInvisibleInstances = !runner.drawInvisibleInstances
                         }
 
                         if (event.key().key() == SDLK_F11) {

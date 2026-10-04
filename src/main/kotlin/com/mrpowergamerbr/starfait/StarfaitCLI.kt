@@ -50,6 +50,7 @@ class StarfaitCLI : CliktCommand() {
     val traceFrameDuration by option().multiple()
     val traceCodeExecution by option()
     val enableCollisionRendering by option().flag(default = false)
+    val drawInvisibleInstances by option().flag(default = false)
     val recordInputs by option().file()
     val playbackInputs by option().file()
     val screenshot by option().file()
@@ -256,6 +257,7 @@ class StarfaitCLI : CliktCommand() {
             vm,
             seed,
             enableCollisionRendering,
+            drawInvisibleInstances,
             recordInputs,
             playbackInputFrames,
             screenshot,

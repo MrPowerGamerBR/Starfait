@@ -1,6 +1,5 @@
 package com.mrpowergamerbr.starfait.runner
 
-import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -36,8 +35,9 @@ class StarfaitRunner(
     val persistentRooms = mutableMapOf<Int, RunnerRoom>()
     val drawState = DrawState(gameWAD)
 
-    var enableCollisionRendering = true
+    var enableCollisionRendering = false
     val debugRectangles = mutableListOf<BoundingBox>()
+    var drawInvisibleInstances = false
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true
 
@@ -259,7 +259,7 @@ class StarfaitRunner(
         forEachInstanceByDepth { instance ->
             val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
 
-            if (!instanceHasDrawEvent) {
+            if (!instanceHasDrawEvent && (instance.visible || this.drawInvisibleInstances)) {
                 // Draw the instance manually
                 // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
                 renderer.drawInstance(instance)

@@ -121,6 +121,9 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         height: Float,
         x: Float,
         y: Float,
+        xscale: Float,
+        yscale: Float,
+        color: GMLColor,
         alpha: Float
     ) {
         val framePointer = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
@@ -141,7 +144,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         // CLIP the drawing area.
         if (xOffset > partLeft) {
             val off = xOffset - partLeft
-            partX += off
+            partX += off * xscale
             partWidth -= off
             partLeft = 0f
         } else {
@@ -150,7 +153,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
 
         if (yOffset > partTop) {
             val off = yOffset - partTop
-            partY += off
+            partY += off * yscale
             partHeight -= off
             partTop = 0f
         } else {
@@ -170,10 +173,10 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             (tpag.sourceY.toFloat() + partTop) / texture.height,
             (tpag.sourceX.toFloat() + partLeft + partWidth) / texture.width,
             (tpag.sourceY.toFloat() + partTop + partHeight) / texture.height,
-            partWidth,
-            partHeight,
+            partWidth * xscale,
+            partHeight * yscale,
             texture,
-            GMLColor(0xFFFFFF),
+            color,
             alpha
         )
     }

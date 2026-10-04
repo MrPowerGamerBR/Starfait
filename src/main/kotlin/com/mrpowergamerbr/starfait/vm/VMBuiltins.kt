@@ -1029,7 +1029,26 @@ class VMBuiltins(val vm: StarfaitVM) {
             val sprite = runner.gameWAD.sprt.sprites[spriteIndex]
 
             // TODO: alpha?
-            runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1.0f)
+            runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1f, 1f, GMLColor(0xFFFFFF), 1.0f)
+        }
+
+        registerVoidFunction("draw_sprite_part_ext", 12) { args ->
+            val spriteIndex = args[0].convertToInt32()
+            val subimg = args[1].convertToInt32()
+            val left = args[2].convertToReal().toFloat()
+            val top = args[3].convertToReal().toFloat()
+            val width = args[4].convertToReal().toFloat()
+            val height = args[5].convertToReal().toFloat()
+            val x = args[6].convertToReal().toFloat()
+            val y = args[7].convertToReal().toFloat()
+            val xscale = args[8].convertToReal().toFloat()
+            val yscale = args[9].convertToReal().toFloat()
+            val color = GMLColor(args[10].convertToInt32())
+            val alpha = args[11].convertToReal().toFloat()
+
+            val sprite = runner.gameWAD.sprt.sprites[spriteIndex]
+
+            runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, xscale, yscale, color, alpha)
         }
 
         registerRealFunction("power", 2) { args ->

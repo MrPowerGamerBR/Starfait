@@ -264,6 +264,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             val glyph = font.glyphs.firstOrNull { it.character == char }
 
             if (glyph != null) {
+                x += glyph.offset
+
                 drawQuad(
                     x,
                     y,

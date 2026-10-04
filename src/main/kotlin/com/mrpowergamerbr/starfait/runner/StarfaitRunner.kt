@@ -1,6 +1,5 @@
 package com.mrpowergamerbr.starfait.runner
 
-import com.mrpowergamerbr.starfait.runner.EventKey
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -8,8 +7,6 @@ import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
 import kotlin.comparisons.compareBy
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.random.Random
 
 class StarfaitRunner(
@@ -93,10 +90,11 @@ class StarfaitRunner(
             newRoom.height = room.height
             newRoom.speed = room.speed
             newRoom.persistent = room.persistent
+            newRoom.flags = room.flags
 
             if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {
                 for (view in room.views) {
-                    println("Visible? ${view.visible} - View BorderX is ${view.borderX}, View BorderY is ${view.borderY}, objectId is ${view.objectId}")
+                    println("Visible? ${view.visible} - View BorderX is ${view.borderX}, View BorderY is ${view.borderY}, objectIndex is ${view.objectIndex}")
                     newRoom.views.add(
                         RunnerRoom.RunnerView(
                             view.viewX,
@@ -108,7 +106,11 @@ class StarfaitRunner(
                             view.portWidth,
                             view.portHeight,
                             view.visible,
-                            view.objectId
+                            view.objectIndex,
+                            view.borderX,
+                            view.borderY,
+                            view.speedX,
+                            view.speedY
                         )
                     )
                 }

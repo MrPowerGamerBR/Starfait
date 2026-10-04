@@ -262,7 +262,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerViewIntVariable("view_yview", RunnerRoom.RunnerView::viewY)
         registerViewIntVariable("view_wview", RunnerRoom.RunnerView::viewWidth)
         registerViewIntVariable("view_hview", RunnerRoom.RunnerView::viewHeight)
-        registerViewIntVariable("view_object", RunnerRoom.RunnerView::objectId)
+        registerViewIntVariable("view_object", RunnerRoom.RunnerView::objectIndex)
 
         registerRealStubbedVariable("application_surface", -1.0)
 

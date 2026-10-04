@@ -57,7 +57,7 @@ class Room(
         val borderY: Int,
         val speedX: Int,
         val speedY: Int,
-        val objectId: Int
+        val objectIndex: Int
     )
 
     class Instance(

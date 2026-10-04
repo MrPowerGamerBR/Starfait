@@ -2,9 +2,9 @@ package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
-import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.Room
-import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
+import com.mrpowergamerbr.starfait.wad.RoomFlags
+import kotlin.math.floor
 
 class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
     @DumpRunnerField var width = 0
@@ -16,6 +16,7 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
     @DumpRunnerField val views = mutableListOf<RunnerView>()
     @DumpRunnerField val backgrounds = mutableListOf<RunnerBackground>()
     @DumpRunnerField val tiles = mutableListOf<RunnerTile>()
+    var flags = RoomFlags(0u)
 
     fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
         this.x = instance.x.toFloat()
@@ -50,15 +51,68 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
         return gameInstance
     }
 
+    // Views are a bit hard to come by, because most of the GameMaker-HTML5 code only handles GameMaker: Studio 2+ cameras (because g_isZeus is set)
+    // So we port the camera logic instead
+    // See GameMaker-HTML5's CameraManager.js CCamera.prototype.Update
     fun updateViews() {
-        for (view in views) {
-            if (view.visible) {
-                // TODO: Pretty sure that this can also be a instanceId
-                val followingObjectId = view.objectId
-                val followingObject = instances.firstOrNull { it.objectIndex == followingObjectId }
+        if (RoomFlags.Flag.ENABLE_VIEWS !in this.flags)
+            return
 
-                // TODO: Actually do something useful with it
+        for (view in views) {
+            if (!view.visible)
+                continue
+
+            if (0 > view.objectIndex)
+                continue
+
+            val inst = if (StarfaitRunner.BASE_INSTANCE_ID > view.objectIndex) {
+                instances.firstOrNull { !it.destroyed && it.objectIndex == view.objectIndex }
+            } else {
+                instances.firstOrNull { !it.destroyed && it.id == view.objectIndex }
+            } ?: continue
+
+            val halfwidth = view.viewWidth * 0.5f
+            val halfheight = view.viewHeight * 0.5f
+            var l = view.viewX.toFloat()
+            var t = view.viewY.toFloat()
+
+            val ix = floor(inst.x)
+            val iy = floor(inst.y)
+
+            if (2 * view.borderX >= view.viewWidth) {
+                l = ix - halfwidth
+            } else if (ix - view.borderX < view.viewX) {
+                l = ix - view.borderX
+            } else if (ix + view.borderX > (view.viewX + view.viewWidth)) {
+                l = ix + view.borderX - view.viewWidth
             }
+
+            if (2 * view.borderY >= view.viewHeight) {
+                t = iy - halfheight
+            } else if (iy - view.borderY < view.viewY) {
+                t = iy - view.borderY
+            } else if (iy + view.borderY > (view.viewY + view.viewHeight)) {
+                t = iy + view.borderY - view.viewHeight
+            }
+
+            // Make sure it does not extend beyond the room
+            if (0 > l) l = 0f
+            if (l + view.viewWidth > this.width) l = (this.width - view.viewWidth).toFloat()
+            if (0 > t) t = 0f
+            if (t + view.viewHeight > this.height) t = (this.height - view.viewHeight).toFloat()
+
+            // Restrict motion speed
+            if (view.speedX >= 0) {
+                if ((l < view.viewX) && (view.viewX - l > view.speedX)) l = (view.viewX - view.speedX).toFloat()
+                if ((l > view.viewX) && (l - view.viewX > view.speedX)) l = (view.viewX + view.speedX).toFloat()
+            }
+            if (view.speedY >= 0) {
+                if ((t < view.viewY) && (view.viewY - t > view.speedY)) t = (view.viewY - view.speedY).toFloat()
+                if ((t > view.viewY) && (t - view.viewY > view.speedY)) t = (view.viewY + view.speedY).toFloat()
+            }
+
+            view.viewX = l.toInt()
+            view.viewY = t.toInt()
         }
     }
 
@@ -72,7 +126,11 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
         @DumpRunnerField var portWidth: Int,
         @DumpRunnerField var portHeight: Int,
         @DumpRunnerField var visible: Boolean,
-        @DumpRunnerField var objectId: Int,
+        @DumpRunnerField var objectIndex: Int,
+        @DumpRunnerField var borderX: Int,
+        @DumpRunnerField var borderY: Int,
+        @DumpRunnerField var speedX: Int,
+        @DumpRunnerField var speedY: Int,
     )
 
     class RunnerBackground(

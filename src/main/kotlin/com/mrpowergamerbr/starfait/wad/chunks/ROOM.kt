@@ -101,7 +101,7 @@ class ROOM(val rooms: List<Room>) {
                         borderY = borderY,
                         speedX = speedX,
                         speedY = speedY,
-                        objectId = objectId
+                        objectIndex = objectId
                     )
                 }
 

@@ -79,16 +79,28 @@ object GameMakerFeatureTests {
         1
     ) {
         withRunnerAtFrame(0) {
-            it.instanceByIdAndName(100001, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100002, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(true))
-            it.instanceByIdAndName(100003, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100004, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100005, "obj_box").assertVariable(it.vm, "colliding", RValue.Boolean(true))
-            it.instanceByIdAndName(100000, "obj_loritta").assertVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100006, "obj_loritta").assertVariable(it.vm, "colliding", RValue.Boolean(true))
-            it.instanceByIdAndName(100007, "obj_loritta").assertVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100008, "obj_loritta2").assertVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100009, "obj_loritta2").assertVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100001, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100002, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100003, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100004, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100005, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100000, "obj_loritta").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100006, "obj_loritta").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100007, "obj_loritta").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100008, "obj_loritta2").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100009, "obj_loritta2").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
+        }
+    }
+
+    @Test
+    fun `test persistent rooms being removed from the persistent rooms list after the room has been marked as non-persistent`() = runTestGame(
+        "persistent-rooms",
+        0,
+        51
+    ) {
+        withRunnerAtFrame(50) {
+            assertEquals(it.persistentRooms.size, 0)
+            it.vm.global.assertInt32Variable(it.vm, "createdCounter", RValue.Int32(6))
         }
     }
 
@@ -156,7 +168,13 @@ object GameMakerFeatureTests {
         return index
     }
 
-    fun VariableContainer.assertVariable(vm: StarfaitVM, name: String, expected: RValue) {
+    fun VariableContainer.assertInt32Variable(vm: StarfaitVM, name: String, expected: RValue) {
+        val varId = vm.getVariableSlotFromVariableName(name)
+        val actual = this.getVariable(varId, null)
+        assertEquals(expected.convertToInt32(), actual.convertToInt32())
+    }
+
+    fun VariableContainer.assertBooleanVariable(vm: StarfaitVM, name: String, expected: RValue) {
         val varId = vm.getVariableSlotFromVariableName(name)
         val actual = this.getVariable(varId, null)
         assertEquals(expected.convertToBoolean(), actual.convertToBoolean())

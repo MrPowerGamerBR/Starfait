@@ -76,9 +76,9 @@ class StarfaitRunner(
     }
 
     fun initializeRoom(roomId: Int, room: Room) {
-        println("Runner: Initializing room $roomId (${gameWAD.strg.getString(room.name)})")
+        val persistentRoom = persistentRooms.remove(roomId)
+        println("Runner: Initializing room $roomId (${gameWAD.strg.getString(room.name)}) - Has persistent room? ${persistentRoom != null}")
 
-        val persistentRoom = persistentRooms[roomId]
         if (persistentRoom != null) {
             val previousRoom = this.currentRoom
             handlePersistentRoomInstanceHandover(previousRoom, persistentRoom)

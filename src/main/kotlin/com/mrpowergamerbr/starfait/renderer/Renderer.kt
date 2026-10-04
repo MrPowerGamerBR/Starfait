@@ -16,5 +16,4 @@ interface Renderer {
     fun drawText(font: Font, x: Float, y: Float, text: String)
     fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor)
     fun frame(block: () -> (Unit))
-    fun setDrawColor(color: GMLColor)
 }

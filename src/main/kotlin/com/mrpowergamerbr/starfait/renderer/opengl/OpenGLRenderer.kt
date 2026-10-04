@@ -249,7 +249,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
                     glyph.width.toFloat(),
                     glyph.height.toFloat(),
                     texture,
-                    runner.drawSetColor,
+                    runner.drawState.color,
                     1.0f
                 )
 
@@ -320,11 +320,6 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
 
         runner.debugRectangles.clear()
 
-        flush(runner)
-    }
-
-    override fun setDrawColor(color: GMLColor) {
-        // TODO: Remove this
         flush(runner)
     }
 

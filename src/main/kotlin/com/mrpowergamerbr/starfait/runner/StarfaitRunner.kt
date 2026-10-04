@@ -32,10 +32,9 @@ class StarfaitRunner(
     private var pendingRoom: PendingRoom? = null
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
-    var drawSetColor = GMLColor(0xFFFFFF)
-    var activeDrawFont = gameWAD.font.fonts.firstOrNull()
     val random = Random(seed)
     val persistentRooms = mutableMapOf<Int, RunnerRoom>()
+    val drawState = DrawState(gameWAD)
 
     var enableCollisionRendering = true
     val debugRectangles = mutableListOf<BoundingBox>()
@@ -71,9 +70,6 @@ class StarfaitRunner(
         initializeRoom(firstRoomId, room)
 
         dispatchEventToAllInstances(EventType.OTHER, EventType.OtherSubType.GAME_START)
-
-        // TODO: Kinda hacky isn't it?
-        renderer.setDrawColor(drawSetColor)
     }
 
     fun initializeRoom(roomId: Int, room: Room) {

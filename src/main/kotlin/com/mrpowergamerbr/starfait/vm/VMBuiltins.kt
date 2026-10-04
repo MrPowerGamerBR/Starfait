@@ -672,7 +672,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val x = args[0].convertToReal()
             val y = args[1].convertToReal()
             val string = args[2].convertToGMLString()
-            val font = requireNotNull(runner.activeDrawFont)
+            val font = requireNotNull(runner.drawState.font)
 
             runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
         }
@@ -681,7 +681,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val x = args[0].convertToReal()
             val y = args[1].convertToReal()
             val string = args[2].convertToGMLString()
-            val font = requireNotNull(runner.activeDrawFont)
+            val font = requireNotNull(runner.drawState.font)
 
             runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
         }
@@ -697,7 +697,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerStubbedFunction("ini_section_exists", 1, false)
 
         registerVoidFunction("draw_sprite", 4) { args ->
-            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].convertToInt32()], args[1].convertToInt32(), args[2].convertToReal().toFloat(), args[3].convertToReal().toFloat(), 1f, 1f, 1f)
+            runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].convertToInt32()], args[1].convertToInt32(), args[2].convertToReal().toFloat(), args[3].convertToReal().toFloat(), 1f, 1f, runner.drawState.alpha)
         }
 
         registerVoidFunction("draw_sprite_ext", 9) { args ->
@@ -825,12 +825,11 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         // TODO: set_colour too? maybe we need to make a way to do aliases?
         registerVoidFunction("draw_set_color", 1) { args ->
-            runner.drawSetColor = GMLColor(args[0].convertToInt32())
-            runner.renderer.setDrawColor(runner.drawSetColor)
+            runner.drawState.color = GMLColor(args[0].convertToInt32())
         }
 
         registerVoidFunction("draw_set_font", 1) { args ->
-            runner.activeDrawFont = runner.gameWAD.font.fonts[args[0].convertToInt32()]
+            runner.drawState.font = runner.gameWAD.font.fonts[args[0].convertToInt32()]
         }
 
         registerRealFunction("floor", 1) { args -> floor(args[0].convertToReal()) }
@@ -844,7 +843,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerIntFunction("string_width", 1) { args ->
             val text = args[0].convertToGMLString()
-            val font = requireNotNull(runner.activeDrawFont)
+            val font = requireNotNull(runner.drawState.font)
 
             // This is essentially how the text is rendered... but WITHOUT the rendering
             var width = 0
@@ -870,7 +869,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             if (outline)
                 warnFunctionSemiStub("draw_rectangle")
 
-            runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawSetColor)
+            runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawState.color)
         }
 
         // See GameMaker-HTML5's Function_Path.js
@@ -1028,8 +1027,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             val sprite = runner.gameWAD.sprt.sprites[spriteIndex]
 
-            // TODO: alpha?
-            runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1f, 1f, GMLColor(0xFFFFFF), 1.0f)
+            runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1f, 1f, GMLColor(0xFFFFFF), runner.drawState.alpha)
         }
 
         registerVoidFunction("draw_sprite_part_ext", 12) { args ->
@@ -1057,6 +1055,10 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("draw_self", 0) { args ->
             runner.renderer.drawInstance(vm.currentSelfInstance)
+        }
+
+        registerVoidFunction("draw_set_alpha", 1) { args ->
+            runner.drawState.alpha = args[0].convertToReal().toFloat()
         }
     }
 }

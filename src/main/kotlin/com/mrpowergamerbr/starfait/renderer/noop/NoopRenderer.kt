@@ -17,5 +17,4 @@ object NoopRenderer : Renderer {
     override fun drawText(font: Font, x: Float, y: Float, text: String) {}
     override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor) {}
     override fun frame(block: () -> Unit) {}
-    override fun setDrawColor(color: GMLColor) {}
 }

@@ -123,6 +123,7 @@ class StarfaitWindow(
     val dumpStateFile: File?,
     val dumpStateAtFrames: Set<Int>,
     val traceFrameDuration: List<IntRange>,
+    val speed: Double
 ) {
     companion object {
         private val JsonPrettyPrint = Json {
@@ -259,7 +260,7 @@ class StarfaitWindow(
 
                     val finished = System.currentTimeMillis()
                     if (!headless) {
-                        val targetFramesPerSecond = 1000 / runner.currentRoom.speed.toDouble()
+                        val targetFramesPerSecond = 1000 / (runner.currentRoom.speed.toDouble() * speed)
                         val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
                         if (waitTime > 0)
                             Thread.sleep(waitTime)

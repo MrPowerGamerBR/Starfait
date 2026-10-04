@@ -3,10 +3,12 @@ package com.mrpowergamerbr.starfait
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.double
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
@@ -54,6 +56,7 @@ class StarfaitCLI : CliktCommand() {
     val screenshotAtFrame by option().int().multiple()
     val exitAtFrame by option().int()
     val exitWhenPlaybackEnds by option().flag(default = false)
+    val speed by option().double().default(1.0)
     val pauseAtFrame by option().int().multiple()
     val headless by option().flag(default = false)
     val replaceRoom by option().multiple()
@@ -287,7 +290,8 @@ class StarfaitCLI : CliktCommand() {
             }.toMap(),
             dumpState,
             dumpStateAtFrame.toSet(),
-            traceFrameDuration.map { if (it == "*") 0..Int.MAX_VALUE else it.split("..").let { it[0].toInt()..it[1].toInt() } }
+            traceFrameDuration.map { if (it == "*") 0..Int.MAX_VALUE else it.split("..").let { it[0].toInt()..it[1].toInt() } },
+            speed
         )
         window.start()
 

@@ -1031,5 +1031,9 @@ class VMBuiltins(val vm: StarfaitVM) {
             // TODO: alpha?
             runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1.0f)
         }
+
+        registerRealFunction("power", 2) { args ->
+            args[0].convertToReal().pow(args[1].convertToReal())
+        }
     }
 }

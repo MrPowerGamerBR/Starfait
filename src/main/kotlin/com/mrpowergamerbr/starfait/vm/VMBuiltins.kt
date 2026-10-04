@@ -969,15 +969,15 @@ class VMBuiltins(val vm: StarfaitVM) {
             val whereAreWeGoing = enabledIndices.random(runner.random)
 
             val direction = when (whereAreWeGoing) {
-                0 -> 135
-                1 -> 90
-                2 -> 45
+                0 -> 225
+                1 -> 270
+                2 -> 315
                 3 -> 180
                 4 -> null
                 5 -> 0
-                6 -> 225
-                7 -> 270
-                8 -> 315
+                6 -> 135
+                7 -> 90
+                8 -> 45
                 else -> error("I don't know how to handle $whereAreWeGoing!")
             }
 

@@ -8,6 +8,7 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.RValue
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.vm.VariableContainer
+import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -79,16 +80,16 @@ object GameMakerFeatureTests {
         1
     ) {
         withRunnerAtFrame(0) {
-            it.instanceByIdAndName(100001, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100002, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
-            it.instanceByIdAndName(100003, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100004, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100005, "obj_box").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
-            it.instanceByIdAndName(100000, "obj_loritta").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100006, "obj_loritta").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
-            it.instanceByIdAndName(100007, "obj_loritta").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100008, "obj_loritta2").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(false))
-            it.instanceByIdAndName(100009, "obj_loritta2").assertBooleanVariable(it.vm, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100001, "obj_box").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100002, "obj_box").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100003, "obj_box").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100004, "obj_box").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100005, "obj_box").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100000, "obj_loritta").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100006, "obj_loritta").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100007, "obj_loritta").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100008, "obj_loritta2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100009, "obj_loritta2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
         }
     }
 
@@ -100,7 +101,43 @@ object GameMakerFeatureTests {
     ) {
         withRunnerAtFrame(50) {
             assertEquals(it.persistentRooms.size, 0)
-            it.vm.global.assertInt32Variable(it.vm, "createdCounter", RValue.Int32(6))
+            it.vm.global.assertInt32Variable(it.vm, VariableInstanceType.GLOBAL, "createdCounter", RValue.Int32(6))
+        }
+    }
+
+    @Test
+    fun `test action move and speed`() = runTestGame(
+        "action-move",
+        0,
+        2
+    ) {
+        withRunnerAtFrame(1) {
+            assertEquals(218.34314f, it.firstInstanceByName("obj_moveUPLEFT").x)
+            assertEquals(154.34314f, it.firstInstanceByName("obj_moveUPLEFT").y)
+
+            assertEquals(256.0f, it.firstInstanceByName("obj_moveUP").x)
+            assertEquals(152.0f, it.firstInstanceByName("obj_moveUP").y)
+
+            assertEquals(293.65686f, it.firstInstanceByName("obj_moveUPRIGHT").x)
+            assertEquals(154.34314f, it.firstInstanceByName("obj_moveUPRIGHT").y)
+
+            assertEquals(216.0f, it.firstInstanceByName("obj_moveLEFT").x)
+            assertEquals(192.0f, it.firstInstanceByName("obj_moveLEFT").y)
+
+            assertEquals(218.34314f, it.firstInstanceByName("obj_moveDOWNLEFT").x)
+            assertEquals(229.65686f, it.firstInstanceByName("obj_moveDOWNLEFT").y)
+
+            assertEquals(256.0f, it.firstInstanceByName("obj_moveDOWN").x)
+            assertEquals(232.0f, it.firstInstanceByName("obj_moveDOWN").y)
+
+            assertEquals(293.65686f, it.firstInstanceByName("obj_moveDOWNRIGHT").x)
+            assertEquals(229.65686f, it.firstInstanceByName("obj_moveDOWNRIGHT").y)
+
+            assertEquals(296.0f, it.firstInstanceByName("obj_moveRIGHT").x)
+            assertEquals(192.0f, it.firstInstanceByName("obj_moveRIGHT").y)
+
+            assertEquals(256.0f, it.firstInstanceByName("obj_middle").x)
+            assertEquals(192.0f, it.firstInstanceByName("obj_middle").y)
         }
     }
 
@@ -168,14 +205,14 @@ object GameMakerFeatureTests {
         return index
     }
 
-    fun VariableContainer.assertInt32Variable(vm: StarfaitVM, name: String, expected: RValue) {
-        val varId = vm.getVariableSlotFromVariableName(name)
+    fun VariableContainer.assertInt32Variable(vm: StarfaitVM, variableInstanceType: Int, name: String, expected: RValue) {
+        val varId = vm.getVariableSlotFromVariableName(variableInstanceType, name)
         val actual = this.getVariable(varId, null)
         assertEquals(expected.convertToInt32(), actual.convertToInt32())
     }
 
-    fun VariableContainer.assertBooleanVariable(vm: StarfaitVM, name: String, expected: RValue) {
-        val varId = vm.getVariableSlotFromVariableName(name)
+    fun VariableContainer.assertBooleanVariable(vm: StarfaitVM, variableInstanceType: Int, name: String, expected: RValue) {
+        val varId = vm.getVariableSlotFromVariableName(variableInstanceType, name)
         val actual = this.getVariable(varId, null)
         assertEquals(expected.convertToBoolean(), actual.convertToBoolean())
     }

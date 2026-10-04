@@ -879,7 +879,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             if (outline)
                 warnFunctionSemiStub("draw_rectangle")
 
-            runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawState.color)
+            runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat(), (y2 - y1).toFloat(), runner.drawState.color, runner.drawState.alpha)
         }
 
         // See GameMaker-HTML5's Function_Path.js

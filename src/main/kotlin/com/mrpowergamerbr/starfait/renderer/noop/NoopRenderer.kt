@@ -15,6 +15,6 @@ object NoopRenderer : Renderer {
     override fun drawBackground(texturePageEntry: TexturePageEntry, x: Float, y: Float, width: Float, height: Float, alpha: Float) {}
     override fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile) {}
     override fun drawText(font: Font, x: Float, y: Float, text: String) {}
-    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor) {}
+    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float) {}
     override fun frame(block: () -> Unit) {}
 }

@@ -285,7 +285,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         }
     }
 
-    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor) {
+    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float) {
         drawQuad(
             x,
             y,
@@ -297,7 +297,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             height,
             white1x1Texture,
             color,
-            1.0f
+            alpha
         )
     }
 

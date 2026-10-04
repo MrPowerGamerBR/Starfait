@@ -14,6 +14,6 @@ interface Renderer {
     fun drawBackground(texturePageEntry: TexturePageEntry, x: Float, y: Float, width: Float, height: Float, alpha: Float)
     fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile)
     fun drawText(font: Font, x: Float, y: Float, text: String)
-    fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor)
+    fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float)
     fun frame(block: () -> (Unit))
 }

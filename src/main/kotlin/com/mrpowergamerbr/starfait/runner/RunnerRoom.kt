@@ -137,7 +137,8 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
         @DumpRunnerField var enabled: Boolean,
         @DumpRunnerField var x: Int,
         @DumpRunnerField var y: Int,
-        @DumpRunnerField var backgroundIndex: Int
+        @DumpRunnerField var backgroundIndex: Int,
+        @DumpRunnerField var stretch: Boolean
     )
 
     class RunnerTile(

@@ -125,7 +125,8 @@ class StarfaitRunner(
                         background.enabled,
                         background.x,
                         background.y,
-                        background.backgroundIndex
+                        background.backgroundIndex,
+                        background.stretch
                     )
                 )
             }
@@ -229,22 +230,24 @@ class StarfaitRunner(
 
         currentRoom.updateViews()
 
-        for (background in currentRoom.backgrounds) {
-            if (!background.enabled)
+        for (runnerBackground in currentRoom.backgrounds) {
+            if (!runnerBackground.enabled)
                 continue
 
-            // Sometimes a background index can be negative even though the background is enabled
-            val backgroundIndex = background.backgroundIndex
+            // Sometimes a runnerBackground index can be negative even though the runnerBackground is enabled
+            val backgroundIndex = runnerBackground.backgroundIndex
             if (0 > backgroundIndex)
                 continue
 
-            val background = gameWAD.bgnd.backgrounds[background.backgroundIndex]
+            val background = gameWAD.bgnd.backgrounds[runnerBackground.backgroundIndex]
             val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
 
             renderer.drawBackground(
                 tpag,
-                currentRoom.width.toFloat(),
-                currentRoom.height.toFloat()
+                runnerBackground.x.toFloat(),
+                runnerBackground.y.toFloat(),
+                if (runnerBackground.stretch) currentRoom.width.toFloat() else tpag.sourceWidth.toFloat(),
+                if (runnerBackground.stretch) currentRoom.height.toFloat() else tpag.sourceHeight.toFloat()
             )
         }
 

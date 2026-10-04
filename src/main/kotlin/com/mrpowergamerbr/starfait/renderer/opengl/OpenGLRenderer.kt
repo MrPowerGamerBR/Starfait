@@ -97,8 +97,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         // Think of this like if it was a sprite, and the sprite may had included transparent borders, so the values below are in relation to that "canvas"
         // targetX, targetY = where the first non-opaque pixel is
         drawQuad(
-            x + tpag.targetX.toFloat(),
-            y + tpag.targetY.toFloat(),
+            x + tpag.targetX.toFloat() - sprite.originX,
+            y + tpag.targetY.toFloat() - sprite.originY,
             tpag.sourceX.toFloat() / texture.width,
             tpag.sourceY.toFloat() / texture.height,
             (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,

@@ -257,6 +257,15 @@ class VMBuiltins(val vm: StarfaitVM) {
                 runner.currentRoom.backgrounds[arrayIndex!!].y = value.convertToInt32()
             }
         )
+        registerVariable(
+            "background_alpha",
+            { _, arrayIndex ->
+                RValue.Real(runner.currentRoom.backgrounds[arrayIndex!!].alpha.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.backgrounds[arrayIndex!!].alpha = value.convertToReal().toFloat()
+            }
+        )
         // TODO: Pretty sure this is writeable
         registerReadOnlyVariable("argument") { _, arrayIndex ->
             vm.currentCallFrame.arguments[arrayIndex!!]

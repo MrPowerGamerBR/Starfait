@@ -206,7 +206,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         )
     }
 
-    override fun drawBackground(texturePageEntry: TexturePageEntry, x: Float, y: Float, width: Float, height: Float) {
+    override fun drawBackground(texturePageEntry: TexturePageEntry, x: Float, y: Float, width: Float, height: Float, alpha: Float) {
         val texture = textures[texturePageEntry.textureIndex.toInt()]
 
         val tpag = texturePageEntry
@@ -221,7 +221,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             height - tpag.targetY.toFloat(),
             textures[tpag.textureIndex.toInt()],
             GMLColor(0xFFFFFF),
-            1.0f
+            alpha
         )
     }
 

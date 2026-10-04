@@ -1035,5 +1035,9 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealFunction("power", 2) { args ->
             args[0].convertToReal().pow(args[1].convertToReal())
         }
+
+        registerVoidFunction("draw_self", 0) { args ->
+            runner.renderer.drawInstance(vm.currentSelfInstance)
+        }
     }
 }

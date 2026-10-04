@@ -94,6 +94,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         val tpag = runner.gameWAD.tpag.entries[framePointer]!!
 
         val texture = textures[tpag.textureIndex.toInt()]
+        // Think of this like if it was a sprite, and the sprite may had included transparent borders, so the values below are in relation to that "canvas"
+        // targetX, targetY = where the first non-opaque pixel is
         drawQuad(
             x + tpag.targetX.toFloat(),
             y + tpag.targetY.toFloat(),
@@ -101,8 +103,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
             tpag.sourceY.toFloat() / texture.height,
             (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-            (sprite.width.toFloat() - tpag.targetX.toFloat()) * xscale,
-            (sprite.height.toFloat() - tpag.targetY.toFloat()) * yscale,
+            tpag.targetWidth.toInt() * xscale,
+            tpag.targetHeight.toInt() * yscale,
             textures[tpag.textureIndex.toInt()],
             GMLColor(0xFFFFFF),
             alpha

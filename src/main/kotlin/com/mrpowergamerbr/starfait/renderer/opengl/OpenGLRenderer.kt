@@ -90,7 +90,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
     override fun drawSprite(sprite: Sprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, alpha: Float) {
         // Only attempt to render instances that DO have a sprite index
         // See GameMaker-HTML5's yySprite.js Draw, which wraps the subimage: _ind = (~ ~_ind) % this.numb
-        val framePointer = sprite.frames[subimg % sprite.frames.size]
+        val framePointer = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
         val tpag = runner.gameWAD.tpag.entries[framePointer]!!
 
         val texture = textures[tpag.textureIndex.toInt()]
@@ -122,7 +122,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
         y: Float,
         alpha: Float
     ) {
-        val framePointer = sprite.frames[subimg % sprite.frames.size]
+        val framePointer = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
         val tpag = runner.gameWAD.tpag.entries[framePointer]!!
 
         val texture = textures[tpag.textureIndex.toInt()]

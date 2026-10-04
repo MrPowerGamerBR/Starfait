@@ -358,7 +358,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerBooleanFunction("variable_global_exists", null) { args ->
             val variableName = args[0].convertToGMLString()
             // TODO: This is kinda nasty, I think it would be better to have a proper variable name -> varId lookup table
-            val varId = vm.getVariableSlotFromVariableName(variableName)
+            val varId = vm.getVariableSlotFromVariableName(VariableInstanceType.GLOBAL, variableName)
             println("varId: $varId")
             return@registerBooleanFunction vm.global.variables.containsKey(varId)
         }

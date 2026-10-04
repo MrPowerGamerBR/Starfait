@@ -11,6 +11,7 @@ import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import java.nio.ByteBuffer
+import kotlin.collections.mutableMapOf
 
 class StarfaitVM(
     val gameWAD: GameWAD,
@@ -28,7 +29,7 @@ class StarfaitVM(
     val builtins = VMBuiltins(this)
     lateinit var builtinVariableHandlers: Array<BuiltinVariable>
     lateinit var regularVariableNames: Array<String>
-    lateinit var variableNameToId: Map<String, Int>
+    lateinit var variableNameToId: Map<Int, Map<String, Int>>
 
     // "codeName#functionName"
     val loggedUnknownFunctions = mutableSetOf<String>()
@@ -870,19 +871,30 @@ class StarfaitVM(
         // Register the regular variable names
         regularVariableNames = Array(remapResult.allocatedRegularVariables.size) { index -> gameWAD.strg.getString(remapResult.allocatedRegularVariables[index].name) }
 
-        val variableNameToId = mutableMapOf<String, Int>()
+        val variableTypeAndNameToSlot = mutableMapOf<Int, MutableMap<String, Int>>()
         for ((index, variable) in remapResult.allocatedBuiltinVariables.withIndex()) {
-            variableNameToId[gameWAD.strg.getString(variable.name)] = index
+            val thisType = variableTypeAndNameToSlot.getOrPut(variable.instanceType) { mutableMapOf() }
+            val variableName = gameWAD.strg.getString(variable.name)
+            val previousValue = thisType.putIfAbsent(gameWAD.strg.getString(variable.name), index)
+            check(previousValue == null) { "Variable $variableName was already registered in the name -> variable slot map! Bug?" }
         }
 
         for ((index, variable) in remapResult.allocatedRegularVariables.withIndex()) {
-            variableNameToId[gameWAD.strg.getString(variable.name)] = index + StarfaitUtils.REGULAR_VARIABLES_BASE
+            // There are TONS of duplicated variable names in the LOCAL instance type, so we'll just bail
+            // *Maybe* in the future we could be fancy and add a map including the variable container that holds the variable, but for now, this shall be like this
+            if (variable.instanceType == VariableInstanceType.LOCAL)
+                continue
+
+            val thisType = variableTypeAndNameToSlot.getOrPut(variable.instanceType) { mutableMapOf() }
+            val variableName = gameWAD.strg.getString(variable.name)
+            val previousValue = thisType.putIfAbsent(gameWAD.strg.getString(variable.name), index + StarfaitUtils.REGULAR_VARIABLES_BASE)
+            check(previousValue == null) { "Variable $variableName was already registered in the name -> variable slot map! Bug?" }
         }
-        this.variableNameToId = variableNameToId
+        this.variableNameToId = variableTypeAndNameToSlot
     }
 
-    fun getVariableSlotFromVariableName(name: String): Int {
-        return variableNameToId[name] ?: error("I don't know about a variable with name \"$name\"!")
+    fun getVariableSlotFromVariableName(variableInstanceType: Int, name: String): Int {
+        return variableNameToId[variableInstanceType]!![name] ?: error("I don't know about a variable with name \"$name\"!")
     }
 
     fun getVariableNameFromVariableSlot(slot: Int): String {

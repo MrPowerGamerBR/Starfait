@@ -31,7 +31,9 @@ import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_UP
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.runner.StdoutGameOutput
 import com.mrpowergamerbr.starfait.statedumper.StateDumper
+import com.mrpowergamerbr.starfait.vm.RValue
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
+import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlinx.serialization.json.Json
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.GL_BACK
@@ -56,6 +58,7 @@ import org.lwjgl.sdl.SDLKeycode.SDLK_DOWN
 import org.lwjgl.sdl.SDLKeycode.SDLK_END
 import org.lwjgl.sdl.SDLKeycode.SDLK_ESCAPE
 import org.lwjgl.sdl.SDLKeycode.SDLK_F1
+import org.lwjgl.sdl.SDLKeycode.SDLK_F10
 import org.lwjgl.sdl.SDLKeycode.SDLK_F11
 import org.lwjgl.sdl.SDLKeycode.SDLK_F12
 import org.lwjgl.sdl.SDLKeycode.SDLK_F5
@@ -213,6 +216,12 @@ class StarfaitWindow(
                             if (dumpStateFile != null) {
                                 dumpRunnerStateAsJsonToFile(runner, dumpStateFile!!)
                             }
+                        }
+
+                        if (event.key().key() == SDLK_F10) {
+                            val variableSlot = runner.vm.getVariableSlotFromVariableName(VariableInstanceType.GLOBAL, "interact")
+                            runner.vm.global.setVariable(variableSlot, RValue.Int32(0), null)
+                            println("Platform: Changed global.interact [$variableSlot] = 0")
                         }
 
                         if (event.key().key() == 'p'.code) {

@@ -99,5 +99,6 @@ sealed class StackValue {
 
         override fun convertToVariable() = RValue.Boolean(value)
         override fun convertToBoolean() = value
+        override fun convertToReal() = if (value) 1.0 else 0.0
     }
 }

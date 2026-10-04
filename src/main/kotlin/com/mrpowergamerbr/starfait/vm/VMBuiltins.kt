@@ -921,6 +921,12 @@ class VMBuiltins(val vm: StarfaitVM) {
             self.vspeed = if (vm.dragAndDropRelativeValues) self.vspeed + value else value
         }
 
+        registerVoidFunction("action_set_friction", 1) { args ->
+            val value = args[0].convertToReal().toFloat()
+            val self = vm.currentSelfInstance
+            self.friction = if (vm.dragAndDropRelativeValues) self.friction + value else value
+        }
+
         registerVoidFunction("action_kill_object", 0) { args ->
             vm.currentSelfInstance.markAsDestroyed(true)
         }

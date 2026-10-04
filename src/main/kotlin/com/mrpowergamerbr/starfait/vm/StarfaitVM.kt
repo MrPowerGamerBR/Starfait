@@ -862,8 +862,8 @@ class StarfaitVM(
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
                 name,
-                { _, _ -> error("Tried reading from unimplemented builtin variable \"$name\"!") },
-                { _, _, _ -> error("Tried writing to unimplemented builtin variable \"$name\"!") },
+                { instance, arrayIndex -> error("Tried reading from unimplemented builtin variable \"$name\"! (instance: $instance, arrayIndex: $arrayIndex)") },
+                { instance, value, arrayIndex -> error("Tried writing to unimplemented builtin variable \"$name\"! (instance: $instance, value: $value, arrayIndex: $arrayIndex)") },
             )
         }
 

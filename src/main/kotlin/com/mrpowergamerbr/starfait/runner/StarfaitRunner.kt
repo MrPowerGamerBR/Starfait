@@ -259,12 +259,16 @@ class StarfaitRunner(
         }
 
         forEachInstanceByDepth { instance ->
-            val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
+            // "This works by telling GameMaker to skip Draw Events for this instance, so care must be taken when using this as it means that
+            // no code placed in any of the Draw events will be run while the instance is not visible."
+            if (instance.visible || this.drawInvisibleInstances) {
+                val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
 
-            if (!instanceHasDrawEvent && (instance.visible || this.drawInvisibleInstances)) {
-                // Draw the instance manually
-                // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
-                renderer.drawInstance(instance)
+                if (!instanceHasDrawEvent) {
+                    // Draw the instance manually
+                    // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
+                    renderer.drawInstance(instance)
+                }
             }
         }
 

@@ -959,5 +959,17 @@ class VMBuiltins(val vm: StarfaitVM) {
             val gameObject = vm.gameWAD.objt.objects.getOrNull(objectIndex) ?: return@registerFunction RValue.Undefined
             RValue.String(vm.gameWAD.strg.getString(gameObject.name))
         }
+
+        registerRealFunction("lengthdir_x", 2) { args ->
+            val len = args[0].convertToReal()
+            val dir = args[1].convertToReal()
+            cos(Math.toRadians(dir)) * len
+        }
+
+        registerRealFunction("lengthdir_y", 2) { args ->
+            val len = args[0].convertToReal()
+            val dir = args[1].convertToReal()
+            -sin(Math.toRadians(dir)) * len
+        }
     }
 }

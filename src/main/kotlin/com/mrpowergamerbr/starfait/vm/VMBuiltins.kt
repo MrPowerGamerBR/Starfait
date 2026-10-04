@@ -199,12 +199,12 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("xstart", Instance::xStart)
         registerInstanceRealVariable("ystart", Instance::yStart)
         registerReadOnlyInstanceVariable("sprite_width") { instance, _ ->
-            val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
-            RValue.Real(sprite.width.toDouble() * instance.imageXScale)
+            val sprite = runner.gameWAD.sprt.sprites.getOrNull(instance.spriteIndex.toInt())
+            RValue.Real((sprite?.width?.toDouble() ?: 0.0) * instance.imageXScale)
         }
         registerReadOnlyInstanceVariable("sprite_height") { instance, _ ->
-            val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
-            RValue.Real(sprite.height.toDouble() * instance.imageYScale)
+            val sprite = runner.gameWAD.sprt.sprites.getOrNull(instance.spriteIndex.toInt())
+            RValue.Real((sprite?.height?.toDouble() ?: 0.0) * instance.imageYScale)
         }
         registerInstanceBooleanVariable("solid", Instance::solid)
         registerVariable("room_persistent", { _, _ -> RValue.Boolean(runner.currentRoom.persistent) }, { _, value, _ -> runner.currentRoom.persistent = value.convertToBoolean() })

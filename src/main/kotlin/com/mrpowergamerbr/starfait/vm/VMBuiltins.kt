@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.GMLColor
+import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.runner.BoundingBox
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.Instance
@@ -687,8 +688,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerRealFunction("round", 1) { args ->
-            // TODO: delphi round! (bankers rounding)
-            round(args[0].convertToReal())
+            MathUtils.delphiRound(args[0].convertToReal()).toDouble()
         }
 
         registerStubbedFunction("surface_get_width", 1, 320.0)

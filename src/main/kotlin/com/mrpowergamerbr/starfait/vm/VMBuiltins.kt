@@ -220,6 +220,42 @@ class VMBuiltins(val vm: StarfaitVM) {
             )
         }
         registerVariable("background_color", { _, _ -> RValue.Int32(runner.currentRoom.backgroundColor.value) }, { _, value, _ -> runner.currentRoom.backgroundColor = GMLColor(value.convertToInt32()) })
+        registerVariable(
+            "background_visible",
+            { _, arrayIndex ->
+                RValue.Boolean(runner.currentRoom.backgrounds[arrayIndex!!].enabled)
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.backgrounds[arrayIndex!!].enabled = value.convertToBoolean()
+            }
+        )
+        registerVariable(
+            "background_index",
+            { _, arrayIndex ->
+                RValue.Real(runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex = value.convertToInt32()
+            }
+        )
+        registerVariable(
+            "background_x",
+            { _, arrayIndex ->
+                RValue.Real(runner.currentRoom.backgrounds[arrayIndex!!].x.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.backgrounds[arrayIndex!!].x = value.convertToInt32()
+            }
+        )
+        registerVariable(
+            "background_y",
+            { _, arrayIndex ->
+                RValue.Real(runner.currentRoom.backgrounds[arrayIndex!!].y.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.backgrounds[arrayIndex!!].y = value.convertToInt32()
+            }
+        )
         // TODO: Pretty sure this is writeable
         registerReadOnlyVariable("argument") { _, arrayIndex ->
             vm.currentCallFrame.arguments[arrayIndex!!]

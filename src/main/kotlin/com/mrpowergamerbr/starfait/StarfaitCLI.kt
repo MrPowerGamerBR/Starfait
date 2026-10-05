@@ -10,6 +10,7 @@ import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.double
 import com.github.ajalt.clikt.parameters.types.file
+import com.github.ajalt.clikt.parameters.types.float
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
@@ -64,6 +65,7 @@ class StarfaitCLI : CliktCommand() {
     val dumpState by option().file()
     val dumpStateAtFrame by option().int().multiple()
     val disassemble by option().multiple()
+    val masterVolume by option().float().default(1.0f)
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
@@ -293,7 +295,8 @@ class StarfaitCLI : CliktCommand() {
             dumpState,
             dumpStateAtFrame.toSet(),
             traceFrameDuration.map { if (it == "*") 0..Int.MAX_VALUE else it.split("..").let { it[0].toInt()..it[1].toInt() } },
-            speed
+            speed,
+            masterVolume
         )
         window.start()
 

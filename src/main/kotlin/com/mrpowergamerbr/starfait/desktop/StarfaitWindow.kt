@@ -49,6 +49,7 @@ import org.lwjgl.sdl.SDLAudio.SDL_OpenAudioDevice
 import org.lwjgl.sdl.SDLAudio.SDL_OpenAudioDeviceStream
 import org.lwjgl.sdl.SDLAudio.SDL_PutAudioStreamData
 import org.lwjgl.sdl.SDLAudio.SDL_ResumeAudioStreamDevice
+import org.lwjgl.sdl.SDLAudio.SDL_SetAudioDeviceGain
 import org.lwjgl.sdl.SDLError.SDL_GetError
 import org.lwjgl.sdl.SDLEvents.*
 import org.lwjgl.sdl.SDLInit.*
@@ -84,7 +85,8 @@ class StarfaitWindow(
     var dumpStateFile: File?,
     val dumpStateAtFrames: Set<Int>,
     val traceFrameDuration: List<IntRange>,
-    val speed: Double
+    val speed: Double,
+    val masterVolume: Float
 ) {
     companion object {
         private val JsonPrettyPrint = Json {
@@ -113,6 +115,10 @@ class StarfaitWindow(
         SDL_GL_SetSwapInterval(1) // vsync
 
         val device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, null)
+        SDL_SetAudioDeviceGain(device, masterVolume)
+        if (headless) {
+            SDL_SetAudioDeviceGain(device, 0.0f)
+        }
 
         val renderer = OpenGLRenderer(vm.gameWAD)
         val runner = StarfaitRunner(vm.gameWAD, vm, renderer, SDLAudioManager(vm.gameWAD, device), StdoutGameOutput(), seed, replaceRooms)

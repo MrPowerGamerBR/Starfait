@@ -1126,5 +1126,15 @@ class VMBuiltins(val vm: StarfaitVM) {
 
             runner.audioManager.setAudioGain(soundIndexOrInstanceId, gain.toFloat(), timeMs)
         }
+
+        // TODO: make_colour_rgb alias
+        registerIntFunction("make_color_rgb", null) { args ->
+            val red = args[0].convertToInt32()
+            val green = args[1].convertToInt32()
+            val blue = args[2].convertToInt32()
+
+            val value = ((blue and 0xFF) shl 16) or ((red and 0xFF) shl 8) or ((green and 0xFF))
+            return@registerIntFunction value
+        }
     }
 }

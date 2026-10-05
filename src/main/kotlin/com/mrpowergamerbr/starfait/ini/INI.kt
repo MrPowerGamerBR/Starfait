@@ -1,7 +1,15 @@
 package com.mrpowergamerbr.starfait.ini
 
-data class INI(val sections: MutableMap<String, MutableMap<String, String>>) {
+import com.mrpowergamerbr.starfait.MathUtils
+import java.util.Locale
+
+@ConsistentCopyVisibility
+data class INI private constructor(val sections: MutableMap<String, MutableMap<String, String>>) {
     companion object {
+        fun empty(): INI {
+            return INI(mutableMapOf())
+        }
+
         fun parse(text: String): INI {
             val sections = mutableMapOf<String, MutableMap<String, String>>()
             var currentSectionName: String? = null
@@ -37,6 +45,22 @@ data class INI(val sections: MutableMap<String, MutableMap<String, String>>) {
 
             return INI(sections)
         }
+    }
+
+    fun readString(section: String, key: String): String? {
+        return this.sections[section]?.get(key)
+    }
+
+    fun readReal(section: String, key: String): Double? {
+        return this.sections[section]?.get(key)?.let { MathUtils.strtod(it) }
+    }
+
+    fun writeReal(section: String, key: String, value: Double) {
+        this.sections.getOrPut(section) { mutableMapOf() }[key] = "%.6f".format(Locale.ROOT, value)
+    }
+
+    fun writeString(section: String, key: String, value: String) {
+        this.sections.getOrPut(section) { mutableMapOf() }[key] = value
     }
 
     fun writeToString(): String {

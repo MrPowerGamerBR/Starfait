@@ -31,12 +31,12 @@ sealed class SDLSoundInstance(
         soundIndex: Int,
         loop: Boolean,
         val stbVorbisId: Long,
-        val stbVorbisInfo: STBVorbisInfo,
-        val stack: MemoryStack
+        val stbVorbisInfo: STBVorbisInfo
     ) : SDLSoundInstance(sdlStreamId, instanceId, soundIndex, loop) {
         override fun free() {
+            this.markedToBeFreed = true
             this.freed = true
-            this.stack.close()
+            stbVorbisInfo.close()
             SDL_DestroyAudioStream(this.sdlStreamId)
         }
     }
@@ -47,12 +47,11 @@ sealed class SDLSoundInstance(
         soundIndex: Int,
         loop: Boolean,
         val bufferAllocatedBySDL: Boolean,
-        val buffer: ByteBuffer,
-        val stack: MemoryStack
+        val buffer: ByteBuffer
     ) : SDLSoundInstance(sdlStreamId, instanceId, soundIndex, loop) {
         override fun free() {
+            this.markedToBeFreed = true
             this.freed = true
-            this.stack.close()
             if (bufferAllocatedBySDL) {
                 SDL_free(this.buffer)
             } else {

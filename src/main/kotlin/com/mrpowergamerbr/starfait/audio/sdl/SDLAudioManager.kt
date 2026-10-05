@@ -232,9 +232,10 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
         }
     }
 
-    override fun setAudioGain(soundIndexOrInstanceId: Int, gain: Float) {
+    override fun setAudioGain(soundIndexOrInstanceId: Int, gain: Float, timeMs: Int) {
         for (soundInstance in this.filterSoundInstancesBySoundIndexOrInstanceId(soundIndexOrInstanceId)) {
-            SDL_SetAudioStreamGain(soundInstance.sdlStreamId, gain)
+            soundInstance.gain.set(gain, timeMs)
+            SDL_SetAudioStreamGain(soundInstance.sdlStreamId, soundInstance.gain.update())
         }
     }
 
@@ -244,6 +245,11 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
                 soundInstance.free()
                 continue
             }
+
+            val previousGain = soundInstance.gain.get()
+            val currentGain = soundInstance.gain.update()
+            if (previousGain != currentGain)
+                SDL_SetAudioStreamGain(soundInstance.sdlStreamId, currentGain)
 
             if (soundInstance.paused)
                 continue

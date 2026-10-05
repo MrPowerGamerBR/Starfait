@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.audio.sdl
 
+import com.mrpowergamerbr.starfait.audio.TimeRampedParamLinear
 import org.lwjgl.sdl.SDLAudio.SDL_DestroyAudioStream
 import org.lwjgl.sdl.SDLStdinc.SDL_free
 import org.lwjgl.stb.STBVorbisInfo
@@ -15,6 +16,7 @@ sealed class SDLSoundInstance(
     val soundIndex: Int,
     val loop: Boolean
 ) {
+    val gain = TimeRampedParamLinear(1f)
     var hasPlayedAtLeastOnce = false
     var markedToBeFreed = false
     var freed = false

@@ -1115,12 +1115,12 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.audioManager.setAudioPitch(soundIndexOrInstanceId, pitch.toFloat())
         }
 
-        registerVoidFunction("audio_sound_gain", 2) { args ->
+        registerVoidFunction("audio_sound_gain", null) { args ->
             val soundIndexOrInstanceId = args[0].convertToInt32()
             val gain = args[1].convertToReal()
-            // TODO: time for fade?
+            val timeMs = args.getOrNull(2)?.convertToInt32() ?: 0
 
-            runner.audioManager.setAudioGain(soundIndexOrInstanceId, gain.toFloat())
+            runner.audioManager.setAudioGain(soundIndexOrInstanceId, gain.toFloat(), timeMs)
         }
     }
 }

@@ -14,6 +14,6 @@ class NoopAudioManager : AudioManager() {
     override fun stopAllSounds() {}
     override fun isAudioPlaying(soundIndexOrInstanceId: Int) = false
     override fun setAudioPitch(soundIndexOrInstanceId: Int, pitch: Float) {}
-    override fun setAudioGain(soundIndexOrInstanceId: Int, gain: Float) {}
+    override fun setAudioGain(soundIndexOrInstanceId: Int, gain: Float, timeMs: Int) {}
     override fun tick() {}
 }

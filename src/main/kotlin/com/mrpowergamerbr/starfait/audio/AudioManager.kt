@@ -10,6 +10,6 @@ abstract class AudioManager {
     abstract fun stopAllSounds()
     abstract fun isAudioPlaying(soundIndexOrInstanceId: Int): Boolean
     abstract fun setAudioPitch(soundIndexOrInstanceId: Int, pitch: Float)
-    abstract fun setAudioGain(soundIndexOrInstanceId: Int, gain: Float)
+    abstract fun setAudioGain(soundIndexOrInstanceId: Int, gain: Float, timeMs: Int)
     abstract fun tick()
 }

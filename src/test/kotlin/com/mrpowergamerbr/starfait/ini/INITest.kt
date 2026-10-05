@@ -23,17 +23,17 @@ object INITest {
     @Test
     fun `test replicate roundtrip`() {
         val ini = INI.empty()
-        ini.writeReal("Flowey", "Met1", 1.0)
-        ini.writeReal("Toriel", "TS", 1.0)
-        ini.writeReal("Toriel", "Bscotch", 1.0)
-        ini.writeReal("General", "fun", 71.0)
-        ini.writeString("General", "Name", "CHARA")
-        ini.writeReal("General", "Love", 1.0)
-        ini.writeReal("General", "Time", 70854.0)
-        ini.writeReal("General", "Kills", 0.0)
-        ini.writeReal("General", "Room", 46.0)
-        ini.writeReal("Sans", "M1", 1.0)
         ini.writeReal("Papyrus", "M1", 2.0)
+        ini.writeReal("Sans", "M1", 1.0)
+        ini.writeReal("General", "Room", 46.0)
+        ini.writeReal("General", "Kills", 0.0)
+        ini.writeReal("General", "Time", 70854.0)
+        ini.writeReal("General", "Love", 1.0)
+        ini.writeString("General", "Name", "CHARA")
+        ini.writeReal("General", "fun", 71.0)
+        ini.writeReal("Toriel", "Bscotch", 1.0)
+        ini.writeReal("Toriel", "TS", 1.0)
+        ini.writeReal("Flowey", "Met1", 1.0)
 
         INITest::class.java.getResourceAsStream("/undertale.ini").use {
             val originalText = it.readAllBytes().toString(Charsets.UTF_8)

@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait
 
 import com.mrpowergamerbr.starfait.audio.noop.NoopAudioManager
+import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.noop.NoopRenderer
 import com.mrpowergamerbr.starfait.runner.BufferedGameOutput
 import com.mrpowergamerbr.starfait.runner.CollisionPair
@@ -202,6 +203,34 @@ object GameMakerFeatureTests {
         }
     }
 
+    @Test
+    fun `test ini read, write, and virtual file system`() = runTestGame(
+        "ini",
+        0,
+        2
+    ) {
+        onExit {
+            val vfs = (it.fileSystem as VirtualFileSystem)
+
+            // Because GameMaker seems to shuffle the lines
+            assertEquals(
+                """
+                    [Characters]
+                    Gabriela="very cute!"
+                    Pantufa="also cute"
+                    Loritta="cute"
+                    [Howdy]
+                    ayaya="1.000000"
+                    longboi="9999999999999.000000"
+                    test="1234.000000"
+                    answer="5.0 Loritta is so "cute"!"
+                    hello="world"
+                """.trimIndent(),
+                vfs.files["test.ini"]!!.toString(Charsets.UTF_8).removeSuffix("\n")
+            )
+        }
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))
@@ -220,7 +249,7 @@ object GameMakerFeatureTests {
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
         val renderer = NoopRenderer
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, NoopAudioManager(), BufferedGameOutput(), seed, emptyMap())
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, NoopAudioManager(), VirtualFileSystem(), BufferedGameOutput(), seed, emptyMap())
         vm.runner = runner
         runner.start()
 
@@ -236,11 +265,14 @@ object GameMakerFeatureTests {
                 assert(outputOnlyExpectedLines.endsWith(expectedEndsWithString)) { "Expected game log to end with \n---\n$expectedEndsWithString\n---\n...but it ended with \n---\n$outputOnlyExpectedLines\n---" }
             }
         }
+
+        config.onExit(runner)
     }
 
     class TestConfig {
         var runnerCallbacks = mutableMapOf<Int, (StarfaitRunner) -> (Unit)>()
         var gameLogExpectedEndsWith = mutableMapOf<Int, String>()
+        var onExit: (StarfaitRunner) -> (Unit) = {}
 
         fun withRunnerAtFrame(dumpStateAtFrame: Int, callback: (StarfaitRunner) -> (Unit)) {
             runnerCallbacks[dumpStateAtFrame] = callback
@@ -248,6 +280,10 @@ object GameMakerFeatureTests {
 
         fun checkGameLogEndsWith(checkLogAtFrame: Int, expectedEndsWithString: String) {
             gameLogExpectedEndsWith[checkLogAtFrame] = expectedEndsWithString
+        }
+
+        fun onExit(callback: (StarfaitRunner) -> (Unit)) {
+            onExit = callback
         }
     }
 

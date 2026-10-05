@@ -4,20 +4,20 @@ import com.mrpowergamerbr.starfait.MathUtils
 import java.util.Locale
 
 @ConsistentCopyVisibility
-data class INI private constructor(val sections: MutableMap<String, MutableMap<String, String>>) {
+data class INI private constructor(val sections: LinkedHashMap<String, LinkedHashMap<String, String>>) {
     companion object {
         fun empty(): INI {
-            return INI(mutableMapOf())
+            return INI(LinkedHashMap())
         }
 
         fun parse(text: String): INI {
-            val sections = mutableMapOf<String, MutableMap<String, String>>()
+            val sections = LinkedHashMap<String, LinkedHashMap<String, String>>()
             var currentSectionName: String? = null
-            val currentSectionProperties = mutableMapOf<String, String>()
+            val currentSectionProperties = LinkedHashMap<String, String>()
 
             fun appendCurrentSectionIfNeeded() {
                 if (currentSectionName != null) {
-                    sections[currentSectionName!!] = currentSectionProperties.toMutableMap()
+                    sections[currentSectionName!!] = LinkedHashMap(currentSectionProperties)
                     currentSectionName = null
                     currentSectionProperties.clear()
                 }
@@ -55,12 +55,18 @@ data class INI private constructor(val sections: MutableMap<String, MutableMap<S
         return this.sections[section]?.get(key)?.let { MathUtils.strtod(it) }
     }
 
-    fun writeReal(section: String, key: String, value: Double) {
-        this.sections.getOrPut(section) { mutableMapOf() }[key] = "%.6f".format(Locale.ROOT, value)
-    }
+    fun writeReal(section: String, key: String, value: Double) = writeString(section, key, "%.6f".format(Locale.ROOT, value))
 
     fun writeString(section: String, key: String, value: String) {
-        this.sections.getOrPut(section) { mutableMapOf() }[key] = value
+        val entries = if (this.sections.containsKey(section)) {
+            this.sections[section]!!
+        } else {
+            val entries = LinkedHashMap<String, String>()
+            this.sections.putFirst(section, entries)
+            entries
+        }
+
+        entries.putFirst(key, value)
     }
 
     fun writeToString(): String {
@@ -68,7 +74,7 @@ data class INI private constructor(val sections: MutableMap<String, MutableMap<S
 
         for ((sectionName, entries) in this.sections) {
             builder.appendLine("[$sectionName]")
-            for ((key, value) in entries) {
+            for ((key, value) in entries.entries) {
                 builder.appendLine("$key=\"$value\"")
             }
         }

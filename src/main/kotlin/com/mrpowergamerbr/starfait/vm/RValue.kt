@@ -43,6 +43,7 @@ sealed class RValue {
 
         override fun convertToGMLString() = value.toString()
         override fun convertToInt32() = value.toInt()
+        override fun convertToReal() = value.toDouble()
     }
 
     data class Real(val value: Double) : RValue() {

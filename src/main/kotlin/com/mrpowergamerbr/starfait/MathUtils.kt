@@ -25,6 +25,49 @@ object MathUtils {
         return String.format(Locale.ROOT, "%.2f", value)
     }
 
+    /**
+     * Reimplementation of `strtod` in Kotlin
+     *
+     * @param input the input string
+     * @return the double
+     */
+    fun strtod(input: String): Double {
+        val whole = StringBuilder()
+        val decimal = StringBuilder()
+
+        var parsingWhole = true
+        var foundSomethingInWhole = false
+
+        for (char in input) {
+            if (parsingWhole) {
+                // Continue until we find something
+                if (char.isWhitespace()) {
+                    if (foundSomethingInWhole)
+                        break
+                    else
+                        continue
+                } else if (char == '.') {
+                    parsingWhole = false
+                    continue
+                } else if (char.isDigit()) {
+                    foundSomethingInWhole = true
+                    whole.append(char)
+                } else {
+                    // Anything else the parser just bails
+                    break
+                }
+            } else {
+                if (char.isDigit()) {
+                    decimal.append(char)
+                } else {
+                    break
+                }
+            }
+        }
+
+        return try { ("$whole.$decimal").toDouble() } catch (e: NumberFormatException) { 0.0 }
+    }
+
     // Sqr in GameMaker-HTML5
     fun squared(x: Float) = x * x
     fun squared(x: Double) = x * x

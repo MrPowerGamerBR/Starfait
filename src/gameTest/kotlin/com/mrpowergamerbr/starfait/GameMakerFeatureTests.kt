@@ -153,6 +153,38 @@ object GameMakerFeatureTests {
         }
     }
 
+    @Test
+    fun `test real parsing and printing`() = runTestGame(
+        "real-parsing-and-printing",
+        0,
+        1
+    ) {
+        checkGameLogEndsWith(
+            0,
+            """
+                    real(10.0): 10
+                    real(10.5): 10.50
+                    real(10,0): 10
+                    real(10,5): 10
+                    real(): 0
+                    real(            ): 0
+                    real(  4002.8922): 4002.89
+                    real(4002.8922  ): 4002.89
+                    real(Loritta is so cute!): 0
+                    real(Loritta 4562.4562): 0
+                    real(4562.4562 Loritta): 4562.46
+                    real(.5): 0.50
+                    real(..5): 0
+                    real(a9): 0
+                    real(9a): 9
+                    real(9a.5): 9
+                    real(45 62): 45
+                    real(.   50): 0
+            """.trimIndent()
+        )
+    }
+
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))

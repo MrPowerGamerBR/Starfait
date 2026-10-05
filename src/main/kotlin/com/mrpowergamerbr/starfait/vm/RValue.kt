@@ -26,7 +26,7 @@ sealed class RValue {
         override fun toStringTyped() = "string(\"$value\")"
 
         override fun convertToGMLString() = value
-        override fun convertToReal() = value.toDouble()
+        override fun convertToReal() = MathUtils.strtod(value)
     }
 
     data class Int32(val value: Int) : RValue() {

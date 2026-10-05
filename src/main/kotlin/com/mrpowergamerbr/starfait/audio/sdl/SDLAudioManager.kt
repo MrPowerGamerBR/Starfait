@@ -11,6 +11,7 @@ import org.lwjgl.sdl.SDLAudio.SDL_GetAudioStreamQueued
 import org.lwjgl.sdl.SDLAudio.SDL_LoadWAV_IO
 import org.lwjgl.sdl.SDLAudio.SDL_PutAudioStreamData
 import org.lwjgl.sdl.SDLAudio.SDL_SetAudioStreamFrequencyRatio
+import org.lwjgl.sdl.SDLAudio.SDL_SetAudioStreamGain
 import org.lwjgl.sdl.SDLAudio.SDL_UnbindAudioStream
 import org.lwjgl.sdl.SDLError.SDL_GetError
 import org.lwjgl.sdl.SDLIOStream.SDL_IOFromConstMem
@@ -228,6 +229,12 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
     override fun setAudioPitch(soundIndexOrInstanceId: Int, pitch: Float) {
         for (soundInstance in this.filterSoundInstancesBySoundIndexOrInstanceId(soundIndexOrInstanceId)) {
             SDL_SetAudioStreamFrequencyRatio(soundInstance.sdlStreamId, pitch)
+        }
+    }
+
+    override fun setAudioGain(soundIndexOrInstanceId: Int, gain: Float) {
+        for (soundInstance in this.filterSoundInstancesBySoundIndexOrInstanceId(soundIndexOrInstanceId)) {
+            SDL_SetAudioStreamGain(soundInstance.sdlStreamId, gain)
         }
     }
 

@@ -912,4 +912,9 @@ class StarfaitVM(
             return builtinVariableHandlers[slot].name
         }
     }
+
+    fun reset() {
+        this.global.variables.clear()
+        this.dsMapPool.clear()
+    }
 }

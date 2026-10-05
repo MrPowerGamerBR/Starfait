@@ -66,7 +66,10 @@ class StarfaitRunner(
     fun start() {
         generateFlattenedEvents()
         generateCollisionPairs()
+        initializeFirstRoom()
+    }
 
+    fun initializeFirstRoom() {
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]
 
@@ -279,38 +282,24 @@ class StarfaitRunner(
         if (this.pendingRestart) {
             this.pendingRestart = false
 
-            this.vm.global.variables.clear()
-            this.persistentRooms.clear()
-            this.audioManager.stopAllSounds()
-            this.vm.dsMapPool.clear()
-            this.currentInstanceId = BASE_INSTANCE_ID
-            this.drawState = DrawState(this.gameWAD)
+            reset()
+            initializeFirstRoom()
 
-            val firstRoomId = gameWAD.gen8.roomOrder.first()
-            val room = gameWAD.room.rooms[firstRoomId]
-
-            renderer.doSwap = false
-
-            initializeRoom(firstRoomId, room, false)
-
-            dispatchEventToAllInstances(EventType.OTHER, EventType.OtherSubType.GAME_START)
+            this.renderer.doSwap = false
         } else {
-            var hadPendingRoom = false
-
             val pendingRoom = this.pendingRoom
-            if (pendingRoom != null) {
+            val hasPendingRoom = pendingRoom != null
+
+            if (hasPendingRoom) {
                 initializeRoom(pendingRoom.roomId, pendingRoom.room, true)
                 this.pendingRoom = null
-                hadPendingRoom = true
             }
 
             this.currentRoom.instances.removeAll { it.destroyed }
-
-            this.audioManager.tick()
-
-            this.renderer.doSwap = !hadPendingRoom
+            this.renderer.doSwap = !hasPendingRoom
         }
 
+        this.audioManager.tick()
         this.keyboard.resetPressedAndReleasedKeys()
     }
 
@@ -554,5 +543,13 @@ class StarfaitRunner(
         }
 
         this.collisionPairs.addAll(collisionPairs.toList().sortedWith(compareBy(CollisionPair::objectIndex1).thenBy(CollisionPair::objectIndex2)))
+    }
+
+    private fun reset() {
+        this.vm.reset()
+        this.persistentRooms.clear()
+        this.audioManager.stopAllSounds()
+        this.currentInstanceId = BASE_INSTANCE_ID
+        this.drawState = DrawState(this.gameWAD)
     }
 }

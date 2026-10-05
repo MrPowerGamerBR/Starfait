@@ -1220,5 +1220,9 @@ class VMBuiltins(val vm: StarfaitVM) {
             runner.fileSystem.writeFile(openINI.path, openINI.ini.writeToString().toByteArray(Charsets.UTF_8))
             runner.openINI = null
         }
+
+        registerStringFunction("room_get_name", 1) { args ->
+            runner.gameWAD.strg.getString(runner.gameWAD.room.rooms[args[0].convertToInt32()].name)
+        }
     }
 }

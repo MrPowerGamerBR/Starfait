@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait
 
+import com.mrpowergamerbr.starfait.audio.noop.NoopAudioManager
 import com.mrpowergamerbr.starfait.renderer.noop.NoopRenderer
 import com.mrpowergamerbr.starfait.runner.BufferedGameOutput
 import com.mrpowergamerbr.starfait.runner.CollisionPair
@@ -159,7 +160,7 @@ object GameMakerFeatureTests {
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
         val renderer = NoopRenderer
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, BufferedGameOutput(), seed, emptyMap())
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, NoopAudioManager(), BufferedGameOutput(), seed, emptyMap())
         vm.runner = runner
         runner.start()
 

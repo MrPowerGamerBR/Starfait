@@ -80,6 +80,12 @@ class VMStack {
         return value as? T ?: error("Incorrect value on the pop! I wanted ${T::class} but the type was $value")
     }
 
+    // This should ONLY be called in extraordinary situations
+    // To avoid misuse, it doesn't return the StackValue
+    fun popAndThrowAway() {
+        pop()
+    }
+
     // This should NEVER EVER EVER be used outside of the VMStack, because if we are using, we aren't respecting the original runner behavior!
     private fun pop(): StackValue {
         require(top != 0) { "VM stack underflow!" }

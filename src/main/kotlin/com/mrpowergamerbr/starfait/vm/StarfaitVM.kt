@@ -84,7 +84,15 @@ class StarfaitVM(
             throw RuntimeException("Something went wrong while executing code $currentCallFrameCodeName!", e)
         }
 
-        check(callFrame.stackTopWhenTheCallFrameWasCreated == stack.top) { "Unbalanced stack! Stack top is ${stack.top} when it should've been ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString(" -> ") { gameWAD.strg.getString(it.code.name) }}"}
+        // The "repeat" statement in GameMaker is busted
+        // If you call "exit" or "return" within a "repeat" statement, the compiler won't emit POPZ calls to pop the integer used for the repeat statament
+        // Causing the stack to "leak" values!
+        //
+        // To workaround this, we'll just pop them ourselves
+        check(stack.top >= callFrame.stackTopWhenTheCallFrameWasCreated) { "Unbalanced stack! Stack top is ${stack.top} when it should've been equals to or more than ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString(" -> ") { gameWAD.strg.getString(it.code.name) }}"}
+        repeat(stack.top - callFrame.stackTopWhenTheCallFrameWasCreated) {
+            stack.popAndThrowAway()
+        }
 
         this.callFrameStack.removeLast()
         this.currentOrNullCallFrame = this.callFrameStack.lastOrNull()

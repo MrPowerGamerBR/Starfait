@@ -142,6 +142,17 @@ object GameMakerFeatureTests {
         }
     }
 
+    @Test
+    fun `test if there are elements on the stack after after using exit or return within a repeat block`() = runTestGame(
+        "unbalanced-stack-repeat",
+        0,
+        2
+    ) {
+        withRunnerAtFrame(1) {
+            assertEquals(0, it.vm.stack.top)
+        }
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))

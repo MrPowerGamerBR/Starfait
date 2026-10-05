@@ -85,8 +85,8 @@ class StarfaitVM(
         }
 
         // The "repeat" statement in GameMaker is busted
-        // If you call "exit" or "return" within a "repeat" statement, the compiler won't emit POPZ calls to pop the integer used for the repeat statament
-        // Causing the stack to "leak" values!
+        // If you call "exit" or "return" within a "repeat" statement, the compiler won't emit POPZ calls to pop the integer used for the repeat statement,
+        // causing the stack to "leak" values!
         //
         // To workaround this, we'll just pop them ourselves
         check(stack.top >= callFrame.stackTopWhenTheCallFrameWasCreated) { "Unbalanced stack! Stack top is ${stack.top} when it should've been equals to or more than ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString(" -> ") { gameWAD.strg.getString(it.code.name) }}"}

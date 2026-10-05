@@ -520,6 +520,22 @@ class StarfaitRunner(
         }
     }
 
+    /**
+     * Generates a list of collision pairs, ordered by the [GameObject]'s index in ascending order.
+     *
+     * If you have these objects:
+     *
+     * * obj_collision1 has collision events to obj_collision2 and obj_collision3
+     * * obj_collision2 has collision events to obj_collision1 and obj_collision3
+     * * obj_collision3 has collision events to obj_collision2 and obj_collision3
+     *
+     * The collision pairs of them will be:
+     *
+     * * `obj_collision1` -> `[obj_collision2, obj_collision3]`
+     * * `obj_collision2` -> `[obj_collision3]`
+     *
+     * (the `obj_collision3` doesn't have one by itself because the only possible collision for it already exists)
+     */
     private fun generateCollisionPairs() {
         // We first use a set to avoid duplicates, then we convert to a ArrayList for fast iteration (yippee)
         val collisionPairs = mutableSetOf<CollisionPair>()

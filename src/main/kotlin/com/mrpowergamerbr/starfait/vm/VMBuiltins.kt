@@ -195,6 +195,10 @@ class VMBuiltins(val vm: StarfaitVM) {
             val sprite = runner.gameWAD.sprt.sprites.getOrNull(instance.spriteIndex.toInt())
             RValue.Real((sprite?.height?.toDouble() ?: 0.0) * instance.imageYScale)
         }
+        registerReadOnlyInstanceVariable("image_number") { instance, _ ->
+            val sprite = runner.gameWAD.sprt.sprites.getOrNull(instance.spriteIndex.toInt())
+            RValue.Real((sprite?.frames?.size?.toDouble() ?: 0.0))
+        }
         registerInstanceBooleanVariable("solid", Instance::solid)
         registerVariable("room_persistent", { _, _ -> RValue.Boolean(runner.currentRoom.persistent) }, { _, value, _ -> runner.currentRoom.persistent = value.convertToBoolean() })
         repeat(16) {

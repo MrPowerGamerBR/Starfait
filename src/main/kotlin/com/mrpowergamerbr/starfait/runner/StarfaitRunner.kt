@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -13,6 +14,7 @@ class StarfaitRunner(
     val gameWAD: GameWAD,
     val vm: StarfaitVM,
     val renderer: Renderer,
+    val audioManager: AudioManager,
     val output: GameOutput,
     val seed: Long,
     val replaceRooms: Map<Int, Int>
@@ -280,6 +282,7 @@ class StarfaitRunner(
 
         this.currentRoom.instances.removeAll { it.destroyed }
 
+        this.audioManager.tick()
         this.keyboard.tick()
     }
 

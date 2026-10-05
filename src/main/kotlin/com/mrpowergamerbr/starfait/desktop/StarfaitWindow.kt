@@ -1,6 +1,8 @@
 package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.RecordedFrame
+import com.mrpowergamerbr.starfait.audio.AudioManager
+import com.mrpowergamerbr.starfait.audio.sdl.SDLAudioManager
 import com.mrpowergamerbr.starfait.renderer.opengl.OpenGLRenderer
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
@@ -36,81 +38,35 @@ import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlinx.serialization.json.Json
 import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11.GL_BACK
-import org.lwjgl.opengl.GL11.GL_PACK_ALIGNMENT
-import org.lwjgl.opengl.GL11.GL_RGBA
-import org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE
-import org.lwjgl.opengl.GL11.glClearColor
-import org.lwjgl.opengl.GL11.glPixelStorei
-import org.lwjgl.opengl.GL11.glReadBuffer
-import org.lwjgl.opengl.GL11.glReadPixels
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.sdl.SDLAudio
+import org.lwjgl.sdl.SDLAudio.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK
+import org.lwjgl.sdl.SDLAudio.SDL_AUDIO_S16
+import org.lwjgl.sdl.SDLAudio.SDL_DestroyAudioStream
+import org.lwjgl.sdl.SDLAudio.SDL_FlushAudioStream
+import org.lwjgl.sdl.SDLAudio.SDL_GetAudioStreamQueued
+import org.lwjgl.sdl.SDLAudio.SDL_OpenAudioDevice
+import org.lwjgl.sdl.SDLAudio.SDL_OpenAudioDeviceStream
+import org.lwjgl.sdl.SDLAudio.SDL_PutAudioStreamData
+import org.lwjgl.sdl.SDLAudio.SDL_ResumeAudioStreamDevice
 import org.lwjgl.sdl.SDLError.SDL_GetError
-import org.lwjgl.sdl.SDLEvents.SDL_EVENT_KEY_DOWN
-import org.lwjgl.sdl.SDLEvents.SDL_EVENT_KEY_UP
-import org.lwjgl.sdl.SDLEvents.SDL_EVENT_QUIT
-import org.lwjgl.sdl.SDLEvents.SDL_PollEvent
-import org.lwjgl.sdl.SDLInit.SDL_INIT_VIDEO
-import org.lwjgl.sdl.SDLInit.SDL_Init
-import org.lwjgl.sdl.SDLInit.SDL_Quit
-import org.lwjgl.sdl.SDLKeycode.SDLK_BACKSPACE
-import org.lwjgl.sdl.SDLKeycode.SDLK_DELETE
-import org.lwjgl.sdl.SDLKeycode.SDLK_DOWN
-import org.lwjgl.sdl.SDLKeycode.SDLK_END
-import org.lwjgl.sdl.SDLKeycode.SDLK_ESCAPE
-import org.lwjgl.sdl.SDLKeycode.SDLK_F1
-import org.lwjgl.sdl.SDLKeycode.SDLK_F10
-import org.lwjgl.sdl.SDLKeycode.SDLK_F11
-import org.lwjgl.sdl.SDLKeycode.SDLK_F12
-import org.lwjgl.sdl.SDLKeycode.SDLK_F5
-import org.lwjgl.sdl.SDLKeycode.SDLK_F6
-import org.lwjgl.sdl.SDLKeycode.SDLK_HOME
-import org.lwjgl.sdl.SDLKeycode.SDLK_INSERT
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_0
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_1
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_9
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_DIVIDE
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_ENTER
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_MINUS
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_MULTIPLY
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_PERIOD
-import org.lwjgl.sdl.SDLKeycode.SDLK_KP_PLUS
-import org.lwjgl.sdl.SDLKeycode.SDLK_LALT
-import org.lwjgl.sdl.SDLKeycode.SDLK_LCTRL
-import org.lwjgl.sdl.SDLKeycode.SDLK_LEFT
-import org.lwjgl.sdl.SDLKeycode.SDLK_LSHIFT
-import org.lwjgl.sdl.SDLKeycode.SDLK_PAGEDOWN
-import org.lwjgl.sdl.SDLKeycode.SDLK_PAGEUP
-import org.lwjgl.sdl.SDLKeycode.SDLK_PAUSE
-import org.lwjgl.sdl.SDLKeycode.SDLK_PRINTSCREEN
-import org.lwjgl.sdl.SDLKeycode.SDLK_RALT
-import org.lwjgl.sdl.SDLKeycode.SDLK_RCTRL
-import org.lwjgl.sdl.SDLKeycode.SDLK_RETURN
-import org.lwjgl.sdl.SDLKeycode.SDLK_RIGHT
-import org.lwjgl.sdl.SDLKeycode.SDLK_RSHIFT
-import org.lwjgl.sdl.SDLKeycode.SDLK_SPACE
-import org.lwjgl.sdl.SDLKeycode.SDLK_TAB
-import org.lwjgl.sdl.SDLKeycode.SDLK_UP
-import org.lwjgl.sdl.SDLVideo.SDL_CreateWindow
-import org.lwjgl.sdl.SDLVideo.SDL_DestroyWindow
-import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_MAJOR_VERSION
-import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_MINOR_VERSION
-import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_PROFILE_CORE
-import org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_PROFILE_MASK
-import org.lwjgl.sdl.SDLVideo.SDL_GL_CreateContext
-import org.lwjgl.sdl.SDLVideo.SDL_GL_DestroyContext
-import org.lwjgl.sdl.SDLVideo.SDL_GL_MakeCurrent
-import org.lwjgl.sdl.SDLVideo.SDL_GL_SetAttribute
-import org.lwjgl.sdl.SDLVideo.SDL_GL_SetSwapInterval
-import org.lwjgl.sdl.SDLVideo.SDL_GL_SwapWindow
-import org.lwjgl.sdl.SDLVideo.SDL_WINDOW_HIDDEN
-import org.lwjgl.sdl.SDLVideo.SDL_WINDOW_OPENGL
+import org.lwjgl.sdl.SDLEvents.*
+import org.lwjgl.sdl.SDLInit.*
+import org.lwjgl.sdl.SDLKeycode.*
+import org.lwjgl.sdl.SDLTimer.SDL_Delay
+import org.lwjgl.sdl.SDLVideo.*
+import org.lwjgl.sdl.SDL_AudioSpec
 import org.lwjgl.sdl.SDL_Event
+import org.lwjgl.stb.STBVorbis.stb_vorbis_decode_filename
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.MemoryUtil.memByteBuffer
+import org.lwjgl.system.libc.LibCStdlib.free
 import java.awt.image.BufferedImage
 import java.io.File
+import java.nio.ShortBuffer
 import javax.imageio.ImageIO
-import kotlin.use
+
 
 class StarfaitWindow(
     val vm: StarfaitVM,
@@ -139,7 +95,7 @@ class StarfaitWindow(
     var frameCount = 0
 
     fun start() {
-        check(SDL_Init(SDL_INIT_VIDEO)) { "SDL_Init failed: ${SDL_GetError()}" }
+        check(SDL_Init(SDL_INIT_VIDEO or SDL_INIT_AUDIO)) { "SDL_Init failed: ${SDL_GetError()}" }
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)
@@ -156,8 +112,10 @@ class StarfaitWindow(
         GL.createCapabilities() // required before any GL call
         SDL_GL_SetSwapInterval(1) // vsync
 
+        val device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, null)
+
         val renderer = OpenGLRenderer(vm.gameWAD)
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, StdoutGameOutput(), seed, replaceRooms)
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, SDLAudioManager(vm.gameWAD, device), StdoutGameOutput(), seed, replaceRooms)
         renderer.runner = runner
         vm.runner = runner
         vm.runner.enableCollisionRendering = enableCollisionRendering
@@ -200,10 +158,12 @@ class StarfaitWindow(
                     if (event.type() == SDL_EVENT_KEY_UP) {
                         if (event.key().key() == SDLK_PAGEUP) {
                             runner.setPendingRoom(runner.currentRoom.roomId - 1)
+                            runner.audioManager.stopAllSounds()
                         }
 
                         if (event.key().key() == SDLK_PAGEDOWN) {
                             runner.setPendingRoom(runner.currentRoom.roomId + 1)
+                            runner.audioManager.stopAllSounds()
                         }
 
                         if (event.key().key() == SDLK_F5) {

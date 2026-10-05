@@ -2,22 +2,10 @@ package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.MathUtils
-import com.mrpowergamerbr.starfait.runner.BoundingBox
-import com.mrpowergamerbr.starfait.runner.EventType
-import com.mrpowergamerbr.starfait.runner.Instance
-import com.mrpowergamerbr.starfait.runner.RunnerRoom
-import com.mrpowergamerbr.starfait.runner.StarfaitRunner
-import kotlin.math.absoluteValue
-import kotlin.math.atan2
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.round
-import kotlin.math.sin
-import kotlin.math.sqrt
+import com.mrpowergamerbr.starfait.runner.*
+import kotlin.math.*
 import kotlin.reflect.KMutableProperty1
-import kotlin.text.iterator
+
 
 class VMBuiltins(val vm: StarfaitVM) {
     val runner: StarfaitRunner
@@ -163,7 +151,7 @@ class VMBuiltins(val vm: StarfaitVM) {
     fun registerViewIntVariable(name: String, property: KMutableProperty1<RunnerRoom.RunnerView, Int>) {
         registerViewVariable(
             name,
-            { _, view, _ -> 
+            { _, view, _ ->
                 RValue.Real(property.get(view).toDouble())
             },
             { _, view, value, _ ->
@@ -831,8 +819,6 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRealFunction("abs", 1) { args -> args[0].convertToReal().absoluteValue }
 
-        registerStubbedFunction("audio_is_playing", 1, false)
-
         // TODO: set_colour too? maybe we need to make a way to do aliases?
         registerVoidFunction("draw_set_color", 1) { args ->
             runner.drawState.color = GMLColor(args[0].convertToInt32())
@@ -1087,6 +1073,46 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("draw_set_alpha", 1) { args ->
             runner.drawState.alpha = args[0].convertToReal().toFloat()
+        }
+
+        registerIntFunction("audio_play_sound", 3) { args ->
+            val index = args[0].convertToInt32()
+            val priority = args[1].convertToInt32()
+            val loop = args[2].convertToBoolean()
+
+            val sound = runner.gameWAD.sond.sounds[index]
+            runner.audioManager.playSound(index, sound, loop)
+        }
+
+        registerVoidFunction("audio_stop_sound", 1) { args ->
+            val soundIndexOrInstanceId = args[0].convertToInt32()
+            runner.audioManager.stopSound(soundIndexOrInstanceId)
+        }
+
+        registerVoidFunction("audio_stop_all", 0) { args ->
+            runner.audioManager.stopAllSounds()
+        }
+
+        registerBooleanFunction("audio_is_playing", 1) { args ->
+            val soundIndexOrInstanceId = args[0].convertToInt32()
+            runner.audioManager.isAudioPlaying(soundIndexOrInstanceId)
+        }
+
+        registerVoidFunction("audio_pause_sound", 1) { args ->
+            val soundIndexOrInstanceId = args[0].convertToInt32()
+            runner.audioManager.pauseSound(soundIndexOrInstanceId)
+        }
+
+        registerVoidFunction("audio_resume_sound", 1) { args ->
+            val soundIndexOrInstanceId = args[0].convertToInt32()
+            runner.audioManager.resumeSound(soundIndexOrInstanceId)
+        }
+
+        registerVoidFunction("audio_sound_pitch", 2) { args ->
+            val soundIndexOrInstanceId = args[0].convertToInt32()
+            val pitch = args[1].convertToReal()
+
+            runner.audioManager.setAudioPitch(soundIndexOrInstanceId, pitch.toFloat())
         }
     }
 }

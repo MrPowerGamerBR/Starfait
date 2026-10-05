@@ -5,7 +5,9 @@ import org.lwjgl.sdl.SDLStdinc.SDL_free
 import org.lwjgl.stb.STBVorbisInfo
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.memFree
+import java.nio.Buffer
 import java.nio.ByteBuffer
+import java.nio.ShortBuffer
 
 sealed class SDLSoundInstance(
     val sdlStreamId: Long,
@@ -42,13 +44,18 @@ sealed class SDLSoundInstance(
         instanceId: Int,
         soundIndex: Int,
         loop: Boolean,
-        val byteBuffer: ByteBuffer,
+        val bufferAllocatedBySDL: Boolean,
+        val buffer: ByteBuffer,
         val stack: MemoryStack
     ) : SDLSoundInstance(sdlStreamId, instanceId, soundIndex, loop) {
         override fun free() {
             this.freed = true
             this.stack.close()
-            SDL_free(this.byteBuffer)
+            if (bufferAllocatedBySDL) {
+                SDL_free(this.buffer)
+            } else {
+                memFree(this.buffer)
+            }
             SDL_DestroyAudioStream(this.sdlStreamId)
         }
     }

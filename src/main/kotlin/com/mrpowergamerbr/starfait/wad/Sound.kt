@@ -12,10 +12,10 @@ class Sound(
     val audoIndex: Int
 ) {
     enum class Kind(val value: Int) {
-        STREAMED(100),
-        UNCOMPRESSED(101),
-        COMPRESSED(102),
-        UNCOMPRESSED_ON_LOAD(103);
+        COMPRESSED_STREAMED(100),
+        UNCOMPRESSED_NOT_STREAMED(101),
+        COMPRESSED_NOT_STREAMED(102),
+        COMPRESSED_UNCOMPRESS_ON_LOAD_NOT_STREAMED(103);
 
         companion object {
             fun fromValue(value: Int): Kind {

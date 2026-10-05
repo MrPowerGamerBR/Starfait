@@ -19,16 +19,17 @@ import org.lwjgl.stb.STBVorbis.stb_vorbis_get_info
 import org.lwjgl.stb.STBVorbis.stb_vorbis_get_samples_short_interleaved
 import org.lwjgl.stb.STBVorbis.stb_vorbis_open_memory
 import org.lwjgl.stb.STBVorbis.stb_vorbis_seek_start
+import org.lwjgl.stb.STBVorbis.stb_vorbis_stream_length_in_samples
 import org.lwjgl.stb.STBVorbisInfo
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.system.MemoryUtil.memByteBuffer
 import org.lwjgl.system.MemoryUtil.memFree
+import org.lwjgl.system.MemoryUtil.memShortBuffer
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.check
-import kotlin.error
 
 class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager() {
     private val soundInstances = mutableListOf<SDLSoundInstance>()
@@ -46,17 +47,14 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
     }
 
     override fun playSound(soundIndex: Int, sound: Sound, loop: Boolean): Int {
-        val extension = gameWAD.strg.getString(sound.fileType)
-        // println("Trying to play sound ${gameWAD.strg.getString(sound.name)} with priority $priority and loop $loop and ${sound.kind} ${runner.gameWAD.strg.getString(sound.fileType)}")
-
         val audo = gameWAD.audo.blobs[sound.audoIndex]
 
-        // TECHNICALLY we should handle it based on the audio kind, but it is what it is, so let's keep it like this for now
-        when (extension) {
-            ".ogg" -> {
+        when (sound.kind) {
+            Sound.Kind.COMPRESSED_STREAMED -> {
+                // TECHNICALLY sounds can be something that aren't OGGs, but for now, this shall do
+                val songBytes = File("/home/mrpowergamerbr/Projects/ButterGMGames/Undertale_108/", gameWAD.strg.getString(sound.fileName)).readBytes()
+
                 val stack = MemoryStack.stackPush()
-                val song = File("/home/mrpowergamerbr/Projects/ButterGMGames/Undertale_108/", gameWAD.strg.getString(sound.name) + ".ogg")
-                val songBytes = song.readBytes()
 
                 // memAlloc is just like a ByteBuffer
                 val byteBuffer = memAlloc(songBytes.size)
@@ -66,7 +64,7 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
 
                 // This keeps a "position" internally
                 val stbVorbisId = stb_vorbis_open_memory(byteBuffer, pError, null)
-                checkNotNull(stbVorbisId) { "Failed to decode OGG!" }
+                // TODO: How can we check if the OGG was opened correctly?
 
                 val stbVorbisInfo = STBVorbisInfo.calloc(stack)
 
@@ -97,44 +95,92 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
 
                 return instanceId
             }
-            ".wav" -> {
+            Sound.Kind.UNCOMPRESSED_NOT_STREAMED, Sound.Kind.COMPRESSED_NOT_STREAMED -> {
                 val stack = MemoryStack.stackPush()
 
                 val directByteBuffer = ByteBuffer.allocateDirect(audo.size)
                 directByteBuffer.put(audo).flip()
 
-                val pBuf = stack.mallocPointer(1)
-                val pLen = stack.mallocInt(1)
-
                 val spec = SDL_AudioSpec.calloc(stack)
 
-                val io = SDL_IOFromConstMem(directByteBuffer)
+                if (sound.kind == Sound.Kind.UNCOMPRESSED_NOT_STREAMED) {
+                    val pBuf = stack.mallocPointer(1)
+                    val pLen = stack.mallocInt(1)
 
-                val successfullyDecoded = SDL_LoadWAV_IO(io, true, spec, pBuf, pLen)
-                check(successfullyDecoded) { "Failed to decode WAV file!" }
+                    val io = SDL_IOFromConstMem(directByteBuffer)
 
-                val sdlStreamId = SDL_CreateAudioStream(spec, null)
-                check(sdlStreamId != MemoryUtil.NULL) { "Something went wrong when opening the audio device stream! ${SDL_GetError()}" }
-                val successfullyBound = SDL_BindAudioStream(this.sdlDeviceId, sdlStreamId)
-                check(successfullyBound) { "Failed to bind SDL stream to SDL device! ${SDL_GetError()}" }
+                    val successfullyDecoded = SDL_LoadWAV_IO(io, true, spec, pBuf, pLen)
+                    check(successfullyDecoded) { "Failed to decode WAV file!" }
 
-                val buffer = memByteBuffer(pBuf.get(), pLen.get(0))
+                    val sdlStreamId = SDL_CreateAudioStream(spec, null)
+                    check(sdlStreamId != MemoryUtil.NULL) { "Something went wrong when opening the audio device stream! ${SDL_GetError()}" }
+                    val successfullyBound = SDL_BindAudioStream(this.sdlDeviceId, sdlStreamId)
+                    check(successfullyBound) { "Failed to bind SDL stream to SDL device! ${SDL_GetError()}" }
 
-                val instanceId = this.currentSoundInstanceId++
-                soundInstances.add(
-                    SDLSoundInstance.UncompressedSDLSoundInstance(
-                        sdlStreamId,
-                        instanceId,
-                        soundIndex,
-                        loop,
-                        buffer,
-                        stack
+                    val byteBuffer = memByteBuffer(pBuf.get(), pLen.get(0))
+
+                    val instanceId = this.currentSoundInstanceId++
+                    soundInstances.add(
+                        SDLSoundInstance.UncompressedSDLSoundInstance(
+                            sdlStreamId,
+                            instanceId,
+                            soundIndex,
+                            loop,
+                            true,
+                            byteBuffer,
+                            stack
+                        )
                     )
-                )
+                    return instanceId
+                } else {
+                    // This keeps a "position" internally
+                    val pError = stack.mallocInt(1)
+                    val stbVorbisId = stb_vorbis_open_memory(directByteBuffer, pError, null)
+                    // TODO: How can we check if the OGG was opened correctly?
 
-                return instanceId
+                    val stbVorbisInfo = STBVorbisInfo.calloc(stack)
+
+                    stb_vorbis_get_info(stbVorbisId, stbVorbisInfo)
+
+                    spec.format(SDL_AUDIO_S16)
+                    spec.channels(stbVorbisInfo.channels())
+                    spec.freq(stbVorbisInfo.sample_rate())
+
+                    val sdlStreamId = SDL_CreateAudioStream(spec, null)
+                    check(sdlStreamId != MemoryUtil.NULL) { "Something went wrong when opening the audio device stream! ${SDL_GetError()}" }
+                    val successfullyBound = SDL_BindAudioStream(this.sdlDeviceId, sdlStreamId)
+                    check(successfullyBound) { "Failed to bind SDL stream to SDL device! ${SDL_GetError()}" }
+
+                    val samples = stb_vorbis_stream_length_in_samples(stbVorbisId)
+                    println("Samples is $samples")
+                    val capacity = samples * stbVorbisInfo.channels() * Short.SIZE_BYTES
+                    println("Audio capacity is $capacity")
+                    val byteBuffer = memAlloc(capacity)
+
+                    // This is honestly a hack of the century
+                    val shortBuffer = byteBuffer.asShortBuffer()
+                    while (true) {
+                        val frames = stb_vorbis_get_samples_short_interleaved(stbVorbisId, stbVorbisInfo.channels(), shortBuffer)
+                        if (frames == 0)
+                            break
+                    }
+
+                    val instanceId = this.currentSoundInstanceId++
+                    soundInstances.add(
+                        SDLSoundInstance.UncompressedSDLSoundInstance(
+                            sdlStreamId,
+                            instanceId,
+                            soundIndex,
+                            loop,
+                            false,
+                            byteBuffer,
+                            stack
+                        )
+                    )
+                    return instanceId
+                }
             }
-            else -> error("Unsupported sound file type! $extension")
+            Sound.Kind.COMPRESSED_UNCOMPRESS_ON_LOAD_NOT_STREAMED -> TODO()
         }
     }
 
@@ -248,7 +294,7 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
                             // This seems a bit funky, but the reason we do this is to avoid the queue being exhausted while we are in the middle of a frame
                             // So we push it twice if it is for a loop
                             repeat(if (soundInstance.loop) 2 else 1) {
-                                SDL_PutAudioStreamData(soundInstance.sdlStreamId, soundInstance.byteBuffer)
+                                SDL_PutAudioStreamData(soundInstance.sdlStreamId, soundInstance.buffer)
                                 SDL_FlushAudioStream(soundInstance.sdlStreamId)
                             }
                             soundInstance.hasPlayedAtLeastOnce = true

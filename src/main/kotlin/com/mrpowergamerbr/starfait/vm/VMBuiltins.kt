@@ -1171,5 +1171,9 @@ class VMBuiltins(val vm: StarfaitVM) {
             val blue = args[2].convertToInt32()
             return@registerIntFunction GMLColor.fromRGB(red, green, blue).value
         }
+
+        registerVoidFunction("game_restart", 0) { args ->
+            runner.pendingRestart = true
+        }
     }
 }

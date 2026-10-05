@@ -23,7 +23,7 @@ import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
 import kotlin.text.iterator
 
-class OpenGLRenderer(val gameWAD: GameWAD) : Renderer {
+class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
     companion object {
         private const val MAX_BATCH_ELEMENTS = 512
         private const val FIELDS_PER_ELEMENT = 48

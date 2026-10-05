@@ -225,7 +225,7 @@ object GameMakerFeatureTests {
         runner.start()
 
         repeat(exitAtFrame) {
-            runner.step()
+            runner.tick()
 
             config.runnerCallbacks[it]?.invoke(runner)
             config.gameLogExpectedEndsWith[it]?.let { expectedEndsWithString ->

@@ -45,7 +45,7 @@ class RunnerKeyboard {
     val keyHeld = Array(GML_KEY_COUNT) { false }
     val keyReleased = Array(GML_KEY_COUNT) { false }
 
-    fun tick() {
+    fun resetPressedAndReleasedKeys() {
         keyPressed.fill(false)
         keyReleased.fill(false)
     }

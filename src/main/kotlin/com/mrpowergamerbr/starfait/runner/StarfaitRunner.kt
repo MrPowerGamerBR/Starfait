@@ -31,11 +31,12 @@ class StarfaitRunner(
     val operatingSystem = YYOperatingSystem.WINDOWS
     var currentInstanceId = BASE_INSTANCE_ID
     private var pendingRoom: PendingRoom? = null
+    var pendingRestart = false
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
     val random = Random(seed)
     val persistentRooms = mutableMapOf<Int, RunnerRoom>()
-    val drawState = DrawState(gameWAD)
+    var drawState = DrawState(gameWAD)
 
     var enableCollisionRendering = false
     val debugRectangles = mutableListOf<BoundingBox>()
@@ -69,12 +70,12 @@ class StarfaitRunner(
         val firstRoomId = gameWAD.gen8.roomOrder.first()
         val room = gameWAD.room.rooms[firstRoomId]
 
-        initializeRoom(firstRoomId, room)
+        initializeRoom(firstRoomId, room, false)
 
         dispatchEventToAllInstances(EventType.OTHER, EventType.OtherSubType.GAME_START)
     }
 
-    fun initializeRoom(roomId: Int, room: Room) {
+    fun initializeRoom(roomId: Int, room: Room, keepPersistentInstances: Boolean) {
         val persistentRoom = persistentRooms.remove(roomId)
         println("Runner: Initializing room $roomId (${gameWAD.strg.getString(room.name)}) - Has persistent room? ${persistentRoom != null}")
 
@@ -150,7 +151,8 @@ class StarfaitRunner(
             // TODO: This sucks, maybe make it nullable?
             if (this::currentRoom.isInitialized) {
                 val previousRoom = this.currentRoom
-                handlePersistentRoomInstanceHandover(previousRoom, newRoom)
+                if (keepPersistentInstances)
+                    handlePersistentRoomInstanceHandover(previousRoom, newRoom)
 
                 if (previousRoom.persistent) {
                     // If the current room is persistent, we'll store it in our map instead of destroying the instance
@@ -179,7 +181,7 @@ class StarfaitRunner(
         }
     }
 
-    fun step() {
+    fun tick() {
         forEachInstance {
             it.xPrevious = it.x
             it.yPrevious = it.y
@@ -274,16 +276,42 @@ class StarfaitRunner(
             }
         }
 
-        val pendingRoom = this.pendingRoom
-        if (pendingRoom != null) {
-            initializeRoom(pendingRoom.roomId, pendingRoom.room)
-            this.pendingRoom = null
+        if (this.pendingRestart) {
+            this.pendingRestart = false
+
+            this.vm.global.variables.clear()
+            this.persistentRooms.clear()
+            this.audioManager.stopAllSounds()
+            this.vm.dsMapPool.clear()
+            this.currentInstanceId = BASE_INSTANCE_ID
+            this.drawState = DrawState(this.gameWAD)
+
+            val firstRoomId = gameWAD.gen8.roomOrder.first()
+            val room = gameWAD.room.rooms[firstRoomId]
+
+            renderer.doSwap = false
+
+            initializeRoom(firstRoomId, room, false)
+
+            dispatchEventToAllInstances(EventType.OTHER, EventType.OtherSubType.GAME_START)
+        } else {
+            var hadPendingRoom = false
+
+            val pendingRoom = this.pendingRoom
+            if (pendingRoom != null) {
+                initializeRoom(pendingRoom.roomId, pendingRoom.room, true)
+                this.pendingRoom = null
+                hadPendingRoom = true
+            }
+
+            this.currentRoom.instances.removeAll { it.destroyed }
+
+            this.audioManager.tick()
+
+            this.renderer.doSwap = !hadPendingRoom
         }
 
-        this.currentRoom.instances.removeAll { it.destroyed }
-
-        this.audioManager.tick()
-        this.keyboard.tick()
+        this.keyboard.resetPressedAndReleasedKeys()
     }
 
     fun handlePersistentRoomInstanceHandover(previousRoom: RunnerRoom, newRoom: RunnerRoom) {

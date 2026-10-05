@@ -1,7 +1,6 @@
 package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.RecordedFrame
-import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.audio.sdl.SDLAudioManager
 import com.mrpowergamerbr.starfait.renderer.opengl.OpenGLRenderer
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
@@ -39,33 +38,19 @@ import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlinx.serialization.json.Json
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.sdl.SDLAudio
 import org.lwjgl.sdl.SDLAudio.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK
-import org.lwjgl.sdl.SDLAudio.SDL_AUDIO_S16
-import org.lwjgl.sdl.SDLAudio.SDL_DestroyAudioStream
-import org.lwjgl.sdl.SDLAudio.SDL_FlushAudioStream
-import org.lwjgl.sdl.SDLAudio.SDL_GetAudioStreamQueued
 import org.lwjgl.sdl.SDLAudio.SDL_OpenAudioDevice
-import org.lwjgl.sdl.SDLAudio.SDL_OpenAudioDeviceStream
-import org.lwjgl.sdl.SDLAudio.SDL_PutAudioStreamData
-import org.lwjgl.sdl.SDLAudio.SDL_ResumeAudioStreamDevice
 import org.lwjgl.sdl.SDLAudio.SDL_SetAudioDeviceGain
 import org.lwjgl.sdl.SDLError.SDL_GetError
 import org.lwjgl.sdl.SDLEvents.*
 import org.lwjgl.sdl.SDLInit.*
 import org.lwjgl.sdl.SDLKeycode.*
-import org.lwjgl.sdl.SDLTimer.SDL_Delay
 import org.lwjgl.sdl.SDLVideo.*
-import org.lwjgl.sdl.SDL_AudioSpec
 import org.lwjgl.sdl.SDL_Event
-import org.lwjgl.stb.STBVorbis.stb_vorbis_decode_filename
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
-import org.lwjgl.system.MemoryUtil.memByteBuffer
-import org.lwjgl.system.libc.LibCStdlib.free
 import java.awt.image.BufferedImage
 import java.io.File
-import java.nio.ShortBuffer
 import javax.imageio.ImageIO
 
 
@@ -172,6 +157,10 @@ class StarfaitWindow(
                             runner.audioManager.stopAllSounds()
                         }
 
+                        if (event.key().key() == SDLK_F4) {
+                            runner.pendingRestart = true
+                        }
+
                         if (event.key().key() == SDLK_F5) {
                             runner.enableCollisionRendering = !runner.enableCollisionRendering
                         }
@@ -244,7 +233,7 @@ class StarfaitWindow(
                     }
 
                     renderer.frame {
-                        runner.step()
+                        runner.tick()
                     }
 
                     val finished = System.currentTimeMillis()
@@ -294,7 +283,8 @@ class StarfaitWindow(
 
                     frameCount++
 
-                    SDL_GL_SwapWindow(window)
+                    if (renderer.doSwap)
+                        SDL_GL_SwapWindow(window)
                 }
             }
         }

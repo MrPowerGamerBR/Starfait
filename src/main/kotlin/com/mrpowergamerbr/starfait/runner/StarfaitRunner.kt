@@ -1,6 +1,8 @@
 package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.audio.AudioManager
+import com.mrpowergamerbr.starfait.filesystem.FileSystem
+import com.mrpowergamerbr.starfait.ini.INI
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -15,6 +17,7 @@ class StarfaitRunner(
     val vm: StarfaitVM,
     val renderer: Renderer,
     val audioManager: AudioManager,
+    val fileSystem: FileSystem,
     val output: GameOutput,
     val seed: Long,
     val replaceRooms: Map<Int, Int>
@@ -37,6 +40,7 @@ class StarfaitRunner(
     val random = Random(seed)
     val persistentRooms = mutableMapOf<Int, RunnerRoom>()
     var drawState = DrawState(gameWAD)
+    var openINI: OpenINI? = null
 
     var enableCollisionRendering = false
     val debugRectangles = mutableListOf<BoundingBox>()
@@ -567,5 +571,6 @@ class StarfaitRunner(
         this.audioManager.stopAllSounds()
         this.currentInstanceId = BASE_INSTANCE_ID
         this.drawState = DrawState(this.gameWAD)
+        this.openINI = null
     }
 }

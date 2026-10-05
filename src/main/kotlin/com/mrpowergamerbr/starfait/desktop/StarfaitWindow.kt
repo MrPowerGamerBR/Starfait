@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.RecordedFrame
 import com.mrpowergamerbr.starfait.audio.sdl.SDLAudioManager
+import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.opengl.OpenGLRenderer
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
@@ -106,7 +107,16 @@ class StarfaitWindow(
         }
 
         val renderer = OpenGLRenderer(vm.gameWAD)
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, SDLAudioManager(vm.gameWAD, device), StdoutGameOutput(), seed, replaceRooms)
+        val runner = StarfaitRunner(
+            vm.gameWAD,
+            vm,
+            renderer,
+            SDLAudioManager(vm.gameWAD, device),
+            VirtualFileSystem(),
+            StdoutGameOutput(),
+            seed,
+            replaceRooms
+        )
         renderer.runner = runner
         vm.runner = runner
         vm.runner.enableCollisionRendering = enableCollisionRendering

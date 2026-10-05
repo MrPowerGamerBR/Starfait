@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.MathUtils
+import com.mrpowergamerbr.starfait.ini.INI
 import com.mrpowergamerbr.starfait.runner.*
 import kotlin.math.*
 import kotlin.reflect.KMutableProperty1
@@ -695,7 +696,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerStubbedFunction("surface_get_width", 1, 320.0)
         registerStubbedFunction("surface_get_height", 1, 240.0)
         registerStubbedFunction("window_get_fullscreen", 0, false)
-        registerStubbedFunction("ini_section_exists", 1, false)
 
         registerVoidFunction("draw_sprite", 4) { args ->
             runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[args[0].convertToInt32()], args[1].convertToInt32(), args[2].convertToReal().toFloat(), args[3].convertToReal().toFloat(), 1f, 1f, 0f, GMLColor(0xFFFFFF), runner.drawState.alpha)
@@ -1048,7 +1048,6 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerRealFunction sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
         }
 
-        registerStubbedFunction("ini_read_real", 3, 0.0)
         registerStubbedFunction("audio_sound_get_gain", 1, 0.0)
 
         registerFunction("object_get_name", 1) { args ->
@@ -1174,6 +1173,52 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerVoidFunction("game_restart", 0) { args ->
             runner.pendingRestart = true
+        }
+
+        registerVoidFunction("ini_open", 1) { args ->
+            val fileName = args[0].convertToGMLString()
+            val content = runner.fileSystem.readFile(fileName)?.toString(Charsets.UTF_8) ?: ""
+            runner.openINI = OpenINI(fileName, INI.parse(content))
+        }
+
+        registerBooleanFunction("ini_section_exists", 1) { args ->
+            val section = args[0].convertToGMLString()
+            return@registerBooleanFunction runner.openINI?.ini?.sections?.containsKey(section) == true
+        }
+
+        registerStringFunction("ini_read_string", 3) { args ->
+            val section = args[0].convertToGMLString()
+            val key = args[1].convertToGMLString()
+            val defaultValue = args[2].convertToGMLString()
+            return@registerStringFunction runner.openINI?.ini?.readString(section, key) ?: defaultValue
+        }
+
+        registerRealFunction("ini_read_real", 3) { args ->
+            val section = args[0].convertToGMLString()
+            val key = args[1].convertToGMLString()
+            val defaultValue = args[2].convertToReal()
+            return@registerRealFunction runner.openINI?.ini?.readReal(section, key) ?: defaultValue
+        }
+
+        registerVoidFunction("ini_write_string", 3) { args ->
+            val section = args[0].convertToGMLString()
+            val key = args[1].convertToGMLString()
+            val value = args[2].convertToGMLString()
+            runner.openINI?.ini?.writeString(section, key, value)
+        }
+
+        registerVoidFunction("ini_write_real", 3) { args ->
+            val section = args[0].convertToGMLString()
+            val key = args[1].convertToGMLString()
+            val value = args[2].convertToReal()
+            runner.openINI?.ini?.writeReal(section, key, value)
+        }
+
+        registerVoidFunction("ini_close", 0) { _ ->
+            val openINI = runner.openINI ?: return@registerVoidFunction
+
+            runner.fileSystem.writeFile(openINI.path, openINI.ini.writeToString().toByteArray(Charsets.UTF_8))
+            runner.openINI = null
         }
     }
 }

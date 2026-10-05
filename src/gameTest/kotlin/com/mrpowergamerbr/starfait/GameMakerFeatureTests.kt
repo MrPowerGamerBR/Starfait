@@ -184,6 +184,23 @@ object GameMakerFeatureTests {
         )
     }
 
+    @Test
+    fun `test move snap`() = runTestGame(
+        "move-snap",
+        0,
+        2
+    ) {
+        withRunnerAtFrame(1) {
+            assertEquals(128.0f, it.instanceByIdAndName(100000, "obj_tobesnapped").x)
+            assertEquals(128.0f, it.instanceByIdAndName(100000, "obj_tobesnapped").y)
+            assertEquals(128.0f, it.instanceByIdAndName(100001, "obj_tobesnapped").x)
+            assertEquals(256.0f, it.instanceByIdAndName(100001, "obj_tobesnapped").y)
+            assertEquals(256.0f, it.instanceByIdAndName(100002, "obj_tobesnapped").x)
+            assertEquals(256.0f, it.instanceByIdAndName(100002, "obj_tobesnapped").y)
+            assertEquals(256.0f, it.instanceByIdAndName(100003, "obj_tobesnapped").x)
+            assertEquals(128.0f, it.instanceByIdAndName(100003, "obj_tobesnapped").y)
+        }
+    }
 
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)

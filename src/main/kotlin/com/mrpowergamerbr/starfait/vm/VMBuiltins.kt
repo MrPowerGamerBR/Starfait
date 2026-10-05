@@ -789,6 +789,43 @@ class VMBuiltins(val vm: StarfaitVM) {
             return@registerIntFunction InstanceReferenceType.NOONE
         }
 
+        registerIntFunction("instance_position", 3) { args ->
+            val x = args[0].convertToReal().toFloat()
+            val y = args[1].convertToReal().toFloat()
+            val obj = args[2].convertToInt32()
+
+            runner.forEachInstance { instance ->
+                val matches = instance.matchesObjectOrInstanceId(
+                    obj,
+                    excludeInstance = null,
+                    skipDestroyed = true,
+                    checkHierarchy = true,
+                    checkSpecialSelf = true,
+                    checkSpecialOther = true,
+                    checkSpecialAll = true,
+                    checkSpecialNoone = true
+                )
+
+                if (matches && instance.getBoundingBox().contains(x, y)) {
+                    return@registerIntFunction instance.id
+                }
+            }
+
+            return@registerIntFunction InstanceReferenceType.NOONE
+        }
+
+        registerVoidFunction("move_snap", 2) { args ->
+            val currentInstance = vm.currentSelfInstance
+            val gridWidth = args[0].convertToReal()
+            val gridHeight = args[1].convertToReal()
+
+            val gridCellX = MathUtils.delphiRound(currentInstance.x / gridWidth)
+            val gridCellY = MathUtils.delphiRound(currentInstance.y / gridHeight)
+
+            currentInstance.x = (gridCellX * gridWidth).toFloat()
+            currentInstance.y = (gridCellY * gridHeight).toFloat()
+        }
+
         registerIntFunction("collision_line", 7) { args ->
             val self = vm.currentSelfInstance
             val x1 = args[0].convertToReal().toFloat()

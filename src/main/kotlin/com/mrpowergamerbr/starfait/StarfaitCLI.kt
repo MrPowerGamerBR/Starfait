@@ -17,6 +17,7 @@ import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.disasm.StarfaitDisassembler
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
+import com.mrpowergamerbr.starfait.vm.VMBuiltins
 import com.mrpowergamerbr.starfait.wad.*
 import com.mrpowergamerbr.starfait.wad.Function
 import kotlinx.serialization.json.Json
@@ -38,6 +39,7 @@ class StarfaitCLI : CliktCommand() {
     val printCodes by option()
     val printVariables by option()
     val printFunctions by option()
+    val printUnimplementedFunctions by option().flag(default = false)
     val printTexturePages by option()
     val printSprites by option()
     val printObjectTree by option()
@@ -138,6 +140,45 @@ class StarfaitCLI : CliktCommand() {
 
         if (printSprites != null) {
             dump(gameWAD, "Sprite", gameWAD.sprt.sprites, Sprite::name, printSprites!!)
+            return
+        }
+
+        if (printUnimplementedFunctions) {
+            val vm = StarfaitVM(gameWAD, setOf(), setOf(), setOf(), setOf(), setOf(), setOf(), setOf())
+            val implementedFunctions = mutableSetOf<String>()
+            val unimplementedFunctions = mutableSetOf<String>()
+            val scriptFunctions = mutableSetOf<String>()
+
+            for (func in gameWAD.func.functions) {
+                val functionName = func.name.let { gameWAD.strg.getString(it) }
+
+                val handler = vm.builtins.registeredFunctions[functionName]
+
+                if (handler != null) {
+                    implementedFunctions.add(functionName)
+                } else {
+                    val scpt = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
+
+                    if (scpt != null) {
+                        scriptFunctions.add(functionName)
+                    } else {
+                        unimplementedFunctions.add(functionName)
+                    }
+                }
+            }
+
+            println("Overview (${implementedFunctions.size} / ${unimplementedFunctions.size} / ${scriptFunctions.size}):")
+            for (functionName in unimplementedFunctions) {
+                println("UNIMPLEMENTED $functionName")
+            }
+
+            for (functionName in implementedFunctions) {
+                println("IMPLEMENTED $functionName")
+            }
+
+            for (functionName in scriptFunctions) {
+                println("SCRIPT $functionName")
+            }
             return
         }
 

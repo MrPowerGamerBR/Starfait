@@ -344,16 +344,16 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
 
             for (debugRectangle in runner.debugRectangles) {
                 drawQuad(
-                    debugRectangle.left,
-                    debugRectangle.top,
+                    debugRectangle.bbox.left,
+                    debugRectangle.bbox.top,
                     0.0f,
                     0.0f,
                     1.0f,
                     1.0f,
-                    debugRectangle.right - debugRectangle.left,
-                    debugRectangle.bottom - debugRectangle.top,
+                    debugRectangle.bbox.right - debugRectangle.bbox.left,
+                    debugRectangle.bbox.bottom - debugRectangle.bbox.top,
                     white1x1Texture,
-                    GMLColor(0x0000ff),
+                    debugRectangle.color,
                     0.5f
                 )
             }

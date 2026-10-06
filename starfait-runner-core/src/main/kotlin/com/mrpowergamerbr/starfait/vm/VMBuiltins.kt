@@ -731,7 +731,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val selfBBox = BoundingBox.fromWorldCoordinates(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat())
 
             if (runner.enableCollisionRendering)
-                runner.debugRectangles.add(selfBBox)
+                runner.debugRectangles.add(DebugBoundingBox(selfBBox, GMLColor.fromRGB(255, 0, 0)))
 
             runner.forEachInstance { instance ->
                 val matches = instance.matchesObjectOrInstanceId(
@@ -930,6 +930,18 @@ class VMBuiltins(val vm: StarfaitVM) {
             val direction = angle.toFloat() % 360
             vm.currentSelfInstance.direction = direction
             vm.currentSelfInstance.speed = sp.toFloat()
+
+            this.runner.debugRectangles.add(
+                DebugBoundingBox(
+                    BoundingBox.fromWorldCoordinates(
+                        x.toFloat() - 4,
+                        y.toFloat() - 4,
+                        x.toFloat() + 4,
+                        y.toFloat() + 4
+                    ),
+                    GMLColor.fromRGB(0, 0, 255)
+                )
+            )
         }
 
         registerVoidFunction("action_move_to", 2) { args ->
@@ -1026,26 +1038,23 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         registerRealFunction("distance_to_point", 2) { args ->
             val self = vm.currentCallFrame.self
-            val x2 = args[0].convertToReal()
-            val y2 = args[1].convertToReal()
+            val targetX = args[0].convertToReal().toFloat()
+            val targetY = args[1].convertToReal().toFloat()
 
             val bbox = self.getBoundingBox()
 
-            // GameMaker-HTML5 does default these values to 0.0 so... ¯\_(ツ)_/¯
-            // Get the nearest corner to the target
-            val x1 = if (bbox.left > x2) {
-                bbox.left
-            } else {
-                bbox.right
-            }
-
-            val y1 = if (bbox.top > y2) {
-                bbox.top
-            } else {
-                bbox.bottom
-            }
-
-            return@registerRealFunction sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
+            this.runner.debugRectangles.add(
+                DebugBoundingBox(
+                    BoundingBox.fromWorldCoordinates(
+                        targetX - 4,
+                        targetY - 4,
+                        targetX + 4,
+                        targetY + 4
+                    ),
+                    GMLColor.fromRGB(20, 200, 255)
+                )
+            )
+            return@registerRealFunction bbox.distanceTowardsPoint(targetX, targetY).toDouble()
         }
 
         registerStubbedFunction("audio_sound_get_gain", 1, 0.0)

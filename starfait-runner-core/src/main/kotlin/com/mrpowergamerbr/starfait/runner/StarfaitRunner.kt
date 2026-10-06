@@ -42,7 +42,7 @@ class StarfaitRunner(
     var openINI: OpenINI? = null
 
     var enableCollisionRendering = false
-    val debugRectangles = mutableListOf<BoundingBox>()
+    val debugRectangles = mutableListOf<DebugBoundingBox>()
     var drawInvisibleInstances = false
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true

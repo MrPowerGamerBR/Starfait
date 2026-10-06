@@ -2,6 +2,8 @@ package com.mrpowergamerbr.starfait.runner
 
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @ConsistentCopyVisibility
 data class BoundingBox private constructor(
@@ -73,5 +75,24 @@ data class BoundingBox private constructor(
             }
         }
         return true
+    }
+
+    fun distanceTowardsPoint(targetX: Float, targetY: Float): Float {
+        var distanceX = 0.0f
+        var distanceY = 0.0f
+
+        // The reason we do it like this is because, if the point is INSIDE the bounding box, it MUST be 0.0
+        // Essentially you need to see that the "gap" in the BoundingBox falls through
+        // And we can't use "contains" because we NEED that fallthrough to happen
+        // If we just use "else" (example: on the first statement -> else), it won't work for values like...
+        // bbox(32, 32) -> distanceTowardsPoint(24, 50)
+        // Technically not contained, but the targetX is inside the bounding box
+        // But because we were using else, the distanceX would NOT be 0.0f
+        if (this.left > targetX) distanceX = targetX - this.left
+        if (targetX > this.right) distanceX = targetX - this.right
+        if (this.top > targetY) distanceY = targetY - this.top
+        if (targetY > this.bottom) distanceY = targetY - this.bottom
+
+        return sqrt(distanceX.pow(2) + distanceY.pow(2))
     }
 }

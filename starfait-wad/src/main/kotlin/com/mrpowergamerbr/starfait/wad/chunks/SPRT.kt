@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
+import com.mrpowergamerbr.starfait.wad.CollisionMask
 import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
 
@@ -76,7 +77,7 @@ class SPRT(val sprites: List<Sprite>) {
                         originY = originY,
                         type = type,
                         frames = frames,
-                        collisionMasks = collisionMasks
+                        collisionMasks = collisionMasks.map { CollisionMask(it) }
                     )
                 )
             }

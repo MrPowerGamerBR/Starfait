@@ -1,6 +1,5 @@
 package com.mrpowergamerbr.starfait.runner
 
-import com.mrpowergamerbr.starfait.runner.EventKey
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
@@ -482,28 +481,28 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         if (this == other || this.destroyed || other.destroyed)
             return false
 
-        val bbox1 = other.getBoundingBox()
-        val bbox2 = this.getBoundingBox()
+        val selfBBox = this.getBoundingBox()
+        val otherBBox = other.getBoundingBox()
 
-        if (!bbox2.isCollidingWith(bbox1, runner.collisionCompatibilityMode))
+        if (!selfBBox.isCollidingWith(otherBBox, runner.collisionCompatibilityMode))
             return false
 
-        val sprite1 = this.collisionSprite() ?: return false
-        val sprite2 = other.collisionSprite() ?: return false
+        val sprite1 = this.getCollisionSprite() ?: return false
+        val sprite2 = other.getCollisionSprite() ?: return false
         if (sprite1.frames.isEmpty() || sprite2.frames.isEmpty())
             return false
 
         if (!precise || (!sprite1.precise && !sprite2.precise)) {
             if (!runner.collisionCompatibilityMode) {
-                val l = max(bbox1.left, bbox2.left)
-                val t = max(bbox1.top, bbox2.top)
-                val r = min(bbox1.right, bbox2.right)
-                val b = min(bbox1.bottom, bbox2.bottom)
+                val left = max(otherBBox.left, selfBBox.left)
+                val top = max(otherBBox.top, selfBBox.top)
+                val right = min(otherBBox.right, selfBBox.right)
+                val bottom = min(otherBBox.bottom, selfBBox.bottom)
 
-                if (floor(l + 0.5f) == floor(r + 0.5f))
+                if (floor(left + 0.5f) == floor(right + 0.5f))
                     return false
 
-                if (floor(t + 0.5f) == floor(b + 0.5f))
+                if (floor(top + 0.5f) == floor(bottom + 0.5f))
                     return false
             }
             return true
@@ -512,107 +511,12 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         if (!runner.collisionCompatibilityMode)
             TODO("Non-compatibility mode precise collisions")
 
-        return origPreciseCollision(this, bbox2, sprite1, other, bbox1, sprite2)
+        return CollisionMaskQuery.checkPreciseCollisionInstanceInstance(this, selfBBox, sprite1, other, otherBBox, sprite2, runner.collisionCompatibilityMode)
     }
 
-    private fun collisionSprite(): Sprite? {
-        val index = (if (this.maskIndex >= 0.0f) this.maskIndex else this.spriteIndex).toInt()
-        return runner.gameWAD.sprt.sprites.getOrNull(index)
-    }
-
-    // See GameMaker-HTML5's "OrigPreciseCollision"
-    private fun origPreciseCollision(
-        inst1: Instance,
-        bb1: BoundingBox,
-        sprite1: Sprite,
-        inst2: Instance,
-        bb2: BoundingBox,
-        sprite2: Sprite
-    ): Boolean {
-        val img1 = Math.floorMod(inst1.imageIndex.toInt(), sprite1.collisionMasks.size.coerceAtLeast(1))
-        val img2 = Math.floorMod(inst2.imageIndex.toInt(), sprite2.collisionMasks.size.coerceAtLeast(1))
-
-        val x1 = MathUtils.delphiRound(inst1.x).toDouble()
-        val y1 = MathUtils.delphiRound(inst1.y).toDouble()
-        val x2 = MathUtils.delphiRound(inst2.x).toDouble()
-        val y2 = MathUtils.delphiRound(inst2.y).toDouble()
-
-        val angle1 = inst1.imageAngle.toDouble()
-        val angle2 = inst2.imageAngle.toDouble()
-
-        val scale1x = 1.0 / inst1.imageXScale
-        val scale1y = 1.0 / inst1.imageYScale
-        val scale2x = 1.0 / inst2.imageXScale
-        val scale2y = 1.0 / inst2.imageYScale
-
-        // Compute overlapping bounding box
-        val l = max(bb1.left, bb2.left).toDouble()
-        val r = min(bb1.right, bb2.right).toDouble()
-        val t = max(bb1.top, bb2.top).toDouble()
-        val b = min(bb1.bottom, bb2.bottom).toDouble()
-
-        if (scale1x == 1.0 && scale2x == 1.0 && scale1y == 1.0 && scale2y == 1.0 && angle1 == 0.0 && angle2 == 0.0) {
-            // No rotation or scaling
-            var i = l
-            while (r >= i) {
-                var j = t
-                while (b >= j) {
-                    val xx1 = i - x1 + sprite1.originX
-                    val yy1 = j - y1 + sprite1.originY
-                    val xx2 = i - x2 + sprite2.originX
-                    val yy2 = j - y2 + sprite2.originY
-
-                    if (sprite1.containsMaskPixel(xx1, yy1, img1, false) && sprite2.containsMaskPixel(xx2, yy2, img2, false))
-                        return true
-
-                    j += 1.0
-                }
-                i += 1.0
-            }
-        } else if (angle1 == 0.0 && angle2 == 0.0) {
-            // Scaling but no rotation
-            var i = l
-            while (r >= i) {
-                var j = t
-                while (b >= j) {
-                    val xx1 = (i - x1) * scale1x + sprite1.originX
-                    val yy1 = (j - y1) * scale1y + sprite1.originY
-                    val xx2 = (i - x2) * scale2x + sprite2.originX
-                    val yy2 = (j - y2) * scale2y + sprite2.originY
-
-                    if (sprite1.containsMaskPixel(xx1, yy1, img1, true) && sprite2.containsMaskPixel(xx2, yy2, img2, true))
-                        return true
-
-                    j += 1.0
-                }
-                i += 1.0
-            }
-        } else {
-            // "Do Everything" case - rotation AND scaling!
-            val ss1 = sin(-angle1 * PI / 180.0)
-            val cc1 = cos(-angle1 * PI / 180.0)
-            val ss2 = sin(-angle2 * PI / 180.0)
-            val cc2 = cos(-angle2 * PI / 180.0)
-
-            var i = l
-            while (r >= i) {
-                var j = t
-                while (b >= j) {
-                    val xx1 = (cc1 * (i - x1) + ss1 * (j - y1)) * scale1x + sprite1.originX
-                    val yy1 = (cc1 * (j - y1) - ss1 * (i - x1)) * scale1y + sprite1.originY
-                    val xx2 = (cc2 * (i - x2) + ss2 * (j - y2)) * scale2x + sprite2.originX
-                    val yy2 = (cc2 * (j - y2) - ss2 * (i - x2)) * scale2y + sprite2.originY
-
-                    if (sprite1.containsMaskPixel(xx1, yy1, img1, true) && sprite2.containsMaskPixel(xx2, yy2, img2, true))
-                        return true
-
-                    j += 1.0
-                }
-                i += 1.0
-            }
-        }
-
-        return false
+    fun getCollisionSprite(): Sprite? {
+        val index = if (this.maskIndex >= 0.0f) this.maskIndex else this.spriteIndex
+        return runner.gameWAD.sprt.sprites.getOrNull(index.toInt())
     }
 
     fun matchesObjectOrInstanceId(

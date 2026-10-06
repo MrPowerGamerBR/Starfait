@@ -9,7 +9,6 @@ repositories {
 }
 
 val lwjglVersion = "3.4.2"
-val jomlVersion = "1.10.9"
 val lwjglNatives = findProperty("lwjglNativesPlatform") ?: "natives-linux"
 
 dependencies {
@@ -29,7 +28,6 @@ dependencies {
     implementation("org.lwjgl:lwjgl-sdl::$lwjglNatives")
     implementation("org.lwjgl:lwjgl-stb::$lwjglNatives")
     implementation("org.lwjgl:lwjgl-tinyfd::$lwjglNatives")
-    implementation("org.joml:joml:$jomlVersion")
 
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))

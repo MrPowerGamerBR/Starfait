@@ -749,7 +749,15 @@ class VMBuiltins(val vm: StarfaitVM) {
                     val bbox = instance.getBoundingBox()
 
                     if (selfBBox.isCollidingWith(bbox, runner.collisionCompatibilityMode)) {
-                        return@registerIntFunction instance.id
+                        if (usePreciseCollisionCheck) {
+                            val collisionSprite = instance.getCollisionSprite()
+
+                            if (collisionSprite != null && CollisionMaskQuery.checkPreciseCollisionInstanceRectangle(instance, bbox, collisionSprite, selfBBox, runner.collisionCompatibilityMode)) {
+                                return@registerIntFunction instance.id
+                            }
+                        } else {
+                            return@registerIntFunction instance.id
+                        }
                     }
                 }
             }
@@ -781,7 +789,15 @@ class VMBuiltins(val vm: StarfaitVM) {
                     val bbox = instance.getBoundingBox()
 
                     if (bbox.contains(x, y)) {
-                        return@registerIntFunction instance.id
+                        if (usePreciseCollisionCheck) {
+                            val collisionSprite = instance.getCollisionSprite()
+
+                            if (collisionSprite != null && CollisionMaskQuery.checkPreciseCollisionInstancePoint(instance, collisionSprite, x, y, runner.collisionCompatibilityMode)) {
+                                return@registerIntFunction instance.id
+                            }
+                        } else {
+                            return@registerIntFunction instance.id
+                        }
                     }
                 }
             }
@@ -806,8 +822,18 @@ class VMBuiltins(val vm: StarfaitVM) {
                     checkSpecialNoone = true
                 )
 
-                if (matches && instance.getBoundingBox().contains(x, y)) {
-                    return@registerIntFunction instance.id
+                if (matches) {
+                    if (instance.getBoundingBox().contains(x, y)) {
+                        val collisionSprite = instance.getCollisionSprite()
+
+                        if (collisionSprite?.precise == true) {
+                            if (CollisionMaskQuery.checkPreciseCollisionInstancePoint(instance, collisionSprite, x, y, runner.collisionCompatibilityMode)) {
+                                return@registerIntFunction instance.id
+                            }
+                        } else {
+                            return@registerIntFunction instance.id
+                        }
+                    }
                 }
             }
 

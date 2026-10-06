@@ -14,7 +14,7 @@ data class BoundingBox private constructor(
 ) {
     companion object {
         /**
-         * Creates a BoundingBox and applies the correct coordinate order (right = larger X, bottom = larger Y)
+         * Creates a [BoundingBox] and applies the correct coordinate order (right = larger X, bottom = larger Y)
          */
         fun fromWorldCoordinates(x1: Float, y1: Float, x2: Float, y2: Float) = BoundingBox(
             min(x1, x2),
@@ -22,6 +22,11 @@ data class BoundingBox private constructor(
             min(y1, y2),
             max(y1, y2)
         )
+
+        /**
+         * Creates a [BoundingBox] without any coordinate order checks
+         */
+        fun fromLeftRightTopBottom(left: Float, right: Float, top: Float, bottom: Float) = BoundingBox(left, right, top, bottom)
     }
 
     fun isCollidingWith(other: BoundingBox, collisionCompatibilityMode: Boolean): Boolean {

@@ -340,6 +340,37 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
                     GMLColor(0x00ff00),
                     0.25f
                 )
+
+                if (instance.spriteIndex >= 0f) {
+                    val collisionSprite = instance.getCollisionSprite()
+                    if (collisionSprite != null && collisionSprite.hasCollisionMask) {
+                        val collisionMask = collisionSprite.collisionMasks.getOrNull(instance.imageIndex.toInt())
+
+                        // This is very much NOT optimized
+                        // I think the best way would be to convert the mask into a image, then blit it to a texture
+                        if (collisionMask != null) {
+                            for (y in 0 until (collisionSprite.height * instance.imageYScale).toInt()) {
+                                for (x in 0 until (collisionSprite.width * instance.imageXScale).toInt()) {
+                                    if (collisionMask.isPixelSolid(collisionSprite, (x / instance.imageXScale).toInt(), (y / instance.imageYScale).toInt())) {
+                                        drawQuad(
+                                            x + instance.x,
+                                            y + instance.y,
+                                            0.0f,
+                                            0.0f,
+                                            1.0f,
+                                            1.0f,
+                                            1f,
+                                            1f,
+                                            white1x1Texture,
+                                            GMLColor(0x00ffff),
+                                            0.25f
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             for (debugRectangle in runner.debugRectangles) {

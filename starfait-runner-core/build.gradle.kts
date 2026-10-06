@@ -11,6 +11,7 @@ dependencies {
     api(project(":starfait-wad"))
 
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0-RC")
+    api("org.joml:joml:1.10.9")
 
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))

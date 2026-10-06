@@ -92,6 +92,39 @@ object GameMakerFeatureTests {
             it.instanceByIdAndName(100007, "obj_loritta").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
             it.instanceByIdAndName(100008, "obj_loritta2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
             it.instanceByIdAndName(100009, "obj_loritta2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100011, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100012, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100013, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100014, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100015, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100016, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100017, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100018, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            // Those two are *technically* colliding, but GameMaker doesn't consider them as colliding
+            it.instanceByIdAndName(100019, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100020, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100021, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100022, "obj_precisebox").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+
+            it.instanceByIdAndName(100024, "obj_face").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding1", RValue.Real(-4.0))
+            it.instanceByIdAndName(100024, "obj_face").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding2", RValue.Real(100024.0))
+            it.instanceByIdAndName(100024, "obj_face").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding3", RValue.Real(-4.0))
+            it.instanceByIdAndName(100024, "obj_face").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding4", RValue.Real(100024.0))
+            it.instanceByIdAndName(100024, "obj_face").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding5", RValue.Real(-4.0))
+            it.instanceByIdAndName(100024, "obj_face").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding6", RValue.Real(100024.0))
+
+            it.instanceByIdAndName(100025, "obj_facenotprecise").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding1", RValue.Real(100025.0))
+            it.instanceByIdAndName(100025, "obj_facenotprecise").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding2", RValue.Real(100025.0))
+            it.instanceByIdAndName(100025, "obj_facenotprecise").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding3", RValue.Real(100025.0))
+            it.instanceByIdAndName(100025, "obj_facenotprecise").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding4", RValue.Real(100025.0))
+            it.instanceByIdAndName(100025, "obj_facenotprecise").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding5", RValue.Real(100025.0))
+            it.instanceByIdAndName(100025, "obj_facenotprecise").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding6", RValue.Real(100025.0))
+
+            // These test stretched sprites
+            it.instanceByIdAndName(100027, "obj_collideprecise2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100028, "obj_collideprecise2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
+            it.instanceByIdAndName(100029, "obj_collideprecise2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(false))
+            it.instanceByIdAndName(100030, "obj_collideprecise2").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "colliding", RValue.Boolean(true))
         }
     }
 

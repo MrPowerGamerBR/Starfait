@@ -22,6 +22,8 @@ import com.mrpowergamerbr.starfait.wad.Function
 import kotlinx.serialization.json.Json
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
@@ -50,6 +52,8 @@ class StarfaitCLI : CliktCommand() {
     val printTexturePages by option()
     val printSprites by option()
     val printObjectTree by option()
+    val dumpSprites by option()
+    val dumpSpriteMasks by option()
     val dumpTiles by option()
     val traceOpcodes by option()
     val traceFunctionCalls by option()
@@ -281,6 +285,58 @@ class StarfaitCLI : CliktCommand() {
                 )
 
                 ImageIO.write(tileImage, "png", File(outputFolder, "${gameWAD.strg.getString(room.name)}_${tile.x}_${tile.y}.png"))
+            }
+            return
+        }
+
+        if (dumpSprites != null) {
+            val outputFolder = File(dumpSprites!!)
+            outputFolder.mkdirs()
+
+            // Preload all atlas so that we don't need to keep recreating them
+            val textureAtlasImages = gameWAD.txtr.textures.map { ImageIO.read(it.blob.inputStream()) }
+            for (sprite in gameWAD.sprt.sprites) {
+                for ((index, frame) in sprite.frames.withIndex()) {
+                    val texturePageEntry = gameWAD.tpag.entries[frame]
+                    // val textureAtlas = gameWAD.txtr.textures[texturePageEntry!!.textureIndex.toInt()]
+                    val textureAtlasImage = textureAtlasImages[texturePageEntry!!.textureIndex.toInt()]
+                    val spriteImage = textureAtlasImage.getSubimage(
+                        texturePageEntry.sourceX.toInt(),
+                        texturePageEntry.sourceY.toInt(),
+                        texturePageEntry.sourceWidth.toInt(),
+                        texturePageEntry.sourceHeight.toInt()
+                    )
+
+                    ImageIO.write(spriteImage, "png", File(outputFolder, "${gameWAD.strg.getString(sprite.name)}.$index.png"))
+                }
+            }
+            return
+        }
+
+        if (dumpSpriteMasks != null) {
+            val outputFolder = File(dumpSpriteMasks!!)
+            outputFolder.mkdirs()
+
+            for (sprite in gameWAD.sprt.sprites) {
+                if (sprite.hasCollisionMask) {
+                    for ((collisionMaskIndex, collisionMask) in sprite.collisionMasks.withIndex()) {
+                        File(outputFolder, "${gameWAD.strg.getString(sprite.name)}.$collisionMaskIndex.bin").writeBytes(collisionMask.data)
+
+                        val maskWidth = sprite.width
+                        val maskHeight = sprite.height
+
+                        val image = BufferedImage(maskWidth, maskHeight, BufferedImage.TYPE_INT_ARGB)
+
+                        for (y in 0 until maskHeight) {
+                            for (x in 0 until maskWidth) {
+                                val isSet = collisionMask.isPixelSolid(sprite, x, y)
+                                image.setRGB(x, y, if (isSet) Color.WHITE.rgb else Color.BLACK.rgb)
+                            }
+                        }
+
+                        ImageIO.write(image, "png", File(outputFolder, "${gameWAD.strg.getString(sprite.name)}.$collisionMaskIndex.png"))
+                    }
+                }
             }
             return
         }

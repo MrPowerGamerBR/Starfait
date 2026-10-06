@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.wad
 
+import kotlin.math.ceil
 import kotlin.math.floor
 
 class Sprite(
@@ -19,42 +20,26 @@ class Sprite(
     val originY: Int,
     val type: Type,
     val frames: List<TexturePageEntryPointer>,
-    // One collision mask per entry, each ((width + 7) / 8) * height bytes, one bit per pixel
-    val collisionMasks: List<ByteArray>
+    val collisionMasks: List<CollisionMask>
 ) {
     // Unlike GameMaker-HTML5, where only precise sprites get a mask built, the WAD stores masks for every sprite
     // So "has a mask" is decided by the precise flag
     val hasCollisionMask get() = precise && collisionMasks.isNotEmpty()
 
-    // The bounds check and (if the sprite is precise) the mask check that OrigPreciseCollision does for each sprite on each pixel
-    fun containsMaskPixel(u: Double, v: Double, imageIndex: Int, floorInput: Boolean): Boolean {
-        if (0 > u || u >= width) return false
-        if (0 > v || v >= height) return false
-        return !hasCollisionMask || colMaskSet(u, v, imageIndex, floorInput)
+    fun getCollisionMask(imageIndex: Int) = if (this.hasCollisionMask) this.collisionMasks[imageIndex] else null
+
+    fun isPixelSolidOnBoundingBox(x: Int, y: Int, collisionCompatibilityMode: Boolean): Boolean {
+        return if (collisionCompatibilityMode)
+            (x in bboxLeft..bboxRight && y in bboxTop..bboxBottom)
+        else
+            (x in bboxLeft until bboxRight && y in bboxTop until bboxBottom)
     }
 
-    // See GameMaker-HTML5's "ColMaskSet"
-    // The WAD stores masks over the whole sprite, instead of only over the bounding box
-    fun colMaskSet(u: Double, v: Double, imageIndex: Int, floorInput: Boolean): Boolean {
-        val mask = collisionMasks[imageIndex]
+    fun isPixelSolidOnCollisionMask(imageIndex: Int, x: Int, y: Int, collisionCompatibilityMode: Boolean): Boolean {
+        // If a sprite doesn't has a collision mask, then we assume it's entirely solid as long as the x, y falls into the sprite's width and height
+        val thisCollisionMaskSprite = getCollisionMask(imageIndex) ?: return isPixelSolidOnBoundingBox(x, y, collisionCompatibilityMode)
 
-        val intU: Int
-        val intV: Int
-        if (floorInput) {
-            intU = floor(u).toInt()
-            intV = floor(v).toInt()
-        } else {
-            intU = u.toInt()
-            intV = v.toInt()
-        }
-
-        if (bboxLeft > intU || intU > bboxRight) return false
-        if (bboxTop > intV || intV > bboxBottom) return false
-
-        val maskWidth = (width + 7) shr 3
-        val maskByte = mask[intV * maskWidth + (intU shr 3)].toInt()
-
-        return (maskByte and (1 shl (7 - (intU and 7)))) != 0
+        return thisCollisionMaskSprite.isPixelSolid(this, x, y)
     }
 
     enum class Type(val value: Int) {

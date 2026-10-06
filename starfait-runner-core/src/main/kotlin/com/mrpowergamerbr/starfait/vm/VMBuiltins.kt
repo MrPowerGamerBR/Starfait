@@ -681,7 +681,11 @@ class VMBuiltins(val vm: StarfaitVM) {
             val yscale = args[4].convertToReal()
             val angle = args[5].convertToReal()
 
-            val font = requireNotNull(runner.drawState.font)
+            val font = runner.drawState.font
+            if (font == null) {
+                println("Runner: Trying to draw without a valid font bound!")
+                return@registerVoidFunction
+            }
 
             runner.renderer.drawText(font, x.toFloat(), y.toFloat(), xscale.toFloat(), yscale.toFloat(), angle.toFloat(), string)
         }
@@ -690,7 +694,11 @@ class VMBuiltins(val vm: StarfaitVM) {
             val x = args[0].convertToReal()
             val y = args[1].convertToReal()
             val string = args[2].convertToGMLString()
-            val font = requireNotNull(runner.drawState.font)
+            val font = runner.drawState.font
+            if (font == null) {
+                println("Runner: Trying to draw without a valid font bound!")
+                return@registerVoidFunction
+            }
 
             runner.renderer.drawText(font, x.toFloat(), y.toFloat(), 1f, 1f, 0f, string)
         }

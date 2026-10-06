@@ -68,6 +68,7 @@ class StarfaitCLI : CliktCommand() {
     val exitAtFrame by option().int()
     val exitWhenPlaybackEnds by option().flag(default = false)
     val speed by option().double().default(1.0)
+    val runFullSpeedUntilFrame by option().int()
     val pauseAtFrame by option().int().multiple()
     val headless by option().flag(default = false)
     val replaceRoom by option().multiple()
@@ -368,6 +369,7 @@ class StarfaitCLI : CliktCommand() {
             dumpStateAtFrame.toSet(),
             traceFrameDuration.map { if (it == "*") 0..Int.MAX_VALUE else it.split("..").let { it[0].toInt()..it[1].toInt() } },
             speed,
+            runFullSpeedUntilFrame,
             masterVolume
         )
         window.start()

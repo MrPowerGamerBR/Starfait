@@ -72,6 +72,7 @@ class StarfaitWindow(
     val dumpStateAtFrames: Set<Int>,
     val traceFrameDuration: List<IntRange>,
     val speed: Double,
+    val runFullSpeedUntilFrame: Int?,
     val masterVolume: Float
 ) {
     companion object {
@@ -254,7 +255,7 @@ class StarfaitWindow(
                     }
 
                     val finished = System.currentTimeMillis()
-                    if (!headless) {
+                    if (!headless && (runFullSpeedUntilFrame == null || frameCount > runFullSpeedUntilFrame)) {
                         val targetFramesPerSecond = 1000 / (runner.currentRoom.speed.toDouble() * speed)
                         val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
                         if (waitTime > 0)

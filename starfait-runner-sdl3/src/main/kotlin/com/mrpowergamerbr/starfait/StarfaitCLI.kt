@@ -3,6 +3,7 @@ package com.mrpowergamerbr.starfait
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
@@ -19,6 +20,8 @@ import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.*
 import com.mrpowergamerbr.starfait.wad.Function
 import kotlinx.serialization.json.Json
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.io.File
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
@@ -27,7 +30,13 @@ import kotlin.let
 import kotlin.reflect.KProperty1
 
 class StarfaitCLI : CliktCommand() {
-    val wadPath by argument()
+    companion object {
+        private val WAD_FILTERS = listOf(
+            "*.win"
+        )
+    }
+
+    val wadFile by argument().file(mustExist = true).optional()
     val printGameObjects by option()
     val printBackgrounds by option()
     val printSounds by option()
@@ -82,7 +91,31 @@ class StarfaitCLI : CliktCommand() {
     }
 
     override fun run() {
-        val byteReader = StarfaitByteBuffer.fromByteArray(File(wadPath).readBytes())
+        val wadFile = if (wadFile == null) {
+            val selectedFile = MemoryStack.stackPush().use { stack ->
+                val filters = stack.mallocPointer(WAD_FILTERS.size)
+                WAD_FILTERS.forEach { filters.put(stack.UTF8(it)) }
+                filters.flip()
+
+                return@use TinyFileDialogs.tinyfd_openFileDialog(
+                    "Select GameMaker: Studio WAD File",
+                    null,
+                    filters,
+                    null,
+                    false
+                )
+            }
+
+            if (selectedFile == null) {
+                println("You need to select a file to be able to use Starfait!")
+                return
+            }
+
+            File(selectedFile)
+        } else
+            wadFile!!
+
+        val byteReader = StarfaitByteBuffer.fromByteArray(wadFile.readBytes())
         val gameWAD = GameWAD.read(byteReader)
         println("Loaded \"${gameWAD.strg.getString(gameWAD.gen8.gameDisplayName)}\" successfully! [WAD Version ${gameWAD.gen8.wadVersion}]")
 

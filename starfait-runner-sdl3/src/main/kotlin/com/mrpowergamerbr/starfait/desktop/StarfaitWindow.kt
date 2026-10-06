@@ -50,6 +50,7 @@ import org.lwjgl.sdl.SDLVideo.*
 import org.lwjgl.sdl.SDL_Event
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -180,8 +181,15 @@ class StarfaitWindow(
 
                         if (event.key().key() == SDLK_F11) {
                             if (dumpStateFile == null) {
-                                println("Platform: You haven't configured a dump state file! Write the file name of the dump state file:")
-                                dumpStateFile = File(readln())
+                                println("Platform: You haven't configured a dump state file!")
+                                val selectedFile = TinyFileDialogs.tinyfd_saveFileDialog(
+                                    "Where the dump state file should be saved?",
+                                    null,
+                                    null,
+                                    null
+                                )
+
+                                dumpStateFile = selectedFile?.let { File(it) }
                             }
 
                             if (dumpStateFile != null) {

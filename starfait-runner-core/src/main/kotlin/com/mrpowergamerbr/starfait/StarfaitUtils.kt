@@ -4,6 +4,8 @@ import com.mrpowergamerbr.starfait.vm.FunctionReferenceOperand
 import com.mrpowergamerbr.starfait.vm.VariableReferenceOperand
 import com.mrpowergamerbr.starfait.wad.DumpNested
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import com.mrpowergamerbr.starfait.wad.OPTNFlags
+import com.mrpowergamerbr.starfait.wad.RoomFlags
 import com.mrpowergamerbr.starfait.wad.StringPointer
 import com.mrpowergamerbr.starfait.wad.Variable
 import kotlin.reflect.full.hasAnnotation
@@ -113,6 +115,12 @@ object StarfaitUtils {
                 } else {
                     if (value is StringPointer) {
                         value = gameWAD.strg.strings[value]
+                    } else if (value is RoomFlags) {
+                        value = RoomFlags.Flag.entries.filter { value.contains(it) }.joinToString(", ")
+                    } else if (value is OPTNFlags) {
+                        value = OPTNFlags.Flag.entries.filter { value.contains(it) }.joinToString(", ")
+                    } else if (value is GMLColor) {
+                        value = value.value.toHexString()
                     }
 
                     val addDash = isListElement == true && isFirstElement

@@ -132,7 +132,9 @@ class StarfaitRunner(
                         background.y,
                         background.backgroundIndex,
                         background.stretch,
-                        1.0f
+                        1.0f,
+                        background.tileX,
+                        background.tileY
                     )
                 )
             }
@@ -255,7 +257,11 @@ class StarfaitRunner(
                 runnerBackground.y.toFloat(),
                 if (runnerBackground.stretch) currentRoom.width.toFloat() else tpag.sourceWidth.toFloat(),
                 if (runnerBackground.stretch) currentRoom.height.toFloat() else tpag.sourceHeight.toFloat(),
-                runnerBackground.alpha
+                runnerBackground.tileX,
+                runnerBackground.tileY,
+                currentRoom.width,
+                currentRoom.height,
+                runnerBackground.alpha,
             )
         }
 

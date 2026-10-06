@@ -21,6 +21,7 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
+import kotlin.math.ceil
 import kotlin.text.iterator
 
 class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
@@ -206,23 +207,36 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         )
     }
 
-    override fun drawBackground(texturePageEntry: TexturePageEntry, x: Float, y: Float, width: Float, height: Float, alpha: Float) {
+    override fun drawBackground(texturePageEntry: TexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, alpha: Float) {
         val texture = textures[texturePageEntry.textureIndex.toInt()]
 
         val tpag = texturePageEntry
-        drawQuad(
-            x + tpag.targetX.toFloat(),
-            y + tpag.targetY.toFloat(),
-            tpag.sourceX.toFloat() / texture.width,
-            tpag.sourceY.toFloat() / texture.height,
-            (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
-            (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-            width,
-            height,
-            textures[tpag.textureIndex.toInt()],
-            GMLColor(0xFFFFFF),
-            alpha
-        )
+
+        val howManyTilesX = if (tileX) ceil((roomWidth - x) / width).toInt() else 1
+        val howManyTilesY = if (tileY) ceil((roomHeight - y) / height).toInt() else 1
+
+        // println("X tiles: $howManyTilesX, Y tiles: $howManyTilesY, $width, $height")
+        repeat(howManyTilesY) { cellY ->
+            repeat(howManyTilesX) { cellX ->
+                val drawX = (x + tpag.targetX.toInt()) + (cellX * width)
+                val drawY = (y + tpag.targetY.toInt()) + (cellY * height)
+
+                // println("$drawX, $drawY")
+                drawQuad(
+                    drawX,
+                    drawY,
+                    tpag.sourceX.toFloat() / texture.width,
+                    tpag.sourceY.toFloat() / texture.height,
+                    (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
+                    (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
+                    width,
+                    height,
+                    textures[tpag.textureIndex.toInt()],
+                    GMLColor(0xFFFFFF),
+                    alpha
+                )
+            }
+        }
     }
 
     override fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile) {

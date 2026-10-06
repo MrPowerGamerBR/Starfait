@@ -213,6 +213,8 @@ class VMBuiltins(val vm: StarfaitVM) {
                 }
             )
         }
+        registerRealStubbedVariable("mouse_x", 0.0)
+        registerRealStubbedVariable("mouse_y", 0.0)
         registerVariable("background_color", { _, _ -> RValue.Int32(runner.currentRoom.backgroundColor.value) }, { _, value, _ -> runner.currentRoom.backgroundColor = GMLColor(value.convertToInt32()) })
         registerVariable(
             "background_visible",

@@ -400,7 +400,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val y = args[1].convertToReal()
             val objectId = args[2].convertToInt32()
 
-            val instance = runner.currentRoom.createAndSpawnInstance(objectId) {
+            val instance = runner.currentRoom.createAndSpawnInstance(objectId, runner.allocateNewRuntimeInstanceId()) {
                 this.x = x.toFloat()
                 this.y = y.toFloat()
             }
@@ -1069,7 +1069,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 y += vm.currentSelfInstance.y
             }
 
-            val instance = runner.currentRoom.createAndSpawnInstance(objectId) {
+            val instance = runner.currentRoom.createAndSpawnInstance(objectId, runner.allocateNewRuntimeInstanceId()) {
                 this.x = x.toFloat()
                 this.y = y.toFloat()
             }
@@ -1234,6 +1234,12 @@ class VMBuiltins(val vm: StarfaitVM) {
             val saturation = args[1].convertToReal()
             val value = args[2].convertToReal()
             return@registerIntFunction GMLColor.fromHSV(hue.toFloat(), saturation.toFloat(), value.toFloat()).value
+        }
+
+        registerStringFunction("string_repeat", 2) { args ->
+            val string = args[0].convertToGMLString()
+            val count = args[1].convertToInt32()
+            return@registerStringFunction string.repeat(count)
         }
 
         registerVoidFunction("game_restart", 0) { args ->

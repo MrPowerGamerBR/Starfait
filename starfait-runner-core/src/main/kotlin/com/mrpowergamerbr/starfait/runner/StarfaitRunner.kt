@@ -2,13 +2,11 @@ package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.filesystem.FileSystem
-import com.mrpowergamerbr.starfait.ini.INI
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
-import com.mrpowergamerbr.starfait.wad.RoomFlags
 import kotlin.comparisons.compareBy
 import kotlin.random.Random
 
@@ -24,6 +22,7 @@ class StarfaitRunner(
 ) {
     companion object {
         // You can check that by creating a room with a single instance where the instance's code is just "show_debug_message(id)"
+        // Keep in mind that this is DIFFERENT from the *first* ID used when a new instance is created via code!
         const val BASE_INSTANCE_ID = 100_000
         const val MAX_ALARMS = 12
     }
@@ -69,6 +68,7 @@ class StarfaitRunner(
     fun start() {
         generateFlattenedEvents()
         generateCollisionPairs()
+        resetCurrentInstanceId()
         initializeFirstRoom()
     }
 
@@ -325,6 +325,8 @@ class StarfaitRunner(
         this.keyboard.resetPressedAndReleasedKeys()
     }
 
+    fun allocateNewRuntimeInstanceId() = this.currentInstanceId++
+
     fun handlePersistentRoomInstanceHandover(previousRoom: RunnerRoom, newRoom: RunnerRoom) {
         forEachInstance {
             it.dispatchEvent(EventType.OTHER, EventType.OtherSubType.ROOM_END, null)
@@ -436,8 +438,7 @@ class StarfaitRunner(
     }
 
     inline fun forEachInstance(action: (Instance) -> Unit) {
-        // reversed creates a copy, so we don't need to worry about ConcurrentModificationException here
-        for (instance in this.currentRoom.instances.reversed()) {
+        for (instance in this.currentRoom.instances.toList()) {
             if (instance.destroyed)
                 continue
 
@@ -583,11 +584,16 @@ class StarfaitRunner(
         this.collisionPairs.addAll(collisionPairs.toList().sortedWith(compareBy(CollisionPair::objectIndex1).thenBy(CollisionPair::objectIndex2)))
     }
 
+    private fun resetCurrentInstanceId() {
+        // This looks and sounds stupid, but if you create a room with an instance, and that instance creates a new instance, the ID of the first instance will be 100_000 and the ID of the new instance will be 100_002
+        this.currentInstanceId = gameWAD.gen8.maxRoomInstanceId + 1
+    }
+
     private fun reset() {
         this.vm.reset()
         this.persistentRooms.clear()
         this.audioManager.stopAllSounds()
-        this.currentInstanceId = BASE_INSTANCE_ID
+        resetCurrentInstanceId()
         this.drawState = DrawState(this.gameWAD)
         this.openINI = null
     }

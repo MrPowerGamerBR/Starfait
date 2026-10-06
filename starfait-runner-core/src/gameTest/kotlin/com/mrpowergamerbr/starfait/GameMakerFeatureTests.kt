@@ -264,6 +264,21 @@ object GameMakerFeatureTests {
         }
     }
 
+    @Test
+    fun `test instance find and instance ids room vs runtime ordering`() = runTestGame(
+        "instance-find-and-instance-ids",
+        0,
+        2
+    ) {
+        withRunnerAtFrame(1) {
+            val first = 100006
+            for (instanceId in first..100015) {
+                it.instanceByIdAndName(instanceId, "obj_tobecreated")
+                    .assertInt32Variable(it.vm, VariableInstanceType.SELF, "findresult", RValue.Int32(first))
+            }
+        }
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))

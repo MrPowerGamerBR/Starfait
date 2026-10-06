@@ -23,7 +23,7 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
      *
      * Does **NOT** fire the [EventType.CREATE] event!
      */
-    fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
+    fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex, instance.id) {
         this.x = instance.x.toFloat()
         this.y = instance.y.toFloat()
         this.imageXScale = instance.scaleX
@@ -36,8 +36,8 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
      *
      * Does **NOT** fire the [EventType.CREATE] event!
      */
-    fun createAndSpawnInstance(gameObjectIndex: Int, builder: Instance.() -> (Unit)): Instance {
-        val gameInstance = Instance(runner, runner.currentInstanceId++, gameObjectIndex)
+    fun createAndSpawnInstance(gameObjectIndex: Int, instanceId: Int, builder: Instance.() -> (Unit)): Instance {
+        val gameInstance = Instance(runner, instanceId, gameObjectIndex)
         val gameObject = gameInstance.gameObject
 
         println("Runner: [${runner.vm.currentOrNullCallFrameCodeName}] Spawning instance ${gameInstance.id} with object ${gameInstance.objectIndex} (${gameInstance.objectName}) at (${gameInstance.x}, ${gameInstance.y})")

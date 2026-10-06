@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.3.10" apply false
     kotlin("plugin.serialization") version "2.3.10" apply false
+    id("com.google.devtools.ksp") version "2.3.12" apply false
 }
 
 allprojects {

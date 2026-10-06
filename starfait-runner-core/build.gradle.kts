@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    id("com.google.devtools.ksp")
 }
 
 repositories {
@@ -9,6 +10,8 @@ repositories {
 
 dependencies {
     api(project(":starfait-wad"))
+    api(project(":starfait-annotations"))
+    ksp(project(":starfait-annotation-processor"))
 
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0-RC")
     api("org.joml:joml:1.10.9")

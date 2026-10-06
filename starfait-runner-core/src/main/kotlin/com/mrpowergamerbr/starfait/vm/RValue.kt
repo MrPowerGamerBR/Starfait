@@ -34,6 +34,7 @@ sealed class RValue {
 
         override fun convertToGMLString() = value.toString()
         override fun convertToInt32() = value
+        override fun convertToInt64() = value.toLong()
         override fun convertToReal() = value.toDouble()
         override fun convertToBoolean() = MathUtils.convertInt32ToBoolean(value)
     }
@@ -43,6 +44,7 @@ sealed class RValue {
 
         override fun convertToGMLString() = value.toString()
         override fun convertToInt32() = value.toInt()
+        override fun convertToInt64() = value
         override fun convertToReal() = value.toDouble()
     }
 

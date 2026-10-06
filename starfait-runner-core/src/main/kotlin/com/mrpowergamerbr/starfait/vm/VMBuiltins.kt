@@ -1224,5 +1224,18 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerStringFunction("room_get_name", 1) { args ->
             runner.gameWAD.strg.getString(runner.gameWAD.room.rooms[args[0].convertToInt32()].name)
         }
+
+        registerVoidFunction("tile_layer_shift", 3) { args ->
+            val depth = args[0].convertToInt32()
+            val x = args[1].convertToInt32()
+            val y = args[2].convertToInt32()
+
+            for (tile in runner.currentRoom.tiles) {
+                if (tile.depth == depth) {
+                    tile.x += x
+                    tile.y += y
+                }
+            }
+        }
     }
 }

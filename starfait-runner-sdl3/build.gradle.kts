@@ -10,7 +10,7 @@ repositories {
 
 val lwjglVersion = "3.4.2"
 val jomlVersion = "1.10.9"
-val lwjglNatives = "natives-linux"
+val lwjglNatives = findProperty("lwjglNativesPlatform") ?: "natives-linux"
 
 dependencies {
     api(project(":starfait-runner-core"))

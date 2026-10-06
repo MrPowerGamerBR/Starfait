@@ -936,12 +936,9 @@ class VMBuiltins(val vm: StarfaitVM) {
             val y1 = args[1].convertToReal()
             val x2 = args[2].convertToReal()
             val y2 = args[3].convertToReal()
-            // TODO: outline support
             val outline = args[4].convertToBoolean()
-            if (outline)
-                warnFunctionSemiStub("draw_rectangle")
 
-            runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat() + 1f, (y2 - y1).toFloat() + 1f, runner.drawState.color, runner.drawState.alpha)
+            runner.renderer.fillRectangle(x1.toFloat(), y1.toFloat(), (x2 - x1).toFloat() + 1f, (y2 - y1).toFloat() + 1f, runner.drawState.color, runner.drawState.alpha, outline)
         }
 
         // See GameMaker-HTML5's Function_Path.js

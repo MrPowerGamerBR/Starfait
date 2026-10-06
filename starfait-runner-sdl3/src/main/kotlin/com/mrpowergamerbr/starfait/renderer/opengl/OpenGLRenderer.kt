@@ -348,20 +348,82 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         }
     }
 
-    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float) {
-        drawQuad(
-            x,
-            y,
-            0.0f,
-            0.0f,
-            1.0f,
-            1.0f,
-            width,
-            height,
-            white1x1Texture,
-            color,
-            alpha
-        )
+    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float, outline: Boolean) {
+        if (outline) {
+            // top
+            drawQuad(
+                x,
+                y,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f,
+                width,
+                1f,
+                white1x1Texture,
+                color,
+                alpha
+            )
+
+            // bottom
+            drawQuad(
+                x,
+                y + height - 1f,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f,
+                width,
+                1f,
+                white1x1Texture,
+                color,
+                alpha
+            )
+
+            // left
+            drawQuad(
+                x,
+                y,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f,
+                1f,
+                height,
+                white1x1Texture,
+                color,
+                alpha
+            )
+
+            // right
+            drawQuad(
+                x + width - 1f,
+                y,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f,
+                1f,
+                height,
+                white1x1Texture,
+                color,
+                alpha
+            )
+        } else {
+            drawQuad(
+                x,
+                y,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f,
+                width,
+                height,
+                white1x1Texture,
+                color,
+                alpha
+            )
+        }
     }
 
     override fun frame(block: () -> Unit) {

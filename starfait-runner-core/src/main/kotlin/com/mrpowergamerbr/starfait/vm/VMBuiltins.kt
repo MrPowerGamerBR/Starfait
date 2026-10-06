@@ -1221,11 +1221,19 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         // TODO: make_colour_rgb alias
-        registerIntFunction("make_color_rgb", null) { args ->
+        registerIntFunction("make_color_rgb", 3) { args ->
             val red = args[0].convertToInt32()
             val green = args[1].convertToInt32()
             val blue = args[2].convertToInt32()
             return@registerIntFunction GMLColor.fromRGB(red, green, blue).value
+        }
+
+        // TODO: make_color_hsv alias
+        registerIntFunction("make_color_hsv", 3) { args ->
+            val hue = args[0].convertToReal()
+            val saturation = args[1].convertToReal()
+            val value = args[2].convertToReal()
+            return@registerIntFunction GMLColor.fromHSV(hue.toFloat(), saturation.toFloat(), value.toFloat()).value
         }
 
         registerVoidFunction("game_restart", 0) { args ->

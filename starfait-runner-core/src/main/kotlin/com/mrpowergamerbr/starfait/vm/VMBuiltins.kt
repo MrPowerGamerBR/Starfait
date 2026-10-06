@@ -892,7 +892,10 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
 
         registerVoidFunction("draw_set_font", 1) { args ->
-            runner.drawState.font = runner.gameWAD.font.fonts[args[0].convertToInt32()]
+            val font = runner.gameWAD.font.fonts.getOrNull(args[0].convertToInt32())
+            if (font == null)
+                println("Runner: Tried setting invalid font with draw_set_font!")
+            runner.drawState.font = font
         }
 
         registerRealFunction("floor", 1) { args -> floor(args[0].convertToReal()) }

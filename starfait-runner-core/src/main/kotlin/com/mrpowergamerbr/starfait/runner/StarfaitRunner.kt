@@ -259,25 +259,40 @@ class StarfaitRunner(
             )
         }
 
-        // TODO: I'm pretty sure we need to interleave instances and tiles based on the depth
-        //  But for now, let's just render all tiles behind instances and hope for the best
-        for (tile in currentRoom.tiles) {
-            val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
-            val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+        val drawables = mutableListOf<Drawable>()
 
-            renderer.drawTile(tpag, tile)
+        for (tile in currentRoom.tiles) {
+            drawables.add(Drawable.Tile(tile, tile.depth))
         }
 
         forEachInstanceByDepth { instance ->
-            // "This works by telling GameMaker to skip Draw Events for this instance, so care must be taken when using this as it means that
-            // no code placed in any of the Draw events will be run while the instance is not visible."
-            if (instance.visible || this.drawInvisibleInstances) {
-                val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
+            drawables.add(Drawable.Instance(instance, instance.depth.toInt()))
+        }
 
-                if (!instanceHasDrawEvent) {
-                    // Draw the instance manually
-                    // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
-                    renderer.drawInstance(instance)
+        for (drawable in drawables.sortedByDescending { it.depth }) {
+            when (drawable) {
+                is Drawable.Instance -> {
+                    val instance = drawable.instance
+
+                    // "This works by telling GameMaker to skip Draw Events for this instance, so care must be taken when using this as it means that
+                    // no code placed in any of the Draw events will be run while the instance is not visible."
+                    if (instance.visible || this.drawInvisibleInstances) {
+                        val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
+
+                        if (!instanceHasDrawEvent) {
+                            // Draw the instance manually
+                            // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
+                            renderer.drawInstance(instance)
+                        }
+                    }
+                }
+                is Drawable.Tile -> {
+                    val tile = drawable.tile
+
+                    val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
+                    val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+
+                    renderer.drawTile(tpag, tile)
                 }
             }
         }

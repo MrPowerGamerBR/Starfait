@@ -98,28 +98,26 @@ class StarfaitRunner(
             newRoom.persistent = room.persistent
             newRoom.flags = room.flags
 
-            if (RoomFlags.Flag.ENABLE_VIEWS in room.flags) {
-                for (view in room.views) {
-                    println("Visible? ${view.visible} - View BorderX is ${view.borderX}, View BorderY is ${view.borderY}, objectIndex is ${view.objectIndex}")
-                    newRoom.views.add(
-                        RunnerRoom.RunnerView(
-                            view.viewX,
-                            view.viewY,
-                            view.viewWidth,
-                            view.viewHeight,
-                            view.portX,
-                            view.portY,
-                            view.portWidth,
-                            view.portHeight,
-                            view.visible,
-                            view.objectIndex,
-                            view.borderX,
-                            view.borderY,
-                            view.speedX,
-                            view.speedY
-                        )
+            for (view in room.views) {
+                println("Visible? ${view.visible} - View BorderX is ${view.borderX}, View BorderY is ${view.borderY}, objectIndex is ${view.objectIndex}")
+                newRoom.views.add(
+                    RunnerRoom.RunnerView(
+                        view.viewX,
+                        view.viewY,
+                        view.viewWidth,
+                        view.viewHeight,
+                        view.portX,
+                        view.portY,
+                        view.portWidth,
+                        view.portHeight,
+                        view.visible,
+                        view.objectIndex,
+                        view.borderX,
+                        view.borderY,
+                        view.speedX,
+                        view.speedY
                     )
-                }
+                )
             }
 
             newRoom.backgroundColor = room.backgroundColor

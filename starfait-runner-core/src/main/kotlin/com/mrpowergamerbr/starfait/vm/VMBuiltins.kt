@@ -1054,6 +1054,23 @@ class VMBuiltins(val vm: StarfaitVM) {
             }
         }
 
+        registerVoidFunction("action_create_object", 3) { args ->
+            val objectId = args[0].convertToInt32()
+            var x = args[1].convertToReal()
+            var y = args[2].convertToReal()
+
+            if (vm.dragAndDropRelativeValues) {
+                x += vm.currentSelfInstance.x
+                y += vm.currentSelfInstance.y
+            }
+
+            val instance = runner.currentRoom.createAndSpawnInstance(objectId) {
+                this.x = x.toFloat()
+                this.y = y.toFloat()
+            }
+            instance.dispatchEvent(EventType.CREATE, 0, null)
+        }
+
         registerRealFunction("min", 2) { args ->
             args.minOf { it.convertToReal() }
         }

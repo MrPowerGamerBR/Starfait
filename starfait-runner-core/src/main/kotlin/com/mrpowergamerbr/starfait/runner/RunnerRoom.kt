@@ -18,6 +18,11 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
     @DumpRunnerField val tiles = mutableListOf<RunnerTile>()
     var flags = RoomFlags(0u)
 
+    /**
+     * Creates and spawns an instance [instance] from the room data
+     *
+     * Does **NOT** fire the [EventType.CREATE] event!
+     */
     fun createAndSpawnInstance(instance: Room.Instance) = createAndSpawnInstance(instance.objectIndex) {
         this.x = instance.x.toFloat()
         this.y = instance.y.toFloat()
@@ -26,6 +31,11 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
         this.imageAngle = instance.rotation
     }
 
+    /**
+     * Creates and spawns an instance with the [gameObjectIndex], using the settings configured in the [builder]
+     *
+     * Does **NOT** fire the [EventType.CREATE] event!
+     */
     fun createAndSpawnInstance(gameObjectIndex: Int, builder: Instance.() -> (Unit)): Instance {
         val gameInstance = Instance(runner, runner.currentInstanceId++, gameObjectIndex)
         val gameObject = gameInstance.gameObject

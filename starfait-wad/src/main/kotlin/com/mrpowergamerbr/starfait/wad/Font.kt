@@ -13,6 +13,8 @@ class Font(
     val scaleY: Float,
     val glyphs: List<Glyph>
 ) {
+    val characterToGlyph = glyphs.associateBy { it.character }
+
     class Glyph(
         val character: Char,
         // Relative to the font's texture page entry, not to the texture page itself

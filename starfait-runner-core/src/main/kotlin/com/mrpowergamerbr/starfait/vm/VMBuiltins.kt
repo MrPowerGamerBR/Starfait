@@ -677,9 +677,13 @@ class VMBuiltins(val vm: StarfaitVM) {
             val x = args[0].convertToReal()
             val y = args[1].convertToReal()
             val string = args[2].convertToGMLString()
+            val xscale = args[3].convertToReal()
+            val yscale = args[4].convertToReal()
+            val angle = args[5].convertToReal()
+
             val font = requireNotNull(runner.drawState.font)
 
-            runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
+            runner.renderer.drawText(font, x.toFloat(), y.toFloat(), xscale.toFloat(), yscale.toFloat(), angle.toFloat(), string)
         }
 
         registerVoidFunction("draw_text", 3) { args ->
@@ -688,7 +692,7 @@ class VMBuiltins(val vm: StarfaitVM) {
             val string = args[2].convertToGMLString()
             val font = requireNotNull(runner.drawState.font)
 
-            runner.renderer.drawText(font, x.toFloat(), y.toFloat(), string)
+            runner.renderer.drawText(font, x.toFloat(), y.toFloat(), 1f, 1f, 0f, string)
         }
 
         registerRealFunction("round", 1) { args ->

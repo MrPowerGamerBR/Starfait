@@ -22,6 +22,9 @@ import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
 import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.sin
 import kotlin.text.iterator
 
 class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
@@ -264,37 +267,87 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         )
     }
 
-    override fun drawText(font: Font, x: Float, y: Float, text: String) {
+    override fun drawText(font: Font, startX: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String) {
         val tpag = requireNotNull(gameWAD.tpag.entries[font.texturePageEntryPointer])
         val texture = textures[tpag.textureIndex.toInt()]
 
-        var x = x
+        var x = startX
         var y = y
 
         flushIfNeeded(texture)
 
+        val rad = Math.toRadians(rot.toDouble())
+        val cos = cos(rad)
+        val sin = sin(rad)
+
+        // Calculate the string width first
+        // TODO: Maybe we could refactor so that the function already provides the position of each glyph?
+        var stringWidth = 0f
+        var stringHeight = 0f
         for (char in text) {
             // TODO: HashMap lookup for the glyphs would be pretty swell
-            val glyph = font.glyphs.firstOrNull { it.character == char }
+            val glyph = font.characterToGlyph[char]
 
             if (glyph != null) {
-                x += glyph.offset
+                stringWidth += (glyph.offset * xscale)
+                stringWidth += (glyph.shift * xscale)
+                stringHeight = max(stringHeight, (glyph.height.toFloat() * yscale))
+            }
+        }
+
+        // Where the text will be rotated around (the center of the string)
+        val pivotX = x + (stringWidth / 2f)
+        val pivotY = y + (stringHeight / 2f)
+
+        // Now we ACTUALLY draw it
+        for (char in text) {
+            val glyph = font.characterToGlyph[char]
+
+            if (glyph != null) {
+                x += (glyph.offset * xscale)
+
+                // One IMPORTANT thing is that we want to rotate AROUND (x, y), NOT (0, 0)
+                // So how can we do that? By moving everything to (0, 0)!
+                val width = (glyph.width.toFloat() * xscale)
+                val height = (glyph.height.toFloat() * yscale)
+
+                // Where in the world it will be drawn (before rotation)
+                val left = x - pivotX
+                val top = y - pivotY
+                val right = left + width
+                val bottom = top + height
+
+                val x1 = pivotX + (left * cos) - (top * sin)
+                val y1 = pivotY + (left * sin) + (top * cos)
+
+                val x2 = pivotX + (right * cos) - (top * sin)
+                val y2 = pivotY + (right * sin) + (top * cos)
+
+                val x3 = pivotX + (right * cos) - (bottom * sin)
+                val y3 = pivotY + (right * sin) + (bottom * cos)
+
+                val x4 = pivotX + (left * cos) - (bottom * sin)
+                val y4 = pivotY + (left * sin) + (bottom * cos)
 
                 drawQuad(
-                    x,
-                    y,
+                    x1.toFloat(),
+                    y1.toFloat(),
+                    x2.toFloat(),
+                    y2.toFloat(),
+                    x3.toFloat(),
+                    y3.toFloat(),
+                    x4.toFloat(),
+                    y4.toFloat(),
                     (tpag.sourceX.toFloat() + glyph.x.toFloat()) / texture.width,
                     (tpag.sourceY.toFloat() + glyph.y.toFloat()) / texture.height,
                     (tpag.sourceX.toFloat() + glyph.x.toFloat() + glyph.width.toFloat()) / texture.width,
                     (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
-                    glyph.width.toFloat(),
-                    glyph.height.toFloat(),
                     texture,
                     runner.drawState.color,
-                    1.0f
+                    runner.drawState.alpha
                 )
 
-                x += glyph.shift
+                x += (glyph.shift * xscale)
             }
         }
     }

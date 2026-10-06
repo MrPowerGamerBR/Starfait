@@ -15,7 +15,9 @@ import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
+import org.joml.Matrix3x2f
 import org.joml.Matrix4f
+import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
@@ -299,6 +301,15 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         val pivotX = x + (stringWidth / 2f)
         val pivotY = y + (stringHeight / 2f)
 
+        // Render around center (backwards!)
+        val matrix = Matrix3x2f()
+            // Translate it back to the pivot
+            .translate(pivotX, pivotY)
+            // Rotate it
+            .rotate(rad.toFloat())
+            // Translate it to the world's origin
+            .translate(-pivotX, -pivotY)
+
         // Now we ACTUALLY draw it
         for (char in text) {
             val glyph = font.characterToGlyph[char]
@@ -306,38 +317,23 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             if (glyph != null) {
                 x += (glyph.offset * xscale)
 
-                // One IMPORTANT thing is that we want to rotate AROUND (x, y), NOT (0, 0)
-                // So how can we do that? By moving everything to (0, 0)!
                 val width = (glyph.width.toFloat() * xscale)
                 val height = (glyph.height.toFloat() * yscale)
 
-                // Where in the world it will be drawn (before rotation)
-                val left = x - pivotX
-                val top = y - pivotY
-                val right = left + width
-                val bottom = top + height
-
-                val x1 = pivotX + (left * cos) - (top * sin)
-                val y1 = pivotY + (left * sin) + (top * cos)
-
-                val x2 = pivotX + (right * cos) - (top * sin)
-                val y2 = pivotY + (right * sin) + (top * cos)
-
-                val x3 = pivotX + (right * cos) - (bottom * sin)
-                val y3 = pivotY + (right * sin) + (bottom * cos)
-
-                val x4 = pivotX + (left * cos) - (bottom * sin)
-                val y4 = pivotY + (left * sin) + (bottom * cos)
+                val xy1 = matrix.transformPosition(Vector2f(x, y), Vector2f())
+                val xy2 = matrix.transformPosition(Vector2f(x + width, y), Vector2f())
+                val xy3 = matrix.transformPosition(Vector2f(x + width, y + height), Vector2f())
+                val xy4 = matrix.transformPosition(Vector2f(x, y + height), Vector2f())
 
                 drawQuad(
-                    x1.toFloat(),
-                    y1.toFloat(),
-                    x2.toFloat(),
-                    y2.toFloat(),
-                    x3.toFloat(),
-                    y3.toFloat(),
-                    x4.toFloat(),
-                    y4.toFloat(),
+                    xy1.x,
+                    xy1.y,
+                    xy2.x,
+                    xy2.y,
+                    xy3.x,
+                    xy3.y,
+                    xy4.x,
+                    xy4.y,
                     (tpag.sourceX.toFloat() + glyph.x.toFloat()) / texture.width,
                     (tpag.sourceY.toFloat() + glyph.y.toFloat()) / texture.height,
                     (tpag.sourceX.toFloat() + glyph.x.toFloat() + glyph.width.toFloat()) / texture.width,

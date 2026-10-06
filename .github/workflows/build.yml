@@ -45,5 +45,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Starfait ${{ matrix.label }}
-          path: starfait-runner-sdl3/build/install/Starfait/starfait-runner-sdl3
+          path: starfait-runner-sdl3/build/install/starfait-runner-sdl3
           if-no-files-found: error

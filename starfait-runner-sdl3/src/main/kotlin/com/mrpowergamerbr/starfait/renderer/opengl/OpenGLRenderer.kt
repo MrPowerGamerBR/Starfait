@@ -279,8 +279,6 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         flushIfNeeded(texture)
 
         val rad = Math.toRadians(rot.toDouble())
-        val cos = cos(rad)
-        val sin = sin(rad)
 
         // Calculate the string width first
         // TODO: Maybe we could refactor so that the function already provides the position of each glyph?

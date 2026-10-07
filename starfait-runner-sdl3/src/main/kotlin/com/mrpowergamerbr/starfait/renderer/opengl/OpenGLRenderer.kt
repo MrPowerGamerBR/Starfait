@@ -381,10 +381,11 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         val dir = Vector2f(p2).sub(p1).normalize()
         val perpendicular = Vector2f(-dir.y, dir.x).mul(thickness * 0.5f)
 
+        // These follow the same convention as the drawQuad (top left, top right, bottom right, bottom left)
         val c1 = Vector2f(p1).add(perpendicular)
         val c2 = Vector2f(p1).sub(perpendicular)
-        val c3 = Vector2f(p2).add(perpendicular)
-        val c4 = Vector2f(p2).sub(perpendicular)
+        val c3 = Vector2f(p2).sub(perpendicular)
+        val c4 = Vector2f(p2).add(perpendicular)
 
         drawQuad(
             c1.x,

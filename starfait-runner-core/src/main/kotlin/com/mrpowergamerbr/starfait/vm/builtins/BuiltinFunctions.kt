@@ -237,7 +237,7 @@ object BuiltinFunctions {
     }
 
     @GMLFunction("draw_line_width_colour")
-    fun draw_line_width_color(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, color1: GMLColor, color2: GMLColor, thickness: Float) {
+    fun draw_line_width_color(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color1: GMLColor, color2: GMLColor) {
         runner.renderer.drawLine(x1, y1, x2, y2, thickness, color1, color2, runner.drawState.alpha)
     }
 

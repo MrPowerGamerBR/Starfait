@@ -19,6 +19,7 @@ import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 object BuiltinFunctions {
     @GMLFunction
@@ -797,6 +798,38 @@ object BuiltinFunctions {
             )
         )
         return bbox.distanceTowardsPoint(targetX, targetY).toDouble()
+    }
+
+    // See GameMaker-HTML5's Function_Movement.js and Instance_SearchLoop2 (Globals.js)
+    @GMLFunction
+    fun distance_to_object(runner: StarfaitRunner, vm: StarfaitVM, queryId: Int): Double {
+        // Instance_SearchLoop2 returns this "error code" when nothing matches
+        var distanceSquared = 10000000000.0
+
+        val selfBBox = vm.currentSelfInstance.getBoundingBox()
+
+        runner.forEachInstance { instance ->
+            val matches = instance.matchesObjectOrInstanceId(
+                queryId,
+                excludeInstance = null,
+                skipDestroyed = true,
+                checkHierarchy = true,
+                checkSpecialSelf = true,
+                checkSpecialOther = true,
+                checkSpecialAll = true,
+                checkSpecialNoone = true
+            )
+
+            if (matches) {
+                val otherBBox = instance.getBoundingBox()
+                val d = selfBBox.distanceTowardsBoundingBoxSquared(otherBBox)
+
+                if (distanceSquared > d)
+                    distanceSquared = d
+            }
+        }
+
+        return sqrt(distanceSquared)
     }
 
     @GMLFunction fun point_direction(x1: Double, y1: Double, x2: Double, y2: Double) = Math.toDegrees(atan2(-(y2 - y1), x2 - x1))

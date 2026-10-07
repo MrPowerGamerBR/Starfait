@@ -82,7 +82,25 @@ data class BoundingBox private constructor(
         return true
     }
 
-    fun distanceTowardsPoint(targetX: Float, targetY: Float): Float {
+    fun distanceTowardsBoundingBox(otherBBox: BoundingBox) = sqrt(distanceTowardsBoundingBoxSquared(otherBBox))
+
+    fun distanceTowardsBoundingBoxSquared(otherBBox: BoundingBox): Double {
+        val selfBBox = this
+
+        var xd = 0.0
+        var yd = 0.0
+        if (otherBBox.left > selfBBox.right) xd = (otherBBox.left - selfBBox.right).toDouble()
+        if (selfBBox.left > otherBBox.right) xd = (otherBBox.right - selfBBox.left).toDouble()
+        if (otherBBox.top > selfBBox.bottom) yd = (otherBBox.top - selfBBox.bottom).toDouble()
+        if (selfBBox.top > otherBBox.bottom) yd = (otherBBox.bottom - selfBBox.top).toDouble()
+        val d = xd * xd + yd * yd
+
+        return d
+    }
+
+    fun distanceTowardsPoint(targetX: Float, targetY: Float) = sqrt(distanceTowardsPointSquared(targetX, targetY))
+
+    fun distanceTowardsPointSquared(targetX: Float, targetY: Float): Float {
         var distanceX = 0.0f
         var distanceY = 0.0f
 
@@ -98,6 +116,6 @@ data class BoundingBox private constructor(
         if (this.top > targetY) distanceY = targetY - this.top
         if (targetY > this.bottom) distanceY = targetY - this.bottom
 
-        return sqrt(distanceX.pow(2) + distanceY.pow(2))
+        return distanceX.pow(2) + distanceY.pow(2)
     }
 }

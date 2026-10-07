@@ -895,4 +895,15 @@ object BuiltinFunctions {
 
         runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, xscale, yscale, color, alpha)
     }
+
+    @GMLFunction fun file_text_open_write(runner: StarfaitRunner, fileName: String) = runner.textFiles.openTextFile(fileName, true)
+    @GMLFunction fun file_text_write_string(runner: StarfaitRunner, textFileId: Int, text: String) = runner.textFiles.getTextFileById(textFileId)!!.writeString(text)
+    @GMLFunction fun file_text_writeln(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.writeNewLine()
+    @GMLFunction fun file_text_write_real(runner: StarfaitRunner, textFileId: Int, value: Double) = runner.textFiles.getTextFileById(textFileId)!!.writeReal(value)
+    @GMLFunction fun file_text_close(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.closeTextFile(textFileId)
+    @GMLFunction fun file_text_open_read(runner: StarfaitRunner, fileName: String) = runner.textFiles.openTextFile(fileName, false)
+    @GMLFunction fun file_text_eof(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.hasRemaining()
+    @GMLFunction fun file_text_read_string(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.readString()
+    @GMLFunction fun file_text_readln(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.readLine()
+    @GMLFunction fun file_text_read_real(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.readReal()
 }

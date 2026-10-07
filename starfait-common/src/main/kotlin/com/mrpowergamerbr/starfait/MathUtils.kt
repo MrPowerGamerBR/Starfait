@@ -32,13 +32,37 @@ object MathUtils {
      * @return the double
      */
     fun strtod(input: String): Double {
+        var position = 0
+
+        return strtodStream {
+            if (position == input.length)
+                return@strtodStream -1
+
+            input[position++].code
+        }
+    }
+
+    /**
+     * Reimplementation of `strtod` in Kotlin
+     *
+     * @param input the input string
+     * @return the double
+     */
+    fun strtodStream(input: () -> (Int)): Double {
         val whole = StringBuilder()
         val decimal = StringBuilder()
 
         var parsingWhole = true
         var foundSomethingInWhole = false
 
-        for (char in input) {
+        while (true) {
+            val byte = input.invoke()
+
+            if (byte == -1)
+                break
+
+            val char = byte.toChar()
+
             if (parsingWhole) {
                 // Continue until we find something
                 if (char.isWhitespace()) {

@@ -215,6 +215,7 @@ class StarfaitAnnotationProcessor(val codeGenerator: CodeGenerator, val logger: 
                         "Float" -> appendLine("    return RValue.Real(result.toDouble())")
                         "String" -> appendLine("    return RValue.String(result)")
                         "Boolean" -> appendLine("    return RValue.Boolean(result)")
+                        "TextFile" -> appendLine("    return RValue.Real(result.textFileId.toDouble())")
                         "RValue" -> appendLine("    return result")
                         else -> logger.error("Unsupported return type $returnType!")
                     }

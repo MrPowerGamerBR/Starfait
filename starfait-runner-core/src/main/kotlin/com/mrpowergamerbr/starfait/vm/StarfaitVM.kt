@@ -562,7 +562,7 @@ class StarfaitVM(
 
         val dedupKey = "$currentCallFrameCodeName#$functionName"
         if (dedupKey !in loggedUnknownFunctions) {
-            println("VM: [$currentCallFrameCodeName] Unknown function! \"$functionName(${arguments.joinToString { it.toStringTyped() }})\"")
+            println("VM: [$currentCallFrameCodeName] Unknown function \"$functionName(${arguments.joinToString { it.toStringTyped() }})\"!")
             loggedUnknownFunctions.add(dedupKey)
         }
 

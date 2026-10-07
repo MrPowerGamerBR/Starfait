@@ -82,11 +82,11 @@ class StarfaitCLI : CliktCommand() {
     val masterVolume by option().float().default(1.0f)
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
 
-    fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: String) {
+    fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: Regex) {
         for ((index, element) in list.withIndex()) {
             val name = nameSource?.invoke(element)?.let { gameWAD.strg.getString(it) }
 
-            if (match == name || index == match.toIntOrNull() || match == "*") {
+            if (name?.matches(match) == true || index.toString().matches(match)) {
                 println("$type #$index:")
                 StarfaitUtils.dump(gameWAD, element, 1, null)
 
@@ -125,57 +125,57 @@ class StarfaitCLI : CliktCommand() {
         println("Loaded \"${gameWAD.strg.getString(gameWAD.gen8.gameDisplayName)}\" successfully! [WAD Version ${gameWAD.gen8.wadVersion}]")
 
         if (printGameObjects != null) {
-            dump(gameWAD, "Object", gameWAD.objt.objects, GameObject::name, printGameObjects!!)
+            dump(gameWAD, "Object", gameWAD.objt.objects, GameObject::name, Regex(printGameObjects!!))
             return
         }
 
         if (printBackgrounds != null) {
-            dump(gameWAD, "Background", gameWAD.bgnd.backgrounds, Background::name, printBackgrounds!!)
+            dump(gameWAD, "Background", gameWAD.bgnd.backgrounds, Background::name, Regex(printBackgrounds!!))
             return
         }
 
         if (printSounds != null) {
-            dump(gameWAD, "Sound", gameWAD.sond.sounds, Sound::name, printSounds!!)
+            dump(gameWAD, "Sound", gameWAD.sond.sounds, Sound::name, Regex(printSounds!!))
             return
         }
 
         if (printFonts != null) {
-            dump(gameWAD, "Font", gameWAD.font.fonts, Font::name, printFonts!!)
+            dump(gameWAD, "Font", gameWAD.font.fonts, Font::name, Regex(printFonts!!))
             return
         }
 
         if (printRooms != null) {
-            dump(gameWAD, "Room", gameWAD.room.rooms, Room::name, printRooms!!)
+            dump(gameWAD, "Room", gameWAD.room.rooms, Room::name, Regex(printRooms!!))
             return
         }
 
         if (printScripts != null) {
-            dump(gameWAD, "Script", gameWAD.scpt.scripts, Script::name, printScripts!!)
+            dump(gameWAD, "Script", gameWAD.scpt.scripts, Script::name, Regex(printScripts!!))
             return
         }
 
         if (printCodes != null) {
-            dump(gameWAD, "Code", gameWAD.code.codes, Code::name, printCodes!!)
+            dump(gameWAD, "Code", gameWAD.code.codes, Code::name, Regex(printCodes!!))
             return
         }
 
         if (printVariables != null) {
-            dump(gameWAD, "Variable", gameWAD.vari.variables, Variable::name, printVariables!!)
+            dump(gameWAD, "Variable", gameWAD.vari.variables, Variable::name, Regex(printVariables!!))
             return
         }
 
         if (printFunctions != null) {
-            dump(gameWAD, "Function", gameWAD.func.functions, Function::name, printFunctions!!)
+            dump(gameWAD, "Function", gameWAD.func.functions, Function::name, Regex(printFunctions!!))
             return
         }
 
         if (printTexturePages != null) {
-            dump(gameWAD, "Texture Page Entry", gameWAD.tpag.entries.values.toList(), null, printTexturePages!!)
+            dump(gameWAD, "Texture Page Entry", gameWAD.tpag.entries.values.toList(), null, Regex(printTexturePages!!))
             return
         }
 
         if (printSprites != null) {
-            dump(gameWAD, "Sprite", gameWAD.sprt.sprites, Sprite::name, printSprites!!)
+            dump(gameWAD, "Sprite", gameWAD.sprt.sprites, Sprite::name, Regex(printSprites!!))
             return
         }
 

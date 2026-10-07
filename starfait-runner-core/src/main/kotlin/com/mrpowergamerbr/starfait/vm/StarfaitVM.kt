@@ -516,10 +516,10 @@ class StarfaitVM(
         if (builtinFunction != null) {
             // Technically the YoYo Runner does NOT validate the parameter count during runtime, only during compilation
             // But we validate it because we are just built like frfr (and because it helps debugging any call issues)
-            if (builtinFunction.parameterCount != null && builtinFunction.parameterCount != arguments.size)
-                error("Wrong number of arguments to built-in function ${functionName}! Expected ${builtinFunction.parameterCount}, got ${arguments.size} instead, with the following arguments: $arguments")
+            if (arguments.size !in builtinFunction.parameterRange)
+                error("Wrong number of arguments to built-in function ${functionName}! Expected ${builtinFunction.parameterRange}, got ${arguments.size} instead, with the following arguments: $arguments")
 
-            val result = builtinFunction.handler.invoke(arguments)
+            val result = builtinFunction.execute(this.runner, this, arguments)
             if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains(currentCallFrame.self.objectName) || functionCallsToBeTraced.contains("*")) {
                 println("VM: [$currentCallFrameCodeName] Called built-in function \"$functionName(${arguments.joinToString(", ")})\"! Result: $result")
             }

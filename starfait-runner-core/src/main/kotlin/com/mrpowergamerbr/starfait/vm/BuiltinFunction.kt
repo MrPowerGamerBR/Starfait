@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.vm
 
-class BuiltinFunction(
-    val parameterCount: Int?,
-    val handler: Function1<List<RValue>, RValue>
-)
+import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+
+abstract class BuiltinFunction(val names: List<String>, val parameterRange: IntRange) {
+    abstract fun execute(runner: StarfaitRunner, vm: StarfaitVM, args: List<RValue>): RValue
+}

@@ -293,7 +293,6 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         for (line in lines) {
             var maxHeightOnThisLine = 0f
             for (char in line) {
-                // TODO: HashMap lookup for the glyphs would be pretty swell
                 val glyph = font.characterToGlyph[char]
 
                 if (glyph != null) {

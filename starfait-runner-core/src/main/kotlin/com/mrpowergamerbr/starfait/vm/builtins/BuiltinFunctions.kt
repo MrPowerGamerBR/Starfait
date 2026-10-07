@@ -155,6 +155,7 @@ object BuiltinFunctions {
     @GMLFunction fun ceil(input: Double) = kotlin.math.ceil(input)
     @GMLFunction fun abs(input: Double) = input.absoluteValue
     @GMLFunction fun degtorad(input: Double) = Math.toRadians(input)
+    @GMLFunction fun sqrt(input: Double) = kotlin.math.sqrt(input)
     @GMLFunction fun choose(runner: StarfaitRunner, args: List<RValue>) = args.random(runner.random)
     @GMLFunction fun random(runner: StarfaitRunner, n: Double) = runner.random.nextDouble() * n
 
@@ -374,7 +375,7 @@ object BuiltinFunctions {
 
     @GMLFunction fun tile_layer_show(runner: StarfaitRunner, depth: Int) = toggleTileLayerVisibility(runner, depth, true)
     @GMLFunction fun tile_layer_hide(runner: StarfaitRunner, depth: Int) = toggleTileLayerVisibility(runner, depth, false)
-    
+
     @GMLFunction
     fun game_restart(runner: StarfaitRunner, vm: StarfaitVM) {
         runner.pendingRestart = true

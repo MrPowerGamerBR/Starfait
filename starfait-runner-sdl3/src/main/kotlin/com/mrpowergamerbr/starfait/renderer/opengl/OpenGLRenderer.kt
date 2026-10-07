@@ -269,14 +269,19 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         )
     }
 
-    override fun drawText(font: Font, startX: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String) {
+    override fun drawText(font: Font, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String) {
         val tpag = requireNotNull(gameWAD.tpag.entries[font.texturePageEntryPointer])
         val texture = textures[tpag.textureIndex.toInt()]
 
-        var x = startX
+        val startX = x
+        val startY = y
+        var x = x
         var y = y
 
         flushIfNeeded(texture)
+
+        // TODO: We need to change this for GameMaker: Studio 2+!
+        val lines = text.split("#")
 
         val rad = Math.toRadians(rot.toDouble())
 
@@ -284,15 +289,20 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         // TODO: Maybe we could refactor so that the function already provides the position of each glyph?
         var stringWidth = 0f
         var stringHeight = 0f
-        for (char in text) {
-            // TODO: HashMap lookup for the glyphs would be pretty swell
-            val glyph = font.characterToGlyph[char]
 
-            if (glyph != null) {
-                stringWidth += (glyph.offset * xscale)
-                stringWidth += (glyph.shift * xscale)
-                stringHeight = max(stringHeight, (glyph.height.toFloat() * yscale))
+        for (line in lines) {
+            var maxHeightOnThisLine = 0f
+            for (char in line) {
+                // TODO: HashMap lookup for the glyphs would be pretty swell
+                val glyph = font.characterToGlyph[char]
+
+                if (glyph != null) {
+                    stringWidth += (glyph.offset * xscale)
+                    stringWidth += (glyph.shift * xscale)
+                    maxHeightOnThisLine = max(maxHeightOnThisLine, (glyph.height.toFloat() * yscale))
+                }
             }
+            stringHeight += maxHeightOnThisLine
         }
 
         // Where the text will be rotated around (the center of the string)
@@ -309,40 +319,47 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             .translate(-pivotX, -pivotY)
 
         // Now we ACTUALLY draw it
-        for (char in text) {
-            val glyph = font.characterToGlyph[char]
+        for (line in lines) {
+            var maxHeightOnThisLine = 0f
 
-            if (glyph != null) {
-                x += (glyph.offset * xscale)
+            for (char in line) {
+                val glyph = font.characterToGlyph[char]
 
-                val width = (glyph.width.toFloat() * xscale)
-                val height = (glyph.height.toFloat() * yscale)
+                if (glyph != null) {
+                    x += (glyph.offset * xscale)
 
-                val xy1 = matrix.transformPosition(Vector2f(x, y), Vector2f())
-                val xy2 = matrix.transformPosition(Vector2f(x + width, y), Vector2f())
-                val xy3 = matrix.transformPosition(Vector2f(x + width, y + height), Vector2f())
-                val xy4 = matrix.transformPosition(Vector2f(x, y + height), Vector2f())
+                    val width = (glyph.width.toFloat() * xscale)
+                    val height = (glyph.height.toFloat() * yscale)
 
-                drawQuad(
-                    xy1.x,
-                    xy1.y,
-                    xy2.x,
-                    xy2.y,
-                    xy3.x,
-                    xy3.y,
-                    xy4.x,
-                    xy4.y,
-                    (tpag.sourceX.toFloat() + glyph.x.toFloat()) / texture.width,
-                    (tpag.sourceY.toFloat() + glyph.y.toFloat()) / texture.height,
-                    (tpag.sourceX.toFloat() + glyph.x.toFloat() + glyph.width.toFloat()) / texture.width,
-                    (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
-                    texture,
-                    runner.drawState.color,
-                    runner.drawState.alpha
-                )
+                    val xy1 = matrix.transformPosition(Vector2f(x, y), Vector2f())
+                    val xy2 = matrix.transformPosition(Vector2f(x + width, y), Vector2f())
+                    val xy3 = matrix.transformPosition(Vector2f(x + width, y + height), Vector2f())
+                    val xy4 = matrix.transformPosition(Vector2f(x, y + height), Vector2f())
 
-                x += (glyph.shift * xscale)
+                    drawQuad(
+                        xy1.x,
+                        xy1.y,
+                        xy2.x,
+                        xy2.y,
+                        xy3.x,
+                        xy3.y,
+                        xy4.x,
+                        xy4.y,
+                        (tpag.sourceX.toFloat() + glyph.x.toFloat()) / texture.width,
+                        (tpag.sourceY.toFloat() + glyph.y.toFloat()) / texture.height,
+                        (tpag.sourceX.toFloat() + glyph.x.toFloat() + glyph.width.toFloat()) / texture.width,
+                        (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
+                        texture,
+                        runner.drawState.color,
+                        runner.drawState.alpha
+                    )
+
+                    x += (glyph.shift * xscale)
+                    maxHeightOnThisLine = max(maxHeightOnThisLine, (glyph.height.toFloat() * yscale))
+                }
             }
+            x = startX
+            y += maxHeightOnThisLine
         }
     }
 

@@ -399,7 +399,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         )
     }
 
-    override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float, outline: Boolean) {
+    override fun drawRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float, outline: Boolean) {
         if (outline) {
             // top
             drawQuad(

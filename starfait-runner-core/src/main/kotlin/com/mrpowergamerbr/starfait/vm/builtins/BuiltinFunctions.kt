@@ -19,7 +19,6 @@ import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
-import kotlin.math.sqrt
 
 object BuiltinFunctions {
     @GMLFunction
@@ -219,7 +218,7 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun draw_rectangle(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, outline: Boolean) {
-        runner.renderer.fillRectangle(x1, y1, (x2 - x1) + 1f, (y2 - y1) + 1f, runner.drawState.color, runner.drawState.alpha, outline)
+        runner.renderer.drawRectangle(x1, y1, (x2 - x1) + 1f, (y2 - y1) + 1f, runner.drawState.color, runner.drawState.alpha, outline)
     }
 
     @GMLFunction

@@ -115,7 +115,8 @@ class StarfaitRunner(
                         view.borderX,
                         view.borderY,
                         view.speedX,
-                        view.speedY
+                        view.speedY,
+                        0f
                     )
                 )
             }

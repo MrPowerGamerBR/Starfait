@@ -631,10 +631,32 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         // This is wrong, we should run ALL the draw events for EACH view
         val firstVisibleView = runner.currentRoom.views.firstOrNull { it.visible }
 
-        if (firstVisibleView != null)
-            minimalShader.uProjection.set(Matrix4f().ortho(firstVisibleView.viewX.toFloat(), firstVisibleView.viewX.toFloat() + firstVisibleView.viewWidth.toFloat(), firstVisibleView.viewY.toFloat() + firstVisibleView.viewHeight.toFloat(), firstVisibleView.viewY.toFloat(), 1.0f, -1.0f).get(FloatArray(16)))
-        else
-            minimalShader.uProjection.set(Matrix4f().ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f).get(FloatArray(16)))
+        if (firstVisibleView != null) {
+            val halfWidth = firstVisibleView.viewWidth.toFloat() / 2f
+            val halfHeight = firstVisibleView.viewHeight.toFloat() / 2f
+
+            minimalShader.uProjection.set(
+                Matrix4f()
+                    .ortho(
+                        firstVisibleView.viewX.toFloat(),
+                        firstVisibleView.viewX.toFloat() + firstVisibleView.viewWidth.toFloat(),
+                        firstVisibleView.viewY.toFloat() + firstVisibleView.viewHeight.toFloat(),
+                        firstVisibleView.viewY.toFloat(),
+                        1.0f,
+                        -1.0f
+                    )
+                    // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
+                    .translate(halfWidth + firstVisibleView.viewX.toFloat(), halfHeight + firstVisibleView.viewY.toFloat(), 0f)
+                    .rotateZ(Math.toRadians(-firstVisibleView.angle.toDouble()).toFloat())
+                    .translate(-halfWidth - firstVisibleView.viewX.toFloat(), -halfHeight - firstVisibleView.viewY.toFloat(), 0f)
+                    .get(FloatArray(16))
+            )
+        } else
+            minimalShader.uProjection.set(
+                Matrix4f()
+                    .ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f)
+                    .get(FloatArray(16))
+            )
 
         val activeBatchTexture = this.activeBatchTexture
         if (activeBatchTexture != null)

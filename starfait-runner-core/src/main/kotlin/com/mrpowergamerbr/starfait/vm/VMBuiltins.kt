@@ -131,6 +131,30 @@ class VMBuiltins(val vm: StarfaitVM) {
         )
     }
 
+    fun registerViewBooleanVariable(name: String, property: KMutableProperty1<RunnerRoom.RunnerView, Boolean>) {
+        registerViewVariable(
+            name,
+            { _, view, _ ->
+                RValue.Boolean(property.get(view))
+            },
+            { _, view, value, _ ->
+                property.set(view, value.convertToBoolean())
+            }
+        )
+    }
+
+    fun registerViewRealVariable(name: String, property: KMutableProperty1<RunnerRoom.RunnerView, Float>) {
+        registerViewVariable(
+            name,
+            { _, view, _ ->
+                RValue.Real(property.get(view).toDouble())
+            },
+            { _, view, value, _ ->
+                property.set(view, value.convertToReal().toFloat())
+            }
+        )
+    }
+
     init {
         registerBuiltinFunctions(this)
 
@@ -276,6 +300,10 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerViewIntVariable("view_wview", RunnerRoom.RunnerView::viewWidth)
         registerViewIntVariable("view_hview", RunnerRoom.RunnerView::viewHeight)
         registerViewIntVariable("view_object", RunnerRoom.RunnerView::objectIndex)
+        registerViewBooleanVariable("view_visible", RunnerRoom.RunnerView::visible)
+        registerViewIntVariable("view_hborder", RunnerRoom.RunnerView::borderX)
+        registerViewIntVariable("view_vborder", RunnerRoom.RunnerView::borderY)
+        registerViewRealVariable("view_angle", RunnerRoom.RunnerView::angle)
 
         registerRealStubbedVariable("application_surface", -1.0)
 

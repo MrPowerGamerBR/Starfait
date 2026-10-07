@@ -141,6 +141,7 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
         @DumpRunnerField var borderY: Int,
         @DumpRunnerField var speedX: Int,
         @DumpRunnerField var speedY: Int,
+        @DumpRunnerField var angle: Float
     )
 
     class RunnerBackground(

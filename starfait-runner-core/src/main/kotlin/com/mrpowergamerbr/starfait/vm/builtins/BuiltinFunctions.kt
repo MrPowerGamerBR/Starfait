@@ -180,6 +180,7 @@ object BuiltinFunctions {
 
     @GMLFunction("make_colour_rgb") fun make_color_rgb(red: Int, green: Int, blue: Int) = GMLColor.fromRGB(red, green, blue).value
     @GMLFunction("make_colour_hsv") fun make_color_hsv(hue: Float, saturation: Float, value: Float) = GMLColor.fromHSV(hue, saturation, value).value
+    @GMLFunction("merge_colour") fun merge_color(col1: Int, col2: Int, amount: Double) = GMLColor.lerp(GMLColor(col1), GMLColor(col2), amount).value
 
     @GMLFunction fun draw_self(runner: StarfaitRunner, vm: StarfaitVM) = runner.renderer.drawInstance(vm.currentSelfInstance)
 

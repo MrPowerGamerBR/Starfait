@@ -7,6 +7,7 @@ repositories {
 }
 
 dependencies {
+    api(project(":starfait-common"))
     testImplementation(kotlin("test"))
 }
 

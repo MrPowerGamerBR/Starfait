@@ -4,6 +4,7 @@ plugins {
 
 rootProject.name = "Starfait"
 
+include(":starfait-common")
 include(":starfait-annotations")
 include(":starfait-annotation-processor")
 include(":starfait-wad")

@@ -1,8 +1,11 @@
 package com.mrpowergamerbr.starfait
 
+import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sign
 
 /**
  * A color in the BGR format
@@ -85,6 +88,17 @@ value class GMLColor(val value: Int) {
             bb = max(0.0, min(255.0, floor((bb * 255.0) + 0.5)))
 
             return fromRGB(rr.toInt(), gg.toInt(), bb.toInt())
+        }
+
+        /**
+         * Lerps (lineraly interpolates) between two colors
+         */
+        fun lerp(color1: GMLColor, color2: GMLColor, amount: Double): GMLColor {
+            val r = (color2.red - color1.red) * amount + color1.red
+            val g = (color2.green - color1.green) * amount + color1.green
+            val b = (color2.blue - color1.blue) * amount + color1.blue
+            // Yes, they use DelphiRound for the lerp
+            return fromRGB(MathUtils.delphiRound(r), MathUtils.delphiRound(g), MathUtils.delphiRound(b))
         }
     }
 

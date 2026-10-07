@@ -293,7 +293,8 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerReadOnlyVariable("room_width") { _, _ -> RValue.Int32(runner.currentRoom.width) }
         registerReadOnlyVariable("room_height") { _, _ -> RValue.Int32(runner.currentRoom.height) }
 
-        registerRealStubbedVariable("view_current", 0.0) // Should be 0 outside of draw events
+        // If null, then it means that we are not in a draw event
+        registerReadOnlyVariable("view_current", { _, _ -> RValue.Int32(runner.currentViewId ?: 0) })
 
         registerViewIntVariable("view_xview", RunnerRoom.RunnerView::viewX)
         registerViewIntVariable("view_yview", RunnerRoom.RunnerView::viewY)

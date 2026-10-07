@@ -7,6 +7,7 @@ import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
+import com.mrpowergamerbr.starfait.wad.RoomFlags
 import kotlin.comparisons.compareBy
 import kotlin.random.Random
 
@@ -45,6 +46,7 @@ class StarfaitRunner(
     var drawInvisibleInstances = false
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true
+    var currentViewId: Int? = null
 
     /**
      * Flattened map of events, indexed by [EventKey].
@@ -239,32 +241,6 @@ class StarfaitRunner(
 
         currentRoom.updateViews()
 
-        for (runnerBackground in currentRoom.backgrounds) {
-            if (!runnerBackground.enabled)
-                continue
-
-            // Sometimes a runnerBackground index can be negative even though the runnerBackground is enabled
-            val backgroundIndex = runnerBackground.backgroundIndex
-            if (0 > backgroundIndex)
-                continue
-
-            val background = gameWAD.bgnd.backgrounds[runnerBackground.backgroundIndex]
-            val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
-
-            renderer.drawBackground(
-                tpag,
-                runnerBackground.x.toFloat(),
-                runnerBackground.y.toFloat(),
-                if (runnerBackground.stretch) currentRoom.width.toFloat() else tpag.sourceWidth.toFloat(),
-                if (runnerBackground.stretch) currentRoom.height.toFloat() else tpag.sourceHeight.toFloat(),
-                runnerBackground.tileX,
-                runnerBackground.tileY,
-                currentRoom.width,
-                currentRoom.height,
-                runnerBackground.alpha,
-            )
-        }
-
         val drawables = mutableListOf<Drawable>()
 
         for (tile in currentRoom.tiles) {
@@ -275,35 +251,26 @@ class StarfaitRunner(
             drawables.add(Drawable.Instance(instance, instance.depth.toInt()))
         }
 
-        for (drawable in drawables.sortedByDescending { it.depth }) {
-            when (drawable) {
-                is Drawable.Instance -> {
-                    val instance = drawable.instance
+        if (RoomFlags.Flag.ENABLE_VIEWS in currentRoom.flags) {
+            for ((index, view) in currentRoom.views.withIndex()) {
+                if (!view.visible)
+                    continue
 
-                    // "This works by telling GameMaker to skip Draw Events for this instance, so care must be taken when using this as it means that
-                    // no code placed in any of the Draw events will be run while the instance is not visible."
-                    if (instance.visible || this.drawInvisibleInstances) {
-                        val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
+                this.currentViewId = index
 
-                        if (!instanceHasDrawEvent) {
-                            // Draw the instance manually
-                            // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
-                            renderer.drawInstance(instance)
-                        }
-                    }
-                }
-                is Drawable.Tile -> {
-                    val tile = drawable.tile
-
-                    if (tile.visible) {
-                        val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
-                        val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
-
-                        renderer.drawTile(tpag, tile)
-                    }
+                renderer.withView(view) {
+                    drawBackgrounds()
+                    drawDrawables(drawables)
                 }
             }
+        } else {
+            renderer.withView(null) {
+                drawBackgrounds()
+                drawDrawables(drawables)
+            }
         }
+
+        this.currentViewId = null
 
         if (this.pendingRestart) {
             this.pendingRestart = false
@@ -340,7 +307,67 @@ class StarfaitRunner(
         newRoom.instances.addAll(persistentInstances)
     }
 
-    fun dispatchKeyboard(eventType: Int, targetArray: Array<Boolean>) {
+    private fun drawBackgrounds() {
+        for (runnerBackground in currentRoom.backgrounds) {
+            if (!runnerBackground.enabled)
+                continue
+
+            // Sometimes a runnerBackground index can be negative even though the runnerBackground is enabled
+            val backgroundIndex = runnerBackground.backgroundIndex
+            if (0 > backgroundIndex)
+                continue
+
+            val background = gameWAD.bgnd.backgrounds[runnerBackground.backgroundIndex]
+            val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+
+            renderer.drawBackground(
+                tpag,
+                runnerBackground.x.toFloat(),
+                runnerBackground.y.toFloat(),
+                if (runnerBackground.stretch) currentRoom.width.toFloat() else tpag.sourceWidth.toFloat(),
+                if (runnerBackground.stretch) currentRoom.height.toFloat() else tpag.sourceHeight.toFloat(),
+                runnerBackground.tileX,
+                runnerBackground.tileY,
+                currentRoom.width,
+                currentRoom.height,
+                runnerBackground.alpha,
+            )
+        }
+    }
+
+    private fun drawDrawables(drawables: List<Drawable>) {
+        for (drawable in drawables.sortedByDescending { it.depth }) {
+            when (drawable) {
+                is Drawable.Instance -> {
+                    val instance = drawable.instance
+
+                    // "This works by telling GameMaker to skip Draw Events for this instance, so care must be taken when using this as it means that
+                    // no code placed in any of the Draw events will be run while the instance is not visible."
+                    if (instance.visible || this.drawInvisibleInstances) {
+                        val instanceHasDrawEvent = instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW, null)
+
+                        if (!instanceHasDrawEvent) {
+                            // Draw the instance manually
+                            // println("Instance ${instance.objectName} did not handle the draw event, drawing manually!")
+                            renderer.drawInstance(instance)
+                        }
+                    }
+                }
+                is Drawable.Tile -> {
+                    val tile = drawable.tile
+
+                    if (tile.visible) {
+                        val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
+                        val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+
+                        renderer.drawTile(tpag, tile)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun dispatchKeyboard(eventType: Int, targetArray: Array<Boolean>) {
         var anyKey = false
         var noKey = true
         for ((index, trigger) in targetArray.withIndex()) {
@@ -357,7 +384,7 @@ class StarfaitRunner(
             dispatchEventToAllInstances(eventType, RunnerKeyboard.VK_NOKEY)
     }
 
-    fun dispatchOutsideRoom() {
+    private fun dispatchOutsideRoom() {
         // GameMaker-HTML5's "./scripts/Events.js"
         forEachInstance { instance ->
             val bbox = instance.getBoundingBox()
@@ -370,7 +397,7 @@ class StarfaitRunner(
         }
     }
 
-    fun dispatchCollisions() {
+    private fun dispatchCollisions() {
         // Contrary to popular belief: It seems that GameMaker-HTML5 does NOT model collision dispatch like the C++ YoYo Runner
         // So that's why this is a bit different
         // The tl;dr is: You MUST iterate by the objectIndex (ascending order)

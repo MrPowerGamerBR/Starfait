@@ -17,5 +17,6 @@ abstract class Renderer {
     abstract fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile)
     abstract fun drawText(font: Font, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String)
     abstract fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float, outline: Boolean)
+    abstract fun withView(view: RunnerRoom.RunnerView?, block: () -> (Unit))
     abstract fun frame(block: () -> (Unit))
 }

@@ -9,6 +9,7 @@ import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import com.mrpowergamerbr.starfait.wad.RoomFlags
 import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
@@ -20,6 +21,13 @@ import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
+import org.lwjgl.opengl.GL11.GL_SCISSOR_TEST
+import org.lwjgl.opengl.GL11.glClear
+import org.lwjgl.opengl.GL11.glDisable
+import org.lwjgl.opengl.GL11.glEnable
+import org.lwjgl.opengl.GL11.glScissor
+import org.lwjgl.opengl.GL11.glViewport
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
@@ -34,6 +42,9 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         private const val MAX_BATCH_ELEMENTS = 512
         private const val FIELDS_PER_ELEMENT = 48
         private const val TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT = 8
+        // TODO: This shouldn't be hardcoded!
+        private const val VIEWPORT_WIDTH = 640
+        private const val VIEWPORT_HEIGHT = 480
     }
 
     lateinit var runner: StarfaitRunner
@@ -440,6 +451,52 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         }
     }
 
+    override fun withView(view: RunnerRoom.RunnerView?, block: () -> Unit) {
+        flush()
+
+        glEnable(GL_SCISSOR_TEST)
+
+        if (view != null) {
+            val halfWidth = view.viewWidth.toFloat() / 2f
+            val halfHeight = view.viewHeight.toFloat() / 2f
+
+            // portX/portY = where it will be rendered in the screen
+            // We do - for the Y because OpenGL is y up
+            glViewport(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+            glScissor(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+
+            minimalShader.uProjection.set(
+                Matrix4f()
+                    .ortho(
+                        view.viewX.toFloat(),
+                        view.viewX.toFloat() + view.viewWidth.toFloat(),
+                        view.viewY.toFloat() + view.viewHeight.toFloat(),
+                        view.viewY.toFloat(),
+                        1.0f,
+                        -1.0f
+                    )
+                    // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
+                    .translate(halfWidth + view.viewX.toFloat(), halfHeight + view.viewY.toFloat(), 0f)
+                    .rotateZ(Math.toRadians(-view.angle.toDouble()).toFloat())
+                    .translate(-halfWidth - view.viewX.toFloat(), -halfHeight - view.viewY.toFloat(), 0f)
+                    .get(FloatArray(16))
+            )
+        } else {
+            glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+            glScissor(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+
+            minimalShader.uProjection.set(
+                Matrix4f()
+                    .ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f)
+                    .get(FloatArray(16))
+            )
+        }
+
+        block()
+
+        glDisable(GL_SCISSOR_TEST)
+    }
+
     override fun frame(block: () -> Unit) {
         // TODO: Respect the room's drawBackgroundColor
         val color = runner.currentRoom.backgroundColor
@@ -517,17 +574,17 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
 
         runner.debugRectangles.clear()
 
-        flush(runner)
+        flush()
     }
 
     fun flushIfNeeded(texture: Texture) {
         if (this.activeBatchTexture != texture) {
-            flush(runner)
+            flush()
             return
         }
 
         if (this.currentIndex == batch.size) {
-            flush(runner)
+            flush()
             return
         }
     }
@@ -623,39 +680,9 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         this.activeBatchTexture = texture
     }
 
-    fun flush(runner: StarfaitRunner) {
+    fun flush() {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
         GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, 0, batch)
-
-        // This is wrong, we should run ALL the draw events for EACH view
-        val firstVisibleView = runner.currentRoom.views.firstOrNull { it.visible }
-
-        if (firstVisibleView != null) {
-            val halfWidth = firstVisibleView.viewWidth.toFloat() / 2f
-            val halfHeight = firstVisibleView.viewHeight.toFloat() / 2f
-
-            minimalShader.uProjection.set(
-                Matrix4f()
-                    .ortho(
-                        firstVisibleView.viewX.toFloat(),
-                        firstVisibleView.viewX.toFloat() + firstVisibleView.viewWidth.toFloat(),
-                        firstVisibleView.viewY.toFloat() + firstVisibleView.viewHeight.toFloat(),
-                        firstVisibleView.viewY.toFloat(),
-                        1.0f,
-                        -1.0f
-                    )
-                    // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
-                    .translate(halfWidth + firstVisibleView.viewX.toFloat(), halfHeight + firstVisibleView.viewY.toFloat(), 0f)
-                    .rotateZ(Math.toRadians(-firstVisibleView.angle.toDouble()).toFloat())
-                    .translate(-halfWidth - firstVisibleView.viewX.toFloat(), -halfHeight - firstVisibleView.viewY.toFloat(), 0f)
-                    .get(FloatArray(16))
-            )
-        } else
-            minimalShader.uProjection.set(
-                Matrix4f()
-                    .ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f)
-                    .get(FloatArray(16))
-            )
 
         val activeBatchTexture = this.activeBatchTexture
         if (activeBatchTexture != null)

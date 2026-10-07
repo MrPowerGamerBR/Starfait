@@ -145,6 +145,9 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
             textures[tpag.textureIndex.toInt()],
             color,
+            color,
+            color,
+            color,
             alpha
         )
     }
@@ -356,6 +359,9 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
                         (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
                         texture,
                         runner.drawState.color,
+                        runner.drawState.color,
+                        runner.drawState.color,
+                        runner.drawState.color,
                         runner.drawState.alpha
                     )
 
@@ -368,7 +374,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         }
     }
 
-    override fun drawLine(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color: GMLColor, alpha: Float) {
+    override fun drawLine(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color1: GMLColor, color2: GMLColor, alpha: Float) {
         // Essentially to draw a line you get the perpendicular vector to the line, and then you "inflate" the coordinates to get the point of each of the quad's corner
         val p1 = Vector2f(x1, y1)
         val p2 = Vector2f(x2, y2)
@@ -394,7 +400,10 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             1f,
             1f,
             white1x1Texture,
-            color,
+            color1,
+            color1,
+            color2,
+            color2,
             1.0f
         )
     }
@@ -627,7 +636,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         texture: Texture,
         blend: GMLColor,
         alpha: Float
-    ) = drawQuad(x, y, x + width, y, x + width, y + height, x, y + height, u1, v1, u2, v2, texture, blend, alpha)
+    ) = drawQuad(x, y, x + width, y, x + width, y + height, x, y + height, u1, v1, u2, v2, texture, blend, blend, blend, blend, alpha)
 
     // Clockwise pattern for the coordinates
     fun drawQuad(
@@ -644,7 +653,10 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         u2: Float,
         v2: Float,
         texture: Texture,
-        blend: GMLColor,
+        blend1: GMLColor,
+        blend2: GMLColor,
+        blend3: GMLColor,
+        blend4: GMLColor,
         alpha: Float
     ) {
         flushIfNeeded(texture)
@@ -653,54 +665,54 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         batch[currentIndex++] = x1; batch[currentIndex++] = y1;
         batch[currentIndex++] = u1; batch[currentIndex++] = v1;
 
-        batch[currentIndex++] = blend.redF
-        batch[currentIndex++] = blend.greenF
-        batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = blend1.redF
+        batch[currentIndex++] = blend1.greenF
+        batch[currentIndex++] = blend1.blueF
         batch[currentIndex++] = alpha
 
         // bottom-right
         batch[currentIndex++] = x3; batch[currentIndex++] = y3;
         batch[currentIndex++] = u2; batch[currentIndex++] = v2;
 
-        batch[currentIndex++] = blend.redF
-        batch[currentIndex++] = blend.greenF
-        batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = blend3.redF
+        batch[currentIndex++] = blend3.greenF
+        batch[currentIndex++] = blend3.blueF
         batch[currentIndex++] = alpha
 
         // bottom-left
         batch[currentIndex++] = x4; batch[currentIndex++] = y4;
         batch[currentIndex++] = u1; batch[currentIndex++] = v2;
 
-        batch[currentIndex++] = blend.redF
-        batch[currentIndex++] = blend.greenF
-        batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = blend4.redF
+        batch[currentIndex++] = blend4.greenF
+        batch[currentIndex++] = blend4.blueF
         batch[currentIndex++] = alpha
 
         // top-left
         batch[currentIndex++] = x1; batch[currentIndex++] = y1;
         batch[currentIndex++] = u1; batch[currentIndex++] = v1;
 
-        batch[currentIndex++] = blend.redF
-        batch[currentIndex++] = blend.greenF
-        batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = blend1.redF
+        batch[currentIndex++] = blend1.greenF
+        batch[currentIndex++] = blend1.blueF
         batch[currentIndex++] = alpha
 
         // top-right
         batch[currentIndex++] = x2; batch[currentIndex++] = y2;
         batch[currentIndex++] = u2; batch[currentIndex++] = v1;
 
-        batch[currentIndex++] = blend.redF
-        batch[currentIndex++] = blend.greenF
-        batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = blend2.redF
+        batch[currentIndex++] = blend2.greenF
+        batch[currentIndex++] = blend2.blueF
         batch[currentIndex++] = alpha
 
         // bottom-right
         batch[currentIndex++] = x3; batch[currentIndex++] = y3;
         batch[currentIndex++] = u2; batch[currentIndex++] = v2;
 
-        batch[currentIndex++] = blend.redF
-        batch[currentIndex++] = blend.greenF
-        batch[currentIndex++] = blend.blueF
+        batch[currentIndex++] = blend3.redF
+        batch[currentIndex++] = blend3.greenF
+        batch[currentIndex++] = blend3.blueF
         batch[currentIndex++] = alpha
 
         this.activeBatchTexture = texture

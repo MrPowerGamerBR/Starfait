@@ -124,6 +124,7 @@ class StarfaitAnnotationProcessor(val codeGenerator: CodeGenerator, val logger: 
                 appendLine("package com.mrpowergamerbr.starfait.vm.builtins")
                 appendLine("import com.mrpowergamerbr.starfait.vm.*")
                 appendLine("import com.mrpowergamerbr.starfait.runner.*")
+                appendLine("import com.mrpowergamerbr.starfait.*")
 
                 for (func in gmlFunctions) {
                     val parentDeclaration = func.parentDeclaration!!
@@ -197,6 +198,8 @@ class StarfaitAnnotationProcessor(val codeGenerator: CodeGenerator, val logger: 
                                 "Float?" -> "args.getOrNull(${consumedArgs++})?.convertToReal()?.toFloat()"
                                 "Int" -> "args[${consumedArgs++}].convertToInt32()"
                                 "Int?" -> "args.getOrNull(${consumedArgs++})?.convertToInt32()"
+                                "GMLColor" -> "GMLColor(args[${consumedArgs++}].convertToInt32())"
+                                "GMLColor?" -> "args.getOrNull(${consumedArgs++})?.convertToInt32()?.let { GMLColor(it) }"
                                 "Boolean" -> "args[${consumedArgs++}].convertToBoolean()"
                                 "List<RValue>" -> "args"
                                 else -> logger.error("Unsupported parameter type ${arg.type.resolve()}!")

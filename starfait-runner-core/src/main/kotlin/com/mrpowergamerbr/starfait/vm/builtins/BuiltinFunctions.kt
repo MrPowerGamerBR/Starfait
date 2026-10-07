@@ -179,7 +179,7 @@ object BuiltinFunctions {
 
     @GMLFunction("make_colour_rgb") fun make_color_rgb(red: Int, green: Int, blue: Int) = GMLColor.fromRGB(red, green, blue).value
     @GMLFunction("make_colour_hsv") fun make_color_hsv(hue: Float, saturation: Float, value: Float) = GMLColor.fromHSV(hue, saturation, value).value
-    @GMLFunction("merge_colour") fun merge_color(col1: Int, col2: Int, amount: Double) = GMLColor.lerp(GMLColor(col1), GMLColor(col2), amount).value
+    @GMLFunction("merge_colour") fun merge_color(col1: GMLColor, col2: GMLColor, amount: Double) = GMLColor.lerp(col1, col2, amount).value
 
     @GMLFunction fun draw_self(runner: StarfaitRunner, vm: StarfaitVM) = runner.renderer.drawInstance(vm.currentSelfInstance)
 
@@ -207,8 +207,8 @@ object BuiltinFunctions {
 
 
     @GMLFunction("draw_set_colour")
-    fun draw_set_color(runner: StarfaitRunner, vm: StarfaitVM, color: Int) {
-        runner.drawState.color = GMLColor(color)
+    fun draw_set_color(runner: StarfaitRunner, vm: StarfaitVM, color: GMLColor) {
+        runner.drawState.color = color
     }
 
     @GMLFunction
@@ -223,12 +223,22 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun draw_line(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float) {
-        runner.renderer.drawLine(x1, y1, x2, y2, 1f, runner.drawState.color, runner.drawState.alpha)
+        runner.renderer.drawLine(x1, y1, x2, y2, 1f, runner.drawState.color, runner.drawState.color, runner.drawState.alpha)
     }
 
     @GMLFunction
     fun draw_line_width(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float) {
-        runner.renderer.drawLine(x1, y1, x2, y2, thickness, runner.drawState.color, runner.drawState.alpha)
+        runner.renderer.drawLine(x1, y1, x2, y2, thickness, runner.drawState.color, runner.drawState.color, runner.drawState.alpha)
+    }
+
+    @GMLFunction("draw_line_colour")
+    fun draw_line_color(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, color1: GMLColor, color2: GMLColor) {
+        runner.renderer.drawLine(x1, y1, x2, y2, 1f, color1, color2, runner.drawState.alpha)
+    }
+
+    @GMLFunction("draw_line_width_colour")
+    fun draw_line_width_color(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, color1: GMLColor, color2: GMLColor, thickness: Float) {
+        runner.renderer.drawLine(x1, y1, x2, y2, thickness, color1, color2, runner.drawState.alpha)
     }
 
     @GMLFunction
@@ -880,9 +890,9 @@ object BuiltinFunctions {
     }
 
     @GMLFunction
-    fun draw_sprite_part_ext(runner: StarfaitRunner, spriteIndex: Int, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: Int, alpha: Float) {
+    fun draw_sprite_part_ext(runner: StarfaitRunner, spriteIndex: Int, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float) {
         val sprite = runner.gameWAD.sprt.sprites[spriteIndex]
 
-        runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, xscale, yscale, GMLColor(color), alpha)
+        runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, xscale, yscale, color, alpha)
     }
 }

@@ -1,7 +1,6 @@
 package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.NamedConstant
-import kotlin.reflect.full.hasAnnotation
 
 object CmpOp {
     @NamedConstant const val LESS_THAN = 1

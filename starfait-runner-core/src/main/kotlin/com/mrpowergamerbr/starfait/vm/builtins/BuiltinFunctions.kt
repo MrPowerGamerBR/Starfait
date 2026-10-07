@@ -848,6 +848,14 @@ object BuiltinFunctions {
 
     @GMLFunction fun point_direction(x1: Double, y1: Double, x2: Double, y2: Double) = Math.toDegrees(atan2(-(y2 - y1), x2 - x1))
 
+    @GMLFunction fun point_distance(x1: Double, y1: Double, x2: Double, y2: Double): Double {
+        val minX = min(x1, x2)
+        val minY = min(y1, y2)
+        val maxX = max(x1, x2)
+        val maxY = max(y1, y2)
+        return sqrt((maxX - minX).pow(2) + (maxY - minY).pow(2))
+    }
+
     @GMLFunction
     fun object_get_name(vm: StarfaitVM, objectIndex: Int): RValue {
         // When testing in GameMaker: Studio 1.4.9999 it seems that it DOES NOT throw on a invalid object, it just returns undefined

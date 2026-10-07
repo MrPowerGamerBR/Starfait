@@ -223,6 +223,16 @@ object BuiltinFunctions {
     }
 
     @GMLFunction
+    fun draw_line(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float) {
+        runner.renderer.drawLine(x1, y1, x2, y2, 1f, runner.drawState.color, runner.drawState.alpha)
+    }
+
+    @GMLFunction
+    fun draw_line_width(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float) {
+        runner.renderer.drawLine(x1, y1, x2, y2, thickness, runner.drawState.color, runner.drawState.alpha)
+    }
+
+    @GMLFunction
     fun action_move_to(runner: StarfaitRunner, vm: StarfaitVM, x: Double, y: Double) {
         var x = x
         var y = y

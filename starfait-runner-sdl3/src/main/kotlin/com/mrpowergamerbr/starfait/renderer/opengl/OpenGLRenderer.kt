@@ -9,7 +9,6 @@ import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.GameWAD
-import com.mrpowergamerbr.starfait.wad.RoomFlags
 import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
@@ -21,9 +20,7 @@ import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT
 import org.lwjgl.opengl.GL11.GL_SCISSOR_TEST
-import org.lwjgl.opengl.GL11.glClear
 import org.lwjgl.opengl.GL11.glDisable
 import org.lwjgl.opengl.GL11.glEnable
 import org.lwjgl.opengl.GL11.glScissor
@@ -32,9 +29,7 @@ import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
 import kotlin.math.ceil
-import kotlin.math.cos
 import kotlin.math.max
-import kotlin.math.sin
 import kotlin.text.iterator
 
 class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
@@ -371,6 +366,37 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             x = startX
             y += maxHeightOnThisLine
         }
+    }
+
+    override fun drawLine(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color: GMLColor, alpha: Float) {
+        // Essentially to draw a line you get the perpendicular vector to the line, and then you "inflate" the coordinates to get the point of each of the quad's corner
+        val p1 = Vector2f(x1, y1)
+        val p2 = Vector2f(x2, y2)
+        val dir = Vector2f(p2).sub(p1).normalize()
+        val perpendicular = Vector2f(-dir.y, dir.x).mul(thickness * 0.5f)
+
+        val c1 = Vector2f(p1).add(perpendicular)
+        val c2 = Vector2f(p1).sub(perpendicular)
+        val c3 = Vector2f(p2).add(perpendicular)
+        val c4 = Vector2f(p2).sub(perpendicular)
+
+        drawQuad(
+            c1.x,
+            c1.y,
+            c2.x,
+            c2.y,
+            c3.x,
+            c3.y,
+            c4.x,
+            c4.y,
+            0f,
+            0f,
+            1f,
+            1f,
+            white1x1Texture,
+            color,
+            1.0f
+        )
     }
 
     override fun fillRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float, outline: Boolean) {

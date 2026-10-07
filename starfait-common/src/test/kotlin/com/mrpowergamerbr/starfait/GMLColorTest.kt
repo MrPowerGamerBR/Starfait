@@ -9,7 +9,17 @@ object GMLColorTest {
         assertEquals("00ff0000", GMLColor.fromRGB(0, 0, 255).value.toHexString())
         assertEquals("0000ff00", GMLColor.fromRGB(0, 255, 0).value.toHexString())
         assertEquals("000000ff", GMLColor.fromRGB(255, 0, 0).value.toHexString())
-        assertEquals(GMLColor.fromRGB(41, 166, 254).value, 16688681)
+        assertEquals(16688681, GMLColor.fromRGB(41, 166, 254).value)
+    }
+
+    @Test
+    fun `test fromHSV`() {
+        assertEquals(16657113, GMLColor.fromHSV(205, 213, 254).value)
+    }
+
+    @Test
+    fun `test fromHSV wraparound`() {
+        assertEquals(2817738, GMLColor.fromHSV(205 + 360, 213, 254).value)
     }
 
     @Test

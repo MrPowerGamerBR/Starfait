@@ -22,16 +22,32 @@ value class GMLColor(val value: Int) {
             return GMLColor(value)
         }
 
-        // From GameMaker-HTML5's "make_color_hsv" implementation
-        fun fromHSV(hue: Float, saturation: Float, value: Float): GMLColor {
+        // Based on GameMaker-HTML5's "make_color_hsv" implementation
+        // The only twist is that the native code clamps the value using bitwise operations BEFORE converting
+        // For reference (based on the Android runner):
+        // F_MakeColorHSV: It converts from Reals to Int using YYGetInt32, then calls Color_HSV
+        // Color_HSV: Clamps the input values from 0 to 255 by doing bitwise operations
+        // Color_HSVToColor: Essentially just calls Color_HSVToRGB
+        // Color_HSVToRGB: The REAL implementation that converts the values to HSV (which is the same as the one in GameMaker-HTML5)
+        fun fromHSV(hue: Int, saturation: Int, value: Int): GMLColor {
+            // Color_HSV
+            // The original code seems to pack it into a single value, but we don't need to do that
+            val hueClamped = hue and 0xFF
+            val saturationClamped = saturation and 0xFF
+            val valueClamped = value and 0xFF
+
+            // Color_HSVToRGB
+            // This part of the code is *similar* to how GameMaker-HTML5 looks like
             var rr: Double
             var gg: Double
             var bb: Double
 
-            var hh = hue * 360.0 / 255.0
-            if (hh == 360.0) hh = 0.0
-            val ss = saturation / 255.0
-            val vv = value / 255.0
+            var hh = (hueClamped * 360.0 / 255.0)
+            if (hh == 360.0) {
+                hh = 0.0
+            }
+            val ss = saturationClamped / 255.0
+            val vv = valueClamped / 255.0
 
             if (ss == 0.0) {
                 rr = vv
@@ -87,7 +103,7 @@ value class GMLColor(val value: Int) {
             gg = max(0.0, min(255.0, floor((gg * 255.0) + 0.5)))
             bb = max(0.0, min(255.0, floor((bb * 255.0) + 0.5)))
 
-            return fromRGB(rr.toInt(), gg.toInt(), bb.toInt())
+            return fromRGB(MathUtils.delphiRound(rr), MathUtils.delphiRound(gg), MathUtils.delphiRound(bb))
         }
 
         /**

@@ -1,8 +1,8 @@
 package com.mrpowergamerbr.starfait.runner.textfiles
 
-import com.mrpowergamerbr.starfait.filesystem.FileSystem
+import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 
-class TextFileManager(val fileSystem: FileSystem) {
+class TextFileManager(val layeredFileSystem: LayeredFileSystem) {
     // "You can only have a maximum of 32 files open at any one time.
     // You should also always close files when finished as this writes the information and frees the memory associated with the file."
     private val openFiles = arrayOfNulls<TextFile>(32)
@@ -10,7 +10,7 @@ class TextFileManager(val fileSystem: FileSystem) {
     fun getTextFileById(fileId: Int) = this.openFiles[fileId - 1]
 
     fun openTextFile(filePath: String, write: Boolean): TextFile {
-        val content = fileSystem.readFile(filePath) ?: byteArrayOf()
+        val content = layeredFileSystem.readFile(filePath) ?: byteArrayOf()
         val allocatedId = allocateTextFileId()
 
         val file = if (write) {
@@ -31,7 +31,7 @@ class TextFileManager(val fileSystem: FileSystem) {
             is ReadableTextFile -> {}
             is WritableTextFile -> {
                 openFile.outputStream.close()
-                fileSystem.writeFile(openFile.path, openFile.outputStream.toByteArray())
+                layeredFileSystem.writeFile(openFile.path, openFile.outputStream.toByteArray())
             }
             null -> TODO()
         }

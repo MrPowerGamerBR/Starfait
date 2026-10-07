@@ -1,6 +1,8 @@
 package com.mrpowergamerbr.starfait.audio.sdl
 
 import com.mrpowergamerbr.starfait.audio.AudioManager
+import com.mrpowergamerbr.starfait.filesystem.FileSystem
+import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Sound
 import org.lwjgl.sdl.SDLAudio.SDL_AUDIO_S16
@@ -32,7 +34,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import kotlin.check
 
-class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager() {
+class SDLAudioManager(val gameWAD: GameWAD, val fileSystem: FileSystem, val sdlDeviceId: Int) : AudioManager() {
     private val soundInstances = mutableListOf<SDLSoundInstance>()
     // TODO: Move this somewhere else - This is from GameMaker
     private var currentSoundInstanceId = 400_000
@@ -55,7 +57,7 @@ class SDLAudioManager(val gameWAD: GameWAD, val sdlDeviceId: Int) : AudioManager
         when (sound.kind) {
             Sound.Kind.COMPRESSED_STREAMED -> {
                 // TECHNICALLY sounds can be something that aren't OGGs, but for now, this shall do
-                val songBytes = File("/home/mrpowergamerbr/Projects/ButterGMGames/Undertale_108/", gameWAD.strg.getString(sound.fileName)).readBytes()
+                val songBytes = fileSystem.readFile(gameWAD.strg.getString(sound.fileName))!!
 
                 MemoryStack.stackPush().use { stack ->
                     // memAlloc is just like a ByteBuffer

@@ -32,7 +32,6 @@ object BuiltinFunctions {
 
     @GMLFunction(stub = true) fun steam_initialised() = true
     @GMLFunction(stub = true) fun steam_file_exists(fileName: String) = false
-    @GMLFunction(stub = true) fun file_exists(fileName: String) = false
     @GMLFunction(stub = true) fun os_get_language(vm: StarfaitVM) = "pt"
     @GMLFunction(stub = true) fun os_get_region(vm: StarfaitVM) = "BR"
     @GMLFunction(stub = true) fun string_height(string: String) = 0.0
@@ -404,7 +403,7 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun ini_open(runner: StarfaitRunner, fileName: String) {
-        val content = runner.fileSystem.readFile(fileName)?.toString(Charsets.UTF_8) ?: ""
+        val content = runner.layeredFileSystem.readFile(fileName)?.toString(Charsets.UTF_8) ?: ""
         runner.openINI = OpenINI(fileName, INI.parse(content))
     }
 
@@ -412,7 +411,7 @@ object BuiltinFunctions {
     fun ini_close(runner: StarfaitRunner) {
         val openINI = runner.openINI ?: return
 
-        runner.fileSystem.writeFile(openINI.path, openINI.ini.writeToString().toByteArray(Charsets.UTF_8))
+        runner.layeredFileSystem.writeFile(openINI.path, openINI.ini.writeToString().toByteArray(Charsets.UTF_8))
         runner.openINI = null
     }
 
@@ -896,6 +895,7 @@ object BuiltinFunctions {
         runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, xscale, yscale, color, alpha)
     }
 
+    @GMLFunction fun file_exists(runner: StarfaitRunner, fileName: String) = runner.layeredFileSystem.fileExists(fileName)
     @GMLFunction fun file_text_open_write(runner: StarfaitRunner, fileName: String) = runner.textFiles.openTextFile(fileName, true)
     @GMLFunction fun file_text_write_string(runner: StarfaitRunner, textFileId: Int, text: String) = runner.textFiles.getTextFileById(textFileId)!!.writeString(text)
     @GMLFunction fun file_text_writeln(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.writeNewLine()
@@ -906,4 +906,26 @@ object BuiltinFunctions {
     @GMLFunction fun file_text_read_string(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.readString()
     @GMLFunction fun file_text_readln(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.readLine()
     @GMLFunction fun file_text_read_real(runner: StarfaitRunner, textFileId: Int) = runner.textFiles.getTextFileById(textFileId)!!.readReal()
+
+    @GMLFunction
+    fun draw_background(runner: StarfaitRunner, backgroundId: Int, x: Int, y: Int) {
+        val currentRoom = runner.currentRoom
+
+        // Contrary to what it *seems* like it is: What this does is draw a background ASSET somewhere
+        val background = runner.gameWAD.bgnd.backgrounds.getOrNull(backgroundId) ?: return
+        val tpag = runner.gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+
+        runner.renderer.drawBackground(
+            tpag,
+            x.toFloat(),
+            y.toFloat(),
+            tpag.sourceWidth.toFloat(),
+            tpag.sourceHeight.toFloat(),
+            false,
+            false,
+            currentRoom.width,
+            currentRoom.height,
+            runner.drawState.alpha // TODO: Is this actually correct? The docs say that it is "without transparency" but who knows
+        )
+    }
 }

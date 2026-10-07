@@ -15,6 +15,7 @@ import com.github.ajalt.clikt.parameters.types.float
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
+import com.mrpowergamerbr.starfait.desktop.StarfaitWindow.SaveFolderKind
 import com.mrpowergamerbr.starfait.disasm.StarfaitDisassembler
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.*
@@ -81,6 +82,7 @@ class StarfaitCLI : CliktCommand() {
     val disassemble by option().multiple()
     val masterVolume by option().float().default(1.0f)
     val seed by option().long().defaultLazy { System.currentTimeMillis() }
+    val saveFolder by option()
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: Regex) {
         for ((index, element) in list.withIndex()) {
@@ -384,7 +386,15 @@ class StarfaitCLI : CliktCommand() {
             playbackInputFrames = null
         }
 
+        var saveFolderKind: SaveFolderKind = SaveFolderKind.Memory
+
+        if (this.saveFolder != "memory" || this.saveFolder == null) {
+            saveFolderKind = SaveFolderKind.Folder(File(this.saveFolder ?: "./saves/${gameWAD.strg.getString(gameWAD.gen8.gameTitle)}/").also { it.mkdirs() })
+        }
+
         val window = StarfaitWindow(
+            wadFile,
+            saveFolderKind,
             vm,
             seed,
             enableCollisionRendering,

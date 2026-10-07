@@ -1,8 +1,7 @@
 package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.audio.AudioManager
-import com.mrpowergamerbr.starfait.filesystem.FileSystem
-import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
+import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.runner.textfiles.TextFileManager
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
@@ -18,7 +17,7 @@ class StarfaitRunner(
     val vm: StarfaitVM,
     val renderer: Renderer,
     val audioManager: AudioManager,
-    val fileSystem: FileSystem,
+    val layeredFileSystem: LayeredFileSystem,
     val output: GameOutput,
     val seed: Long,
     val replaceRooms: Map<Int, Int>
@@ -42,7 +41,7 @@ class StarfaitRunner(
     val persistentRooms = mutableMapOf<Int, RunnerRoom>()
     var drawState = DrawState(gameWAD)
     var openINI: OpenINI? = null
-    val textFiles = TextFileManager(this.fileSystem)
+    val textFiles = TextFileManager(layeredFileSystem)
 
     var enableCollisionRendering = false
     val debugRectangles = mutableListOf<DebugBoundingBox>()

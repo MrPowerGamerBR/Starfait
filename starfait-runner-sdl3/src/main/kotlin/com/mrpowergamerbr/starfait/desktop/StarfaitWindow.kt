@@ -2,6 +2,8 @@ package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.RecordedFrame
 import com.mrpowergamerbr.starfait.audio.sdl.SDLAudioManager
+import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
+import com.mrpowergamerbr.starfait.filesystem.disk.DiskFileSystem
 import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.opengl.OpenGLRenderer
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
@@ -56,6 +58,8 @@ import java.io.File
 import javax.imageio.ImageIO
 
 class StarfaitWindow(
+    val wadFile: File,
+    val saveFolder: SaveFolderKind,
     val vm: StarfaitVM,
     val seed: Long,
     val enableCollisionRendering: Boolean,
@@ -110,13 +114,20 @@ class StarfaitWindow(
             SDL_SetAudioDeviceGain(device, 0.0f)
         }
 
+        val saveFileSystem = when (saveFolder) {
+            is SaveFolderKind.Folder -> DiskFileSystem(saveFolder.file)
+            SaveFolderKind.Memory -> VirtualFileSystem()
+        }
+        val bundleFileSystem = DiskFileSystem(wadFile.parentFile)
+        val layeredFileSystem = LayeredFileSystem(saveFileSystem, bundleFileSystem)
+
         val renderer = OpenGLRenderer(vm.gameWAD)
         val runner = StarfaitRunner(
             vm.gameWAD,
             vm,
             renderer,
-            SDLAudioManager(vm.gameWAD, device),
-            VirtualFileSystem(),
+            SDLAudioManager(vm.gameWAD, bundleFileSystem, device),
+            layeredFileSystem,
             StdoutGameOutput(),
             seed,
             replaceRooms
@@ -355,5 +366,10 @@ class StarfaitWindow(
         SDLK_KP_DIVIDE -> VK_DIVIDE
         SDLK_KP_ENTER -> VK_ENTER
         else -> -1 // unmapped, ignore
+    }
+
+    sealed class SaveFolderKind {
+        data class Folder(val file: File) : SaveFolderKind()
+        data object Memory : SaveFolderKind()
     }
 }

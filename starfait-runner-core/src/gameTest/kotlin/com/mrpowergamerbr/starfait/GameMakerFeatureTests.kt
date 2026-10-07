@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait
 
 import com.mrpowergamerbr.starfait.audio.noop.NoopAudioManager
+import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.noop.NoopRenderer
 import com.mrpowergamerbr.starfait.runner.BufferedGameOutput
@@ -243,7 +244,7 @@ object GameMakerFeatureTests {
         2
     ) {
         onExit {
-            val vfs = (it.fileSystem as VirtualFileSystem)
+            val vfs = (it.layeredFileSystem.saveFileSystem as VirtualFileSystem)
 
             // Because GameMaker seems to shuffle the lines
             assertEquals(
@@ -297,7 +298,7 @@ object GameMakerFeatureTests {
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
         val renderer = NoopRenderer
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, NoopAudioManager(), VirtualFileSystem(), BufferedGameOutput(), seed, emptyMap())
+        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, NoopAudioManager(), LayeredFileSystem(VirtualFileSystem(), VirtualFileSystem()), BufferedGameOutput(), seed, emptyMap())
         vm.runner = runner
         runner.start()
 

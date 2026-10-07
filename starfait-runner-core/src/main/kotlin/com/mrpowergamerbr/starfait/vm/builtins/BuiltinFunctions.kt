@@ -156,6 +156,7 @@ object BuiltinFunctions {
     @GMLFunction fun abs(input: Double) = input.absoluteValue
     @GMLFunction fun degtorad(input: Double) = Math.toRadians(input)
     @GMLFunction fun sqrt(input: Double) = kotlin.math.sqrt(input)
+    @GMLFunction fun sqr(input: Double) = MathUtils.squared(input)
     @GMLFunction fun choose(runner: StarfaitRunner, args: List<RValue>) = args.random(runner.random)
     @GMLFunction fun random(runner: StarfaitRunner, n: Double) = runner.random.nextDouble() * n
 

@@ -149,7 +149,8 @@ class StarfaitRunner(
                         tile.height,
                         tile.depth,
                         tile.id,
-                        tile.scaleX
+                        tile.scaleX,
+                        true
                     )
                 )
             }
@@ -293,10 +294,12 @@ class StarfaitRunner(
                 is Drawable.Tile -> {
                     val tile = drawable.tile
 
-                    val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
-                    val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+                    if (tile.visible) {
+                        val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
+                        val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
 
-                    renderer.drawTile(tpag, tile)
+                        renderer.drawTile(tpag, tile)
+                    }
                 }
             }
         }

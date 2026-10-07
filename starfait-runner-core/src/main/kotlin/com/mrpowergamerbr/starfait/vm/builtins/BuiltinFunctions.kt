@@ -364,6 +364,17 @@ object BuiltinFunctions {
         }
     }
 
+    fun toggleTileLayerVisibility(runner: StarfaitRunner, depth: Int, visible: Boolean) {
+        for (tile in runner.currentRoom.tiles) {
+            if (tile.depth == depth) {
+                tile.visible = visible
+            }
+        }
+    }
+
+    @GMLFunction fun tile_layer_show(runner: StarfaitRunner, depth: Int) = toggleTileLayerVisibility(runner, depth, true)
+    @GMLFunction fun tile_layer_hide(runner: StarfaitRunner, depth: Int) = toggleTileLayerVisibility(runner, depth, false)
+    
     @GMLFunction
     fun game_restart(runner: StarfaitRunner, vm: StarfaitVM) {
         runner.pendingRestart = true

@@ -165,5 +165,6 @@ class RunnerRoom(val runner: StarfaitRunner, @DumpRunnerField val roomId: Int) {
         @DumpRunnerField var depth: Int,
         @DumpRunnerField var id: Int,
         @DumpRunnerField var scaleX: Float,
+        @DumpRunnerField var visible: Boolean
     )
 }

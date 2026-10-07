@@ -90,9 +90,12 @@ class StarfaitWindow(
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
 
-        var windowFlags = SDL_WINDOW_OPENGL
+        var windowFlags = SDL_WINDOW_OPENGL or SDL_WINDOW_HIGH_PIXEL_DENSITY
         if (headless) windowFlags = windowFlags or SDL_WINDOW_HIDDEN
         val window = SDL_CreateWindow("Starfait", vm.gameWAD.gen8.initialApplicationWidth, vm.gameWAD.gen8.initialApplicationHeight, windowFlags)
+        val scale = SDL_GetWindowDisplayScale(window)
+        // Thanks Wayland!
+        SDL_SetWindowSize(window, (vm.gameWAD.gen8.initialApplicationWidth / scale).toInt(), (vm.gameWAD.gen8.initialApplicationHeight / scale).toInt())
         check(window != MemoryUtil.NULL) { "SDL_CreateWindow failed: ${SDL_GetError()}" }
 
         val context = SDL_GL_CreateContext(window)

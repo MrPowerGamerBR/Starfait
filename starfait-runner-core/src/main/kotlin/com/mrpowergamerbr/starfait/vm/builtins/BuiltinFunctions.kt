@@ -6,6 +6,7 @@ import com.mrpowergamerbr.starfait.GMLFunction
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.ini.INI
 import com.mrpowergamerbr.starfait.runner.BoundingBox
+import com.mrpowergamerbr.starfait.runner.Circle
 import com.mrpowergamerbr.starfait.runner.CollisionMaskQuery
 import com.mrpowergamerbr.starfait.runner.DebugBoundingBox
 import com.mrpowergamerbr.starfait.runner.EventType
@@ -664,6 +665,44 @@ object BuiltinFunctions {
                         val collisionSprite = instance.getCollisionSprite()
 
                         if (collisionSprite != null && CollisionMaskQuery.checkPreciseCollisionInstanceRectangle(instance, bbox, collisionSprite, selfBBox, runner.collisionCompatibilityMode)) {
+                            return instance.id
+                        }
+                    } else {
+                        return instance.id
+                    }
+                }
+            }
+        }
+
+        return InstanceReferenceType.NOONE
+    }
+
+    @GMLFunction
+    fun collision_circle(runner: StarfaitRunner, vm: StarfaitVM, x: Float, y: Float, radius: Float, obj: Int, usePreciseCollisionCheck: Boolean, notme: Boolean): Int {
+        val self = vm.currentSelfInstance
+
+        val circle = Circle(x, y, radius)
+
+        runner.forEachInstance { instance ->
+            val matches = instance.matchesObjectOrInstanceId(
+                obj,
+                excludeInstance = if (notme) self else null,
+                skipDestroyed = true,
+                checkHierarchy = true,
+                checkSpecialSelf = true,
+                checkSpecialOther = true,
+                checkSpecialAll = true,
+                checkSpecialNoone = true
+            )
+
+            if (matches) {
+                val bbox = instance.getBoundingBox()
+
+                if (bbox.isCollidingWithCircle(circle)) {
+                    if (usePreciseCollisionCheck) {
+                        val collisionSprite = instance.getCollisionSprite()
+
+                        if (collisionSprite != null && CollisionMaskQuery.checkPreciseCollisionInstanceCircle(instance, bbox, collisionSprite, circle, runner.collisionCompatibilityMode)) {
                             return instance.id
                         }
                     } else {

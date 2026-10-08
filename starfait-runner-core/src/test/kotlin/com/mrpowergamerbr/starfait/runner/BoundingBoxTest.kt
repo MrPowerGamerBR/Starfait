@@ -21,4 +21,11 @@ class BoundingBoxTest {
         assertEquals(4.2426405f, boundingBox.distanceTowardsPoint(35f, 35f)) // bottom right
         assertEquals(4.2426405f, boundingBox.distanceTowardsPoint(-3f, 35f)) // bottom left
     }
+
+    @Test
+    fun `test bounding box circle collision`() {
+        val boundingBox = BoundingBox.fromWorldCoordinates(0f, 0f, 32f, 32f)
+        assertEquals(true, boundingBox.isCollidingWithCircle(Circle(34f, 34f, 3f)))
+        assertEquals(false, boundingBox.isCollidingWithCircle(Circle(-34f, -34f, 3f)))
+    }
 }

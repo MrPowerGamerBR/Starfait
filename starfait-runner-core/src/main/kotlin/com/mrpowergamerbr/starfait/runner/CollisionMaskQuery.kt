@@ -74,6 +74,31 @@ class CollisionMaskQuery(
             return false
         }
 
+        fun checkPreciseCollisionInstanceCircle(
+            inst1: Instance,
+            bb1: BoundingBox,
+            sprite1: Sprite,
+            circle: Circle,
+            collisionCompatibilityMode: Boolean
+        ): Boolean {
+            val query1 = CollisionMaskQuery(sprite1, inst1.x, inst1.y, inst1.imageXScale, inst1.imageYScale, inst1.imageAngle, collisionCompatibilityMode)
+
+            val circleBB = circle.getBoundingBox()
+
+            // Compute overlapping bounding box
+            val (left, right, top, bottom) = computeOverlappingBoundingBox(bb1, circleBB)
+
+            // This is a bit wonky but essentially we check if the circle overlaps with the bounding box by calculating if the point is inside the circle
+            for (x in left.toInt()..right.toInt()) {
+                for (y in top.toInt()..bottom.toInt()) {
+                    if (query1.isPixelSolidOnCollisionMask(inst1.imageIndex.toInt(), x.toFloat(), y.toFloat()))
+                        return true
+                }
+            }
+
+            return false
+        }
+
         fun checkPreciseCollisionInstancePoint(
             inst1: Instance,
             sprite1: Sprite,

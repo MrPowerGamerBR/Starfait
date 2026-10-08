@@ -47,6 +47,13 @@ data class BoundingBox private constructor(
         return true
     }
 
+    fun isCollidingWithCircle(circle: Circle): Boolean {
+        // Closest point on the box to the circle's center
+        val closestX = max(this.left, min(circle.x, this.right))
+        val closestY = max(this.top, min(circle.y, this.bottom))
+        return circle.contains(closestX, closestY)
+    }
+
     fun contains(x: Float, y: Float): Boolean {
         return x >= left && x <= right && y >= top && y <= bottom
     }

@@ -94,7 +94,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
                 instance.imageXScale,
                 instance.imageYScale,
                 instance.imageAngle,
-                GMLColor(0xFFFFFF),
+                GMLColor(instance.imageBlend.toInt()),
                 instance.imageAlpha
             )
         } else {

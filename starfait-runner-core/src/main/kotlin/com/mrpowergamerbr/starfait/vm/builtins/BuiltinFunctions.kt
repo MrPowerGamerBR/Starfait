@@ -622,7 +622,7 @@ object BuiltinFunctions {
     }
 
     @GMLFunction
-    fun draw_sprite_ext(runner: StarfaitRunner, vm: StarfaitVM, spriteIndex: Int, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: Int, alpha: Float) {
+    fun draw_sprite_ext(runner: StarfaitRunner, vm: StarfaitVM, spriteIndex: Int, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
         runner.renderer.drawSprite(
             vm.gameWAD.sprt.sprites[spriteIndex],
             subimg,
@@ -631,7 +631,7 @@ object BuiltinFunctions {
             xscale,
             yscale,
             rot,
-            GMLColor(color),
+            color,
             alpha,
         )
     }

@@ -252,6 +252,22 @@ object BuiltinFunctions {
     }
 
     @GMLFunction
+    fun draw_circle(runner: StarfaitRunner, vm: StarfaitVM, x: Float, y: Float, radius: Float, outline: Boolean) {
+        runner.renderer.drawCircle(x, y, radius, runner.drawState.circlePrecision, runner.drawState.color, runner.drawState.color, runner.drawState.alpha, outline)
+    }
+
+    @GMLFunction("draw_circle_colour")
+    fun draw_circle_color(runner: StarfaitRunner, vm: StarfaitVM, x: Float, y: Float, radius: Float, col1: GMLColor, col2: GMLColor, outline: Boolean) {
+        runner.renderer.drawCircle(x, y, radius, runner.drawState.circlePrecision, col1, col2, runner.drawState.alpha, outline)
+    }
+
+    @GMLFunction
+    fun draw_set_circle_precision(runner: StarfaitRunner, circlePrecision: Int) {
+        // When testing it seems that any values out of the range are just coerced
+        runner.drawState.circlePrecision = circlePrecision.coerceIn(4..64)
+    }
+
+    @GMLFunction
     fun action_move_to(runner: StarfaitRunner, vm: StarfaitVM, x: Double, y: Double) {
         var x = x
         var y = y

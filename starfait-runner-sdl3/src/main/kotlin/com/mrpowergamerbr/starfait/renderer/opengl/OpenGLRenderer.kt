@@ -29,7 +29,9 @@ import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.max
+import kotlin.math.sin
 import kotlin.text.iterator
 
 class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
@@ -535,6 +537,71 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             batch[currentIndex++] = blend3.greenF
             batch[currentIndex++] = blend3.blueF
             batch[currentIndex++] = alpha
+
+            this.activeBatchTexture = texture
+        }
+    }
+
+    override fun drawCircle(x: Float, y: Float, radius: Float, circlePrecision: Int, col1: GMLColor, col2: GMLColor, alpha: Float, outline: Boolean) {
+        val steps = circlePrecision
+
+        data class Point(val x: Float, val y: Float)
+
+        val points = mutableListOf<Point>()
+
+        repeat(steps) {
+            val degrees = (it / steps.toFloat()) * 360f
+            val rads = Math.toRadians(degrees.toDouble()).toFloat()
+            val x = cos(rads) * radius
+            val y = sin(rads) * radius
+
+            points.add(Point(x, y))
+        }
+
+        if (outline) {
+            repeat(steps) {
+                val point1 = points[it]
+                val point2 = points[(it + 1) % steps]
+
+                // TODO: This looks very hacky
+                // "Whether the circle is an outline (true) or not (false). If true, col1 is irrelevant."
+                drawLine(point1.x + x, point1.y + y, point2.x + x, point2.y + y, 0.93f, col2, col2, alpha)
+            }
+        } else {
+            val texture = this.white1x1Texture
+            flushIfNeeded(texture)
+
+            repeat(steps) {
+                val point1 = points[it]
+                val point2 = points[(it + 1) % steps]
+
+                // vertex #1
+                batch[currentIndex++] = x; batch[currentIndex++] = y;
+                batch[currentIndex++] = 0.0f; batch[currentIndex++] = 0.0f;
+
+                batch[currentIndex++] = col1.redF
+                batch[currentIndex++] = col1.greenF
+                batch[currentIndex++] = col1.blueF
+                batch[currentIndex++] = alpha
+
+                // vertex #2
+                batch[currentIndex++] = x + point1.x; batch[currentIndex++] = y + point1.y;
+                batch[currentIndex++] = 1.0f; batch[currentIndex++] = 0.0f;
+
+                batch[currentIndex++] = col2.redF
+                batch[currentIndex++] = col2.greenF
+                batch[currentIndex++] = col2.blueF
+                batch[currentIndex++] = alpha
+
+                // vertex #3
+                batch[currentIndex++] = x + point2.x; batch[currentIndex++] = y + point2.y;
+                batch[currentIndex++] = 1.0f; batch[currentIndex++] = 1.0f;
+
+                batch[currentIndex++] = col2.redF
+                batch[currentIndex++] = col2.greenF
+                batch[currentIndex++] = col2.blueF
+                batch[currentIndex++] = alpha
+            }
 
             this.activeBatchTexture = texture
         }

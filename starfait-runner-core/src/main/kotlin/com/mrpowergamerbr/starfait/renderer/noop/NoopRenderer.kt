@@ -18,6 +18,7 @@ object NoopRenderer : Renderer() {
     override fun drawLine(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color1: GMLColor, color2: GMLColor, alpha: Float) {}
     override fun drawRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float, outline: Boolean) {}
     override fun drawTriangle(x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float, blend1: GMLColor, blend2: GMLColor, blend3: GMLColor, alpha: Float, outline: Boolean) {}
+    override fun drawCircle(x: Float, y: Float, radius: Float, circlePrecision: Int, col1: GMLColor, col2: GMLColor, alpha: Float, outline: Boolean) {}
 
     override fun withView(view: RunnerRoom.RunnerView?, block: () -> (Unit)) {}
     override fun frame(block: () -> Unit) {}

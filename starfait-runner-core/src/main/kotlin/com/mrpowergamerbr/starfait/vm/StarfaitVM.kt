@@ -589,6 +589,7 @@ class StarfaitVM(
         val leftType = left.arithmeticType()
         val isVariable = type1DataType == InstructionDataType.VARIABLE || type2DataType == InstructionDataType.VARIABLE
 
+        // When pushing variables, it seems that the variable type is ALWAYS a Real
         when {
             leftType == ArithmeticType.STRING && rightType == ArithmeticType.STRING -> {
                 val concat = string(left.convertToGMLString(), right.convertToGMLString())
@@ -612,7 +613,7 @@ class StarfaitVM(
                 val sum = int64(left.convertToInt64(), right.convertToInt64())
 
                 if (isVariable)
-                    stack.pushVariable(RValue.Int64(sum))
+                    stack.pushVariable(RValue.Real(sum.toDouble()))
                 else
                     stack.pushInt64(sum)
             }
@@ -620,7 +621,7 @@ class StarfaitVM(
                 val sum = int32(left.convertToInt32(), right.convertToInt32())
 
                 if (isVariable)
-                    stack.pushVariable(RValue.Int32(sum))
+                    stack.pushVariable(RValue.Real(sum.toDouble()))
                 else
                     stack.pushInt32(sum)
             }

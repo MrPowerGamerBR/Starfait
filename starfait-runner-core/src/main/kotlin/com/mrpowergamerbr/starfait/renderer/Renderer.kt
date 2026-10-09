@@ -18,6 +18,7 @@ abstract class Renderer {
     abstract fun drawText(font: Font, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String)
     abstract fun drawLine(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color1: GMLColor, color2: GMLColor, alpha: Float)
     abstract fun drawRectangle(x: Float, y: Float, width: Float, height: Float, color: GMLColor, alpha: Float, outline: Boolean)
+    abstract fun drawTriangle(x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float, blend1: GMLColor, blend2: GMLColor, blend3: GMLColor, alpha: Float, outline: Boolean)
     abstract fun withView(view: RunnerRoom.RunnerView?, block: () -> (Unit))
     abstract fun frame(block: () -> (Unit))
 }

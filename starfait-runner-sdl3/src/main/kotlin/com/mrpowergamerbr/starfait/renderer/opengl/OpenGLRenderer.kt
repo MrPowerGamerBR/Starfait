@@ -487,6 +487,59 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         }
     }
 
+    override fun drawTriangle(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        x3: Float,
+        y3: Float,
+        blend1: GMLColor,
+        blend2: GMLColor,
+        blend3: GMLColor,
+        alpha: Float,
+        outline: Boolean
+    ) {
+        if (outline) {
+            // TODO: The lines are being rendered off screen if they are at 0, 0?
+            drawLine(x1, y1, x2, y2, 1f, blend1, blend2, alpha)
+            drawLine(x2, y2, x3, y3, 1f, blend2, blend3, alpha)
+            drawLine(x3, y3, x1, y1, 1f, blend3, blend1, alpha)
+        } else {
+            val texture = this.white1x1Texture
+            flushIfNeeded(texture)
+
+            // vertex #1
+            batch[currentIndex++] = x1; batch[currentIndex++] = y1;
+            batch[currentIndex++] = 0.0f; batch[currentIndex++] = 0.0f;
+
+            batch[currentIndex++] = blend1.redF
+            batch[currentIndex++] = blend1.greenF
+            batch[currentIndex++] = blend1.blueF
+            batch[currentIndex++] = alpha
+
+            // vertex #2
+            batch[currentIndex++] = x2; batch[currentIndex++] = y2;
+            batch[currentIndex++] = 1.0f; batch[currentIndex++] = 0.0f;
+
+            batch[currentIndex++] = blend2.redF
+            batch[currentIndex++] = blend2.greenF
+            batch[currentIndex++] = blend2.blueF
+            batch[currentIndex++] = alpha
+
+            // vertex #3
+            batch[currentIndex++] = x3; batch[currentIndex++] = y3;
+            batch[currentIndex++] = 1.0f; batch[currentIndex++] = 1.0f;
+
+            batch[currentIndex++] = blend3.redF
+            batch[currentIndex++] = blend3.greenF
+            batch[currentIndex++] = blend3.blueF
+            batch[currentIndex++] = alpha
+
+            this.activeBatchTexture = texture
+        }
+    }
+
     override fun withView(view: RunnerRoom.RunnerView?, block: () -> Unit) {
         flush()
 

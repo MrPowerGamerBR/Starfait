@@ -242,6 +242,16 @@ object BuiltinFunctions {
     }
 
     @GMLFunction
+    fun draw_triangle(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float, outline: Boolean) {
+        runner.renderer.drawTriangle(x1, y1, x2, y2, x3, y3, runner.drawState.color, runner.drawState.color, runner.drawState.color, runner.drawState.alpha, outline)
+    }
+
+    @GMLFunction("draw_triangle_colour")
+    fun draw_triangle_color(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float, col1: GMLColor, col2: GMLColor, col3: GMLColor, outline: Boolean) {
+        runner.renderer.drawTriangle(x1, y1, x2, y2, x3, y3, col1, col2, col3, runner.drawState.alpha, outline)
+    }
+
+    @GMLFunction
     fun action_move_to(runner: StarfaitRunner, vm: StarfaitVM, x: Double, y: Double) {
         var x = x
         var y = y

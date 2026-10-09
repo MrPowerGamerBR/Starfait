@@ -56,6 +56,7 @@ import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
+import kotlin.math.ceil
 
 class StarfaitWindow(
     val wadFile: File,
@@ -99,7 +100,7 @@ class StarfaitWindow(
         val window = SDL_CreateWindow("Starfait", vm.gameWAD.gen8.initialApplicationWidth, vm.gameWAD.gen8.initialApplicationHeight, windowFlags)
         val scale = SDL_GetWindowDisplayScale(window)
         // Thanks Wayland!
-        SDL_SetWindowSize(window, (vm.gameWAD.gen8.initialApplicationWidth / scale).toInt(), (vm.gameWAD.gen8.initialApplicationHeight / scale).toInt())
+        SDL_SetWindowSize(window, (ceil(vm.gameWAD.gen8.initialApplicationWidth / scale)).toInt(), (ceil(vm.gameWAD.gen8.initialApplicationHeight / scale)).toInt())
         check(window != MemoryUtil.NULL) { "SDL_CreateWindow failed: ${SDL_GetError()}" }
 
         val context = SDL_GL_CreateContext(window)

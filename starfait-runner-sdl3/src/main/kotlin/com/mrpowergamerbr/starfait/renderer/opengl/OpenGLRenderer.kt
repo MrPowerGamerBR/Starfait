@@ -555,7 +555,9 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             val x = cos(rads) * radius
             val y = sin(rads) * radius
 
-            points.add(Point(x, y))
+            // TODO: Is this really correct? Because it feels very wonky that we need to add +1 to the coordinate
+            //  And the drawLine has a similar issue too...?
+            points.add(Point(x + 1f, y + 1f))
         }
 
         if (outline) {

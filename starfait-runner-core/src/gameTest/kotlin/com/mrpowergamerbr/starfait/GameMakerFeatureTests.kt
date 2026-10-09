@@ -280,6 +280,28 @@ object GameMakerFeatureTests {
         }
     }
 
+    @Test
+    fun `test arithmetic quirks`() = runTestGame(
+        "arithmetic-quirks",
+        0,
+        1
+    ) {
+        withRunnerAtFrame(0) {
+            it.firstInstanceByName("obj_main").assertVariableType<RValue.Int64>(it.vm, VariableInstanceType.SELF, "value")
+            it.firstInstanceByName("obj_main").assertVariableType<RValue.Real>(it.vm, VariableInstanceType.SELF, "value2")
+            it.firstInstanceByName("obj_main").assertVariableType<RValue.Real>(it.vm, VariableInstanceType.SELF, "value3")
+            it.firstInstanceByName("obj_main").assertVariableType<RValue.Int64>(it.vm, VariableInstanceType.SELF, "value4")
+            it.firstInstanceByName("obj_main").assertVariableType<RValue.Real>(it.vm, VariableInstanceType.SELF, "value5")
+        }
+
+        checkGameLogEndsWith(0, """
+            9007199254740994
+            9007199254740998
+            9007199254740996
+            9007199254741000
+        """.trimIndent())
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))
@@ -355,6 +377,12 @@ object GameMakerFeatureTests {
         val varId = vm.getVariableSlotFromVariableName(variableInstanceType, name)
         val actual = this.getVariable(varId, null)
         assertEquals(expected.convertToInt32(), actual.convertToInt32())
+    }
+
+    inline fun <reified T> VariableContainer.assertVariableType(vm: StarfaitVM, variableInstanceType: Int, name: String) {
+        val varId = vm.getVariableSlotFromVariableName(variableInstanceType, name)
+        val actual = this.getVariable(varId, null)
+        assert(actual is T)
     }
 
     fun VariableContainer.assertBooleanVariable(vm: StarfaitVM, variableInstanceType: Int, name: String, expected: RValue) {

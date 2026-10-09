@@ -361,6 +361,7 @@ object BuiltinFunctions {
     @GMLFunction fun room_goto_next(runner: StarfaitRunner, vm: StarfaitVM) = roomGotoRelative(runner, vm, 1)
     @GMLFunction fun room_goto_previous(runner: StarfaitRunner, vm: StarfaitVM) = roomGotoRelative(runner, vm, -1)
     @GMLFunction fun room_goto(runner: StarfaitRunner, vm: StarfaitVM, roomIndex: Int) = runner.setPendingRoom(roomIndex)
+    @GMLFunction fun room_restart(runner: StarfaitRunner, vm: StarfaitVM) = roomGotoRelative(runner, vm, 0)
 
     fun roomGetRelative(runner: StarfaitRunner, vm: StarfaitVM, roomIndex: Int, offset: Int): Int {
         val positionInRoomOrder = vm.gameWAD.gen8.roomOrder.indexOf(roomIndex)

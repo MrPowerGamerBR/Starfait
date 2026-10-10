@@ -11,7 +11,6 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.runner.resources.RunnerFont
 import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.runner.resources.RunnerTexturePageEntry
-import com.mrpowergamerbr.starfait.wad.GameWAD
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
@@ -35,10 +34,10 @@ import org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER
 import org.lwjgl.opengl.GL30.glBindFramebuffer
 import org.lwjgl.system.MemoryStack
 import java.nio.ByteBuffer
-import java.nio.IntBuffer
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 import kotlin.text.iterator
 
@@ -282,16 +281,24 @@ class OpenGLRenderer : Renderer() {
         val entryY = tpag.sourceY.toInt() + tile.sourceY
         val entryWidth = tile.width
         val entryHeight = tile.height
+        
+        // This is painful as hell, but we need to do this because a tile can be LARGER than its texture page entry
+        // What we need to think is that the "top left" of the sprite is the reference point, but if a tile is larger than its texture page entry, it should be "transparent"
+        val tileMaxWidth = min(entryWidth.toFloat(), tpag.targetWidth.toFloat())
+        val tileMaxHeight = min(entryHeight.toFloat(), tpag.targetHeight.toFloat())
+
+        val diffWidth = tileMaxWidth - entryWidth.toFloat()
+        val diffHeight = tileMaxHeight - entryHeight.toFloat()
 
         drawQuad(
             tile.x + tpag.targetX.toFloat(),
             tile.y + tpag.targetY.toFloat(),
             entryX.toFloat() / texture.width,
             entryY.toFloat() / texture.height,
-            (entryX + entryWidth.toFloat()) / texture.width,
-            (entryY + entryHeight.toFloat()) / texture.height,
-            tile.width.toFloat(),
-            tile.height.toFloat(),
+            (entryX + tileMaxWidth) / texture.width,
+            (entryY + tileMaxHeight) / texture.height,
+            tile.width + diffWidth,
+            tile.height + diffHeight,
             textures[tpag.textureIndex]!!,
             GMLColor(0xFFFFFF),
             1.0f

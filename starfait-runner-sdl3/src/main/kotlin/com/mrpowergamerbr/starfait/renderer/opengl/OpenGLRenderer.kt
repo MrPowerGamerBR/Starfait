@@ -111,22 +111,18 @@ class OpenGLRenderer : Renderer() {
 
     override fun drawInstance(instance: Instance) {
         // Only attempt to render instances that DO have a sprite index
-        if (instance.spriteIndex >= 0) {
-            val sprite = runner.resources.sprites[instance.spriteIndex.toInt()]
-            drawSprite(
-                sprite,
-                instance.imageIndex.toInt(),
-                instance.x,
-                instance.y,
-                instance.imageXScale,
-                instance.imageYScale,
-                instance.imageAngle,
-                GMLColor(instance.imageBlend.toInt()),
-                instance.imageAlpha
-            )
-        } else {
-            // println("Instance ${instance.objectName} has no sprite index!")
-        }
+        val sprite = runner.resources.sprites.getOrNull(instance.spriteIndex.toInt()) ?: return
+        drawSprite(
+            sprite,
+            instance.imageIndex.toInt(),
+            instance.x,
+            instance.y,
+            instance.imageXScale,
+            instance.imageYScale,
+            instance.imageAngle,
+            GMLColor(instance.imageBlend.toInt()),
+            instance.imageAlpha
+        )
     }
 
     override fun drawSprite(sprite: RunnerSprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {

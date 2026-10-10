@@ -118,10 +118,9 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
 
     // See GameMaker-HTML5's yyInstance.js UpdateImages
     fun updateImage() {
-        if (0.0f > this.spriteIndex)
-            return
+        val sprite = runner.resources.sprites.getOrNull(this.spriteIndex.toInt()) ?: return
 
-        val num = runner.resources.sprites[this.spriteIndex.toInt()].frames.size
+        val num = sprite.frames.size
         if (this.imageIndex >= num) {
             this.imageIndex -= num
             dispatchEvent(EventType.OTHER, EventType.OtherSubType.ANIMATION_END, this)
@@ -350,7 +349,12 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
             )
         }
 
-        val sprite = runner.resources.sprites[maskIndex]
+        val sprite = runner.resources.sprites.getOrNull(maskIndex) ?: return BoundingBox.fromWorldCoordinates(
+            this.x,
+            this.y,
+            this.x,
+            this.y
+        )
 
         if (imageAngle == 0f) {
             val width = (sprite.bboxRight + 1) - sprite.bboxLeft

@@ -303,6 +303,20 @@ object GameMakerFeatureTests {
         """.trimIndent())
     }
 
+    @Test
+    fun `test out-of-bounds sprite_index, image_index and mask_index`() = runTestGame(
+        "oob-sprites-indices",
+        0,
+        1
+    ) {
+        withRunnerAtFrame(0) {
+            // OOB mask index = it is like the object doesn't have any mask
+            it.firstInstanceByName("obj_maskoob").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "collided1", RValue.Boolean(false))
+            it.firstInstanceByName("obj_maskoob").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "collided2", RValue.Boolean(false))
+            it.firstInstanceByName("obj_maskoob").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "collided3", RValue.Boolean(false))
+        }
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))

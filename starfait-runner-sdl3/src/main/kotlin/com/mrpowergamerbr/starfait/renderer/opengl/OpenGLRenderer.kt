@@ -47,6 +47,7 @@ class OpenGLRenderer : Renderer() {
         private const val MAX_BATCH_ELEMENTS = 512
         private const val FIELDS_PER_ELEMENT = 48
         private const val TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT = 8
+        private const val TOTAL_BATCH_SIZE = FIELDS_PER_ELEMENT * MAX_BATCH_ELEMENTS
         // TODO: This shouldn't be hardcoded!
         private const val VIEWPORT_WIDTH = 640
         private const val VIEWPORT_HEIGHT = 480
@@ -60,7 +61,7 @@ class OpenGLRenderer : Renderer() {
         StarfaitWindow::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
         ::MinimalShader
     )
-    val batch = FloatArray(FIELDS_PER_ELEMENT * MAX_BATCH_ELEMENTS)
+    val batch = FloatArray(TOTAL_BATCH_SIZE)
     var activeBatchTexture: Texture? = null
     var currentIndex = 0
     val vao = GL30.glGenVertexArrays()
@@ -593,6 +594,11 @@ class OpenGLRenderer : Renderer() {
         } else {
             val texture = this.white1x1Texture
             flushIfNeeded(texture)
+
+            val requiredElements = (steps * 3) * TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT
+            if (this.currentIndex + requiredElements >= TOTAL_BATCH_SIZE) {
+                flush()
+            }
 
             repeat(steps) {
                 val point1 = points[it]

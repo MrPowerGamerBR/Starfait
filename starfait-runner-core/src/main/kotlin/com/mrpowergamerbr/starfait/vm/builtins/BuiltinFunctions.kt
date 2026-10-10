@@ -9,6 +9,7 @@ import com.mrpowergamerbr.starfait.runner.BoundingBox
 import com.mrpowergamerbr.starfait.runner.Circle
 import com.mrpowergamerbr.starfait.runner.CollisionMaskQuery
 import com.mrpowergamerbr.starfait.runner.DebugBoundingBox
+import com.mrpowergamerbr.starfait.runner.DebugLine
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.OpenINI
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
@@ -820,6 +821,16 @@ object BuiltinFunctions {
     @GMLFunction
     fun collision_line(runner: StarfaitRunner, vm: StarfaitVM, x1: Float, y1: Float, x2: Float, y2: Float, obj: Int, usePreciseCollisionCheck: Boolean, notme: Boolean): Int {
         val self = vm.currentSelfInstance
+
+        runner.debugLines.add(
+            DebugLine(
+                x1,
+                y1,
+                x2,
+                y2,
+                GMLColor.fromRGB(100, 255, 100)
+            )
+        )
 
         runner.forEachInstance { instance ->
             val matches = instance.matchesObjectOrInstanceId(

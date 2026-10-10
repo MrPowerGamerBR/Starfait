@@ -48,6 +48,7 @@ class StarfaitRunner(
 
     var enableCollisionRendering = false
     val debugRectangles = mutableListOf<DebugBoundingBox>()
+    val debugLines = mutableListOf<DebugLine>()
     var drawInvisibleInstances = false
     // TODO: This should be actually verified against the WAD, only for newer GM games!
     val collisionCompatibilityMode = true

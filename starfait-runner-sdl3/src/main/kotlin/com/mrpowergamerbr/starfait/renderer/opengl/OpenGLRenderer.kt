@@ -822,9 +822,23 @@ class OpenGLRenderer : Renderer() {
                     0.5f
                 )
             }
+
+            for (debugLine in runner.debugLines) {
+                drawLine(
+                    debugLine.x1,
+                    debugLine.y1,
+                    debugLine.x2,
+                    debugLine.y2,
+                    1f,
+                    debugLine.color,
+                    debugLine.color,
+                    1.0f
+                )
+            }
         }
 
         runner.debugRectangles.clear()
+        runner.debugLines.clear()
 
         flush()
     }

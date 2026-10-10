@@ -1038,4 +1038,9 @@ object BuiltinFunctions {
         val sprite = runner.resources.sprites.removeAt(index)
         runner.renderer.deleteTextures(sprite.frames.map { it.textureIndex })
     }
+
+    @GMLFunction
+    fun sprite_exists(runner: StarfaitRunner, index: Int): Boolean {
+        return runner.resources.sprites.size > index
+    }
 }

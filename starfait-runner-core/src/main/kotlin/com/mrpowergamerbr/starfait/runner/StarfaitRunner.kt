@@ -1,6 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
-import com.mrpowergamerbr.starfait.StarfaitUtils
+import com.mrpowergamerbr.starfait.WADUtils
 import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.renderer.Renderer
@@ -187,13 +187,13 @@ class StarfaitRunner(
 
             for ((roomInstance, instance) in newlyCreatedInstances) {
                 instance.dispatchEvent(EventType.CREATE, 0, null)
-                if (roomInstance.creationCodeId != StarfaitUtils.NO_CREATION_CODE) {
+                if (roomInstance.creationCodeId != WADUtils.NO_CREATION_CODE_ID) {
                     vm.executeCode(gameWAD.code.codes[roomInstance.creationCodeId], instance, null, instance.gameObject, 0, 0, arrayOf())
                 }
             }
         }
 
-        if (room.creationCodeId != StarfaitUtils.NO_CREATION_CODE) {
+        if (room.creationCodeId != WADUtils.NO_CREATION_CODE_ID) {
             // When running a room creation code, it seems that GameMaker creates a "fake"/"dummy" instance for it
             // Because you *can* set "self" variables, but at the same time it isn't bound to the global instance, and changing rooms does NOT persist the variable
             val dummy = Instance(this, 0, 0)

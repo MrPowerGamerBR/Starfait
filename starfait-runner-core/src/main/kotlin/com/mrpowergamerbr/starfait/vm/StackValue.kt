@@ -20,8 +20,10 @@ sealed class StackValue {
         is Int64 -> ArithmeticType.INT64
         is String -> ArithmeticType.STRING
         is Variable -> when (val value = this.value) {
-            is RValue.Int32 -> ArithmeticType.INT32
-            is RValue.Int64 -> ArithmeticType.INT64
+            // This seems well... quirky
+            // But it seems that any arithmetic operation implicitly converts the value to a Real
+            is RValue.Int32 -> ArithmeticType.REAL
+            is RValue.Int64 -> ArithmeticType.REAL
             is RValue.Real -> ArithmeticType.REAL
             is RValue.String -> ArithmeticType.STRING
             else -> error("Type $value does not support arithmetic!")

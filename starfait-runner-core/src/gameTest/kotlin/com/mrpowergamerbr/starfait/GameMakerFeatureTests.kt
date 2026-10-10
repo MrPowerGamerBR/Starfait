@@ -293,6 +293,8 @@ object GameMakerFeatureTests {
             it.firstInstanceByName("obj_main").assertVariableType<RValue.Real>(it.vm, VariableInstanceType.SELF, "value3")
             it.firstInstanceByName("obj_main").assertVariableType<RValue.Int64>(it.vm, VariableInstanceType.SELF, "value4")
             it.firstInstanceByName("obj_main").assertVariableType<RValue.Real>(it.vm, VariableInstanceType.SELF, "value5")
+            it.firstInstanceByName("obj_main").assertVariableType<RValue.Int32>(it.vm, VariableInstanceType.SELF, "value6")
+            it.firstInstanceByName("obj_main").assertVariableType<RValue.Int32>(it.vm, VariableInstanceType.SELF, "value7")
         }
 
         checkGameLogEndsWith(0, """
@@ -300,6 +302,7 @@ object GameMakerFeatureTests {
             9007199254740998
             9007199254740996
             9007199254741000
+            0.09
         """.trimIndent())
     }
 

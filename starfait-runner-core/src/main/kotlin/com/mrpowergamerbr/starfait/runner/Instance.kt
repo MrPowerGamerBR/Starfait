@@ -34,6 +34,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     @DumpRunnerField var pathEndAction = 0
     @DumpRunnerField var pathXStart = 0.0f
     @DumpRunnerField var pathYStart = 0.0f
+    @DumpRunnerField var active = true
 
     @DumpRunnerField var hspeed: Float
         get() = _hspeed

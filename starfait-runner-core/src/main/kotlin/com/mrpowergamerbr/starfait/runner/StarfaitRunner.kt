@@ -456,9 +456,15 @@ class StarfaitRunner(
                 if (selfInstance.destroyed)
                     continue
 
+                if (!selfInstance.active)
+                    continue
+
                 if (selfInstance.objectIndex == pair.objectIndex1) {
                     for (otherInstance in stableList) {
                         if (otherInstance.destroyed)
+                            continue
+
+                        if (!otherInstance.active)
                             continue
 
                         if (otherInstance.objectIndex == pair.objectIndex2) {
@@ -520,6 +526,9 @@ class StarfaitRunner(
             if (instance.destroyed)
                 continue
 
+            if (!instance.active)
+                continue
+
             action(instance)
         }
     }
@@ -532,6 +541,9 @@ class StarfaitRunner(
             // This also needs to be iterated oldest first, when two instances have the same objectIndex
             for (instance in this.currentRoom.instances.toList()) {
                 if (instance.destroyed)
+                    continue
+
+                if (!instance.active)
                     continue
 
                 if (instance.objectIndex == index)
@@ -575,6 +587,9 @@ class StarfaitRunner(
         // TODO: What happens with instances of the same depth? When testing it in GameMaker, it seems that it is based on the instance creation order (older instances on top?)
         for (instance in this.currentRoom.instances.sortedByDescending { it.depth }) {
             if (instance.destroyed)
+                continue
+
+            if (!instance.active)
                 continue
 
             action(instance)

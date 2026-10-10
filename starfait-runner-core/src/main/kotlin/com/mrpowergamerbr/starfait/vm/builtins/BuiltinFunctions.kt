@@ -1043,4 +1043,48 @@ object BuiltinFunctions {
     fun sprite_exists(runner: StarfaitRunner, index: Int): Boolean {
         return runner.resources.sprites.size > index
     }
+
+    @GMLFunction
+    fun instance_activate_all(runner: StarfaitRunner) {
+        runner.forEachInstance {
+            it.active = true
+        }
+    }
+
+    @GMLFunction
+    fun instance_deactivate_all(runner: StarfaitRunner, notme: Boolean) {
+        val self = runner.vm.currentSelfInstance
+
+        runner.forEachInstance {
+            it.active = if (notme) it == self else false
+        }
+    }
+
+    fun setInstanceActiveState(runner: StarfaitRunner, queryId: Int, active: Boolean) {
+        runner.forEachInstance { instance ->
+            val matches = instance.matchesObjectOrInstanceId(
+                queryId,
+                excludeInstance = null,
+                skipDestroyed = true,
+                checkHierarchy = true,
+                checkSpecialSelf = true,
+                checkSpecialOther = true,
+                checkSpecialAll = true,
+                checkSpecialNoone = true
+            )
+
+            if (matches)
+                instance.active = active
+        }
+    }
+
+    @GMLFunction
+    fun instance_activate_object(runner: StarfaitRunner, queryId: Int) {
+        setInstanceActiveState(runner, queryId, true)
+    }
+
+    @GMLFunction
+    fun instance_deactivate_object(runner: StarfaitRunner, queryId: Int) {
+        setInstanceActiveState(runner, queryId, false)
+    }
 }

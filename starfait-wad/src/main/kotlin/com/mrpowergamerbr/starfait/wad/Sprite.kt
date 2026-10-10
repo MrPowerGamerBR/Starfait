@@ -14,7 +14,7 @@ class Sprite(
     val transparent: Boolean,
     val smooth: Boolean,
     val preload: Boolean,
-    val bboxMode: Int,
+    val bboxMode: BoundingBoxMode,
     val precise: Boolean,
     val originX: Int,
     val originY: Int,
@@ -50,6 +50,18 @@ class Sprite(
         companion object {
             fun fromValue(value: Int): Type {
                 return entries.firstOrNull { it.value == value } ?: error("Unknown sprite type: $value")
+            }
+        }
+    }
+
+    enum class BoundingBoxMode(val value: Int) {
+        AUTOMATIC(0),
+        FULL_IMAGE(1),
+        MANUAL(2);
+
+        companion object {
+            fun fromValue(value: Int): BoundingBoxMode {
+                return entries.firstOrNull { it.value == value } ?: error("Unknown bounding box mode: $value")
             }
         }
     }

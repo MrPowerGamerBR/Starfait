@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.WADUtils
 import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
@@ -139,7 +140,8 @@ class StarfaitRunner(
                         background.stretch,
                         1.0f,
                         background.tileX,
-                        background.tileY
+                        background.tileY,
+                        GMLColor(0xFFFFFF)
                     )
                 )
             }
@@ -357,7 +359,8 @@ class StarfaitRunner(
                 runnerBackground.tileY,
                 currentRoom.width,
                 currentRoom.height,
-                runnerBackground.alpha,
+                runnerBackground.color,
+                runnerBackground.alpha
             )
         }
     }

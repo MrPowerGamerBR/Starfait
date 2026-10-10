@@ -998,7 +998,8 @@ object BuiltinFunctions {
             false,
             currentRoom.width,
             currentRoom.height,
-            runner.drawState.alpha // TODO: Is this actually correct? The docs say that it is "without transparency" but who knows
+            runner.drawState.color,
+            runner.drawState.alpha, // TODO: Is this actually correct? The docs say that it is "without transparency" but who knows
         )
     }
 

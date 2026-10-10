@@ -19,7 +19,7 @@ object NoopRenderer : Renderer() {
     override fun drawInstance(instance: Instance) {}
     override fun drawSprite(sprite: RunnerSprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {}
     override fun drawSpritePart(sprite: RunnerSprite, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float) {}
-    override fun drawBackground(texturePageEntry: RunnerTexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, alpha: Float) {}
+    override fun drawBackground(texturePageEntry: RunnerTexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, color: GMLColor, alpha: Float) {}
     override fun drawTile(texturePageEntry: RunnerTexturePageEntry, tile: RunnerRoom.RunnerTile) {}
     override fun drawText(font: RunnerFont, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String) {}
     override fun drawLine(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color1: GMLColor, color2: GMLColor, alpha: Float) {}

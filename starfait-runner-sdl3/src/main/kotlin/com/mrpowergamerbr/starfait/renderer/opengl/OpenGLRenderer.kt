@@ -240,7 +240,7 @@ class OpenGLRenderer : Renderer() {
         )
     }
 
-    override fun drawBackground(texturePageEntry: RunnerTexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, alpha: Float) {
+    override fun drawBackground(texturePageEntry: RunnerTexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, color: GMLColor, alpha: Float) {
         val texture = textures[texturePageEntry.textureIndex]!!
 
         val tpag = texturePageEntry
@@ -265,7 +265,7 @@ class OpenGLRenderer : Renderer() {
                     width,
                     height,
                     textures[tpag.textureIndex]!!,
-                    GMLColor(0xFFFFFF),
+                    color,
                     alpha
                 )
             }
@@ -281,7 +281,7 @@ class OpenGLRenderer : Renderer() {
         val entryY = tpag.sourceY.toInt() + tile.sourceY
         val entryWidth = tile.width
         val entryHeight = tile.height
-        
+
         // This is painful as hell, but we need to do this because a tile can be LARGER than its texture page entry
         // What we need to think is that the "top left" of the sprite is the reference point, but if a tile is larger than its texture page entry, it should be "transparent"
         val tileMaxWidth = min(entryWidth.toFloat(), tpag.targetWidth.toFloat())

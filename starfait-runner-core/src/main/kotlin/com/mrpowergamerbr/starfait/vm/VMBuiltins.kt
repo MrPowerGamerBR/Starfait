@@ -285,6 +285,16 @@ class VMBuiltins(val vm: StarfaitVM) {
             }
         )
 
+        registerVariable(
+            "background_blend",
+            { _, arrayIndex ->
+                RValue.Real(runner.currentRoom.backgrounds[arrayIndex!!].color.value.toDouble())
+            },
+            { _, value, arrayIndex ->
+                runner.currentRoom.backgrounds[arrayIndex!!].color = GMLColor(value.convertToInt32())
+            }
+        )
+
         // TODO: Actually provide the correct FPS
         registerReadOnlyVariable("fps") { _, arrayIndex ->
             warnVariableSemiStub("fps");

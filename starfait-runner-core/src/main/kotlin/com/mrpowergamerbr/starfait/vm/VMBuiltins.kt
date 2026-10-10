@@ -205,6 +205,8 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
         registerInstanceBooleanVariable("solid", Instance::solid)
         registerVariable("room_persistent", { _, _ -> RValue.Boolean(runner.currentRoom.persistent) }, { _, value, _ -> runner.currentRoom.persistent = value.convertToBoolean() })
+        registerVariable("room_speed", { _, _ -> RValue.Int32(runner.currentRoom.speed) }, { _, value, _ -> runner.currentRoom.speed = value.convertToInt32() })
+
         repeat(16) {
             registerVariable(
                 "argument$it",

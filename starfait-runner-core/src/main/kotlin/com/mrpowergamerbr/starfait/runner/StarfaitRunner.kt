@@ -36,6 +36,7 @@ class StarfaitRunner(
     var currentInstanceId = BASE_INSTANCE_ID
     private var pendingRoom: PendingRoom? = null
     var pendingRestart = false
+    var gameEnded = false
     val startedAt = System.currentTimeMillis()
     val keyboard = RunnerKeyboard()
     val random = Random(seed)

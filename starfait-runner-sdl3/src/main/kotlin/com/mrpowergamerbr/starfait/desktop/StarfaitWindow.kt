@@ -154,6 +154,11 @@ class StarfaitWindow(
                     continue
                 }
 
+                if (runner.gameEnded) {
+                    running = false
+                    continue
+                }
+
                 val started = System.currentTimeMillis()
                 var stepOneFrame = false
 

@@ -430,6 +430,11 @@ object BuiltinFunctions {
     }
 
     @GMLFunction
+    fun game_end(runner: StarfaitRunner, vm: StarfaitVM) {
+        runner.gameEnded = true
+    }
+
+    @GMLFunction
     fun ini_open(runner: StarfaitRunner, fileName: String) {
         val content = runner.layeredFileSystem.readFile(fileName)?.toString(Charsets.UTF_8) ?: ""
         runner.openINI = OpenINI(fileName, INI.parse(content))

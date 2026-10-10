@@ -80,7 +80,8 @@ class StarfaitWindow(
     val traceFrameDuration: List<IntRange>,
     val speed: Double,
     val runFullSpeedUntilFrame: Int?,
-    val masterVolume: Float
+    val masterVolume: Float,
+    val fastForwardSpeed: Double
 ) {
     companion object {
         private val JsonPrettyPrint = Json {
@@ -145,6 +146,7 @@ class StarfaitWindow(
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
 
         var isPaused = false
+        var isFastForwardEnabled = false
 
         recordInputsFile?.delete()
 
@@ -237,6 +239,10 @@ class StarfaitWindow(
                             stepOneFrame = true
                         }
 
+                        if (event.key().key() == SDLK_TAB) {
+                            isFastForwardEnabled = !isFastForwardEnabled
+                        }
+
                         val gmlVkKey = convertSDLKeycodeToGMLVK(event.key().key())
                         if (gmlVkKey != -1)
                             runner.keyboard.onKeyUp(gmlVkKey)
@@ -279,7 +285,7 @@ class StarfaitWindow(
 
                     val finished = System.currentTimeMillis()
                     if (!headless && (runFullSpeedUntilFrame == null || frameCount > runFullSpeedUntilFrame)) {
-                        val targetFramesPerSecond = 1000 / (runner.currentRoom.speed.toDouble() * speed)
+                        val targetFramesPerSecond = 1000 / (runner.currentRoom.speed.toDouble() * speed * (if (isFastForwardEnabled) fastForwardSpeed else 1.0))
                         val waitTime = (targetFramesPerSecond - (finished - started)).toLong()
                         if (waitTime > 0)
                             Thread.sleep(waitTime)

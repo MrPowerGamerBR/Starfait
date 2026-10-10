@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.GMLColor
+import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.runner.*
 import com.mrpowergamerbr.starfait.vm.builtins.registerBuiltinFunctions
 import kotlin.reflect.KMutableProperty1
@@ -274,6 +275,7 @@ class VMBuiltins(val vm: StarfaitVM) {
                 RValue.Real(tpag!!.sourceHeight.toDouble())
             }
         )
+        registerReadOnlyVariable("working_directory", { _, _ -> RValue.String(LayeredFileSystem.BUNDLE_FOLDER_PREFIX) })
 
         registerVariable(
             "background_alpha",

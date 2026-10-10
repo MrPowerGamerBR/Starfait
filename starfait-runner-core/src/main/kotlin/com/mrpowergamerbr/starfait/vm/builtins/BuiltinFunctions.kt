@@ -4,6 +4,7 @@ package com.mrpowergamerbr.starfait.vm.builtins
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.GMLFunction
 import com.mrpowergamerbr.starfait.MathUtils
+import com.mrpowergamerbr.starfait.runner.TextUtils
 import com.mrpowergamerbr.starfait.ini.INI
 import com.mrpowergamerbr.starfait.runner.BoundingBox
 import com.mrpowergamerbr.starfait.runner.Circle
@@ -23,6 +24,7 @@ import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
+import kotlin.text.iterator
 
 object BuiltinFunctions {
     @GMLFunction
@@ -38,7 +40,6 @@ object BuiltinFunctions {
     @GMLFunction(stub = true) fun steam_file_exists(fileName: String) = false
     @GMLFunction(stub = true) fun os_get_language(vm: StarfaitVM) = "pt"
     @GMLFunction(stub = true) fun os_get_region(vm: StarfaitVM) = "BR"
-    @GMLFunction(stub = true) fun string_height(string: String) = 0.0
     @GMLFunction(stub = true) fun surface_get_width(surfaceId: Int) = 640.0
     @GMLFunction(stub = true) fun surface_get_height(surfaceId: Int) = 480.0
     @GMLFunction(stub = true) fun window_get_fullscreen() = false
@@ -54,20 +55,19 @@ object BuiltinFunctions {
     @GMLFunction fun string_replace_all(string: String, oldValue: String, newValue: String) = string.replace(oldValue, newValue)
 
     @GMLFunction
-    fun string_width(runner: StarfaitRunner, text: String): Int {
+    fun string_width(runner: StarfaitRunner, text: String): Float {
         val font = requireNotNull(runner.drawState.font)
 
-        // This is essentially how the text is rendered... but WITHOUT the rendering
-        var width = 0
-        for (char in text) {
-            val glyph = font.characterToGlyph[char]
+        val metrics = TextUtils.getTextMetrics(font, text, 1.0f, 1.0f)
+        return metrics.width
+    }
 
-            if (glyph != null) {
-                width += glyph.shift
-            }
-        }
+    @GMLFunction
+    fun string_height(runner: StarfaitRunner, text: String): Float {
+        val font = requireNotNull(runner.drawState.font)
 
-        return width
+        val metrics = TextUtils.getTextMetrics(font, text, 1.0f, 1.0f)
+        return metrics.height
     }
 
     @GMLFunction

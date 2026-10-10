@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.renderer.opengl
 
 import com.mrpowergamerbr.starfait.GMLColor
+import com.mrpowergamerbr.starfait.runner.TextUtils
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.renderer.TextureHandle
@@ -321,28 +322,11 @@ class OpenGLRenderer : Renderer() {
 
         val rad = Math.toRadians(rot.toDouble())
 
-        // Calculate the string width first
-        // TODO: Maybe we could refactor so that the function already provides the position of each glyph?
-        var stringWidth = 0f
-        var stringHeight = 0f
-
-        for (line in lines) {
-            var maxHeightOnThisLine = 0f
-            for (char in line) {
-                val glyph = font.characterToGlyph[char]
-
-                if (glyph != null) {
-                    stringWidth += (glyph.offset * xscale)
-                    stringWidth += (glyph.shift * xscale)
-                    maxHeightOnThisLine = max(maxHeightOnThisLine, (glyph.height.toFloat() * yscale))
-                }
-            }
-            stringHeight += maxHeightOnThisLine
-        }
+        val metrics = TextUtils.getTextMetrics(font, text, xscale, yscale)
 
         // Where the text will be rotated around (the center of the string)
-        val pivotX = x + (stringWidth / 2f)
-        val pivotY = y + (stringHeight / 2f)
+        val pivotX = x + (metrics.width / 2f)
+        val pivotY = y + (metrics.height / 2f)
 
         // Render around center (backwards!)
         val matrix = Matrix3x2f()

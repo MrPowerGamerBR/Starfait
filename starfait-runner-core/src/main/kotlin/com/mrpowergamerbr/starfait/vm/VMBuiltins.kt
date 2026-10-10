@@ -49,6 +49,14 @@ class VMBuiltins(val vm: StarfaitVM) {
         }
     }
 
+    fun warnVariableSemiStub(name: String) {
+        val dedupKey = "${vm.currentCallFrameCodeName}#${name}"
+        if (dedupKey !in vm.loggedStubbedVariables) {
+            println("VM: [${vm.currentCallFrameCodeName}] Semi-Stubbed built-in variable \"$name\"!")
+            vm.loggedStubbedVariables.add(dedupKey)
+        }
+    }
+
     fun registerVariable(name: String, readHandler: (Instance?, Int?) -> (RValue), writeHandler: (Instance?, RValue, Int?) -> (Unit)) {
         require(name !in registeredVariables) { "Tried registering variable $name, but it already exists!" }
         registeredVariables[name] = BuiltinVariable(name, readHandler, writeHandler)
@@ -58,7 +66,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVariable(name, readHandler, { _, _, _ -> error("Cannot write to read-only variable $name!") })
     }
 
-    fun registerRealStubbedVariable(name: String, value: Double) = registerReadOnlyVariable(name) { _, _ -> warnVariableStub(name); RValue.Real(value) }
+    fun registerRealStubbedVariable(name: String, value: Double) = registerReadOnlyVariable(name) { _, _ -> warnVariableSemiStub(name); RValue.Real(value) }
 
     fun registerInstanceVariable(name: String, readHandler: (Instance, Int?) -> (RValue), writeHandler: (Instance, RValue, Int?) -> (Unit)) {
         registerVariable(
@@ -274,6 +282,13 @@ class VMBuiltins(val vm: StarfaitVM) {
                 runner.currentRoom.backgrounds[arrayIndex!!].alpha = value.convertToReal().toFloat()
             }
         )
+
+        // TODO: Actually provide the correct FPS
+        registerReadOnlyVariable("fps") { _, arrayIndex ->
+            warnVariableStub("fps");
+            RValue.Real(runner.currentRoom.speed.toDouble())
+        }
+
         // TODO: Pretty sure this is writeable
         registerReadOnlyVariable("argument") { _, arrayIndex ->
             vm.currentCallFrame.arguments[arrayIndex!!]

@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.StarfaitUtils
 import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.renderer.Renderer
@@ -178,14 +179,31 @@ class StarfaitRunner(
             // We need to set the currentRoom BEFORE we dispatch the create events
             this.currentRoom = newRoom
 
-            val newlyCreatedInstances = mutableListOf<Instance>()
+            val newlyCreatedInstances = mutableListOf<Pair<Room.Instance, Instance>>()
             for (instance in room.instances) {
-                newlyCreatedInstances.add(newRoom.createAndSpawnInstance(instance))
+                newlyCreatedInstances.add(Pair(instance, newRoom.createAndSpawnInstance(instance)))
             }
 
-            for (instance in newlyCreatedInstances) {
+            for ((roomInstance, instance) in newlyCreatedInstances) {
                 instance.dispatchEvent(EventType.CREATE, 0, null)
+                if (roomInstance.creationCodeId != StarfaitUtils.NO_CREATION_CODE) {
+                    vm.executeCode(gameWAD.code.codes[roomInstance.creationCodeId], instance, null, instance.gameObject, 0, 0, arrayOf())
+                }
             }
+        }
+
+        if (room.creationCodeId != StarfaitUtils.NO_CREATION_CODE) {
+            // When running a room creation code, it seems that GameMaker creates a "fake"/"dummy" instance for it
+            // Because you *can* set "self" variables, but at the same time it isn't bound to the global instance, and changing rooms does NOT persist the variable
+            val dummy = Instance(this, 0, 0)
+            // You may be wondering: "Wow what a gigantic hack"
+            // But THAT'S what the original runner does!
+            // If you call "event_perform(0, 0)" on a room creation code, it WILL execute the event of the first object in the list!
+            // So that's why it is this horrible horrid hack
+            // PS: I did test, and the original YoYo Runner doesn't crash if there isn't any object while using "event_perform(0, 0)"
+            // Oh well, let's just pretend that any competent game will at least have ONE object on the list, right?
+            val dummyGameObject = gameWAD.objt.objects[0]
+            vm.executeCode(gameWAD.code.codes[room.creationCodeId], dummy, null, dummyGameObject, 0, 0, arrayOf())
         }
 
         forEachInstance {

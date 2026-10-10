@@ -14,6 +14,7 @@ import kotlin.reflect.full.primaryConstructor
 
 object StarfaitUtils {
     const val REGULAR_VARIABLES_BASE = 100_000
+    const val NO_CREATION_CODE = -1
 
     /**
      * By default, each variable and function reference in the code references a delta offset on the `extra` field to the next reference of the variable.

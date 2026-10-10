@@ -161,6 +161,8 @@ class VMBuiltins(val vm: StarfaitVM) {
         // ===[ BUILTIN VARIABLES ]===
         registerReadOnlyVariable("os_type") { _, arrayIndex -> RValue.Real(runner.operatingSystem.id.toDouble()) }
         registerReadOnlyInstanceVariable("id") { instance, arrayIndex -> RValue.Real(instance.id.toDouble()) }
+        registerReadOnlyVariable("event_type") { instance, arrayIndex -> RValue.Real(vm.currentCallFrame.eventType.toDouble()) }
+        registerReadOnlyVariable("event_number") { instance, arrayIndex -> RValue.Real(vm.currentCallFrame.eventSubtype.toDouble()) }
         registerInstanceRealVariable("x", Instance::x)
         registerInstanceRealVariable("y", Instance::y)
         registerInstanceRealVariable("image_speed", Instance::imageSpeed)

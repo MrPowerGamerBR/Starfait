@@ -4,7 +4,7 @@ package com.mrpowergamerbr.starfait.vm.builtins
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.GMLFunction
 import com.mrpowergamerbr.starfait.MathUtils
-import com.mrpowergamerbr.starfait.runner.TextUtils
+import com.mrpowergamerbr.starfait.runner.text.TextUtils
 import com.mrpowergamerbr.starfait.ini.INI
 import com.mrpowergamerbr.starfait.runner.BoundingBox
 import com.mrpowergamerbr.starfait.runner.Circle
@@ -24,7 +24,6 @@ import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
-import kotlin.text.iterator
 
 object BuiltinFunctions {
     @GMLFunction

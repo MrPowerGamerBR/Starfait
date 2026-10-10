@@ -1,7 +1,7 @@
 package com.mrpowergamerbr.starfait.renderer.opengl
 
 import com.mrpowergamerbr.starfait.GMLColor
-import com.mrpowergamerbr.starfait.runner.TextUtils
+import com.mrpowergamerbr.starfait.runner.text.TextUtils
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.renderer.TextureHandle
@@ -310,15 +310,7 @@ class OpenGLRenderer : Renderer() {
         val tpag = font.texturePageEntry
         val texture = getGLTextureFromStarfaitHandle(tpag.textureIndex)
 
-        val startX = x
-        val startY = y
-        var x = x
-        var y = y
-
         flushIfNeeded(texture)
-
-        // TODO: We need to change this for GameMaker: Studio 2+!
-        val lines = text.split("#")
 
         val rad = Math.toRadians(rot.toDouble())
 
@@ -338,50 +330,39 @@ class OpenGLRenderer : Renderer() {
             .translate(-pivotX, -pivotY)
 
         // Now we ACTUALLY draw it
-        for (line in lines) {
-            var maxHeightOnThisLine = 0f
-
+        for (line in metrics.lines) {
             for (char in line) {
-                val glyph = font.characterToGlyph[char]
+                val glyph = char.glyph
 
-                if (glyph != null) {
-                    x += (glyph.offset * xscale)
+                val width = (glyph.width.toFloat() * xscale)
+                val height = (glyph.height.toFloat() * yscale)
 
-                    val width = (glyph.width.toFloat() * xscale)
-                    val height = (glyph.height.toFloat() * yscale)
+                val xy1 = matrix.transformPosition(Vector2f(char.x + x, char.y + y), Vector2f())
+                val xy2 = matrix.transformPosition(Vector2f(char.x + x + width, char.y + y), Vector2f())
+                val xy3 = matrix.transformPosition(Vector2f(char.x + x + width, char.y + y + height), Vector2f())
+                val xy4 = matrix.transformPosition(Vector2f(char.x + x, char.y + y + height), Vector2f())
 
-                    val xy1 = matrix.transformPosition(Vector2f(x, y), Vector2f())
-                    val xy2 = matrix.transformPosition(Vector2f(x + width, y), Vector2f())
-                    val xy3 = matrix.transformPosition(Vector2f(x + width, y + height), Vector2f())
-                    val xy4 = matrix.transformPosition(Vector2f(x, y + height), Vector2f())
-
-                    drawQuad(
-                        xy1.x,
-                        xy1.y,
-                        xy2.x,
-                        xy2.y,
-                        xy3.x,
-                        xy3.y,
-                        xy4.x,
-                        xy4.y,
-                        (tpag.sourceX.toFloat() + glyph.x.toFloat()) / texture.width,
-                        (tpag.sourceY.toFloat() + glyph.y.toFloat()) / texture.height,
-                        (tpag.sourceX.toFloat() + glyph.x.toFloat() + glyph.width.toFloat()) / texture.width,
-                        (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
-                        texture,
-                        runner.drawState.color,
-                        runner.drawState.color,
-                        runner.drawState.color,
-                        runner.drawState.color,
-                        runner.drawState.alpha
-                    )
-
-                    x += (glyph.shift * xscale)
-                    maxHeightOnThisLine = max(maxHeightOnThisLine, (glyph.height.toFloat() * yscale))
-                }
+                drawQuad(
+                    xy1.x,
+                    xy1.y,
+                    xy2.x,
+                    xy2.y,
+                    xy3.x,
+                    xy3.y,
+                    xy4.x,
+                    xy4.y,
+                    (tpag.sourceX.toFloat() + glyph.x.toFloat()) / texture.width,
+                    (tpag.sourceY.toFloat() + glyph.y.toFloat()) / texture.height,
+                    (tpag.sourceX.toFloat() + glyph.x.toFloat() + glyph.width.toFloat()) / texture.width,
+                    (tpag.sourceY.toFloat() + glyph.y.toFloat() + glyph.height.toFloat()) / texture.height,
+                    texture,
+                    runner.drawState.color,
+                    runner.drawState.color,
+                    runner.drawState.color,
+                    runner.drawState.color,
+                    runner.drawState.alpha
+                )
             }
-            x = startX
-            y += maxHeightOnThisLine
         }
     }
 

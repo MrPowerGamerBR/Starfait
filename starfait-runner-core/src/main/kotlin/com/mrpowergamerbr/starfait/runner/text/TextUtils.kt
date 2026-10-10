@@ -1,6 +1,5 @@
-package com.mrpowergamerbr.starfait.runner
+package com.mrpowergamerbr.starfait.runner.text
 
-import com.mrpowergamerbr.starfait.runner.TextMetrics
 import com.mrpowergamerbr.starfait.runner.resources.RunnerFont
 import kotlin.math.max
 import kotlin.text.iterator
@@ -25,9 +24,11 @@ object TextUtils {
         var x = 0f
         var y = 0f
 
-        val characters = mutableListOf<TextMetrics.Character>()
+        val characterLines = mutableListOf<List<TextMetrics.Character>>()
 
         for (line in lines) {
+            val characters = mutableListOf<TextMetrics.Character>()
+
             var maxHeightOnThisLine = 0f
             for (char in line) {
                 val glyph = font.characterToGlyph[char]
@@ -54,12 +55,14 @@ object TextUtils {
             stringHeight += maxHeightOnThisLine
             x = 0.0f
             y += maxHeightOnThisLine
+            characterLines.add(characters)
+
         }
 
         return TextMetrics(
             width = stringWidth,
             height = stringHeight,
-            characters = characters
+            lines = characterLines
         )
     }
 }

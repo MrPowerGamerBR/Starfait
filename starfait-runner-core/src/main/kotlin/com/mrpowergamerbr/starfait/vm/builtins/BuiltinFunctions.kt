@@ -12,6 +12,8 @@ import com.mrpowergamerbr.starfait.runner.DebugBoundingBox
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.OpenINI
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
+import com.mrpowergamerbr.starfait.runner.resources.RunnerTexturePageEntry
 import com.mrpowergamerbr.starfait.vm.DSMap
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
 import com.mrpowergamerbr.starfait.vm.RValue
@@ -400,7 +402,7 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun room_get_name(runner: StarfaitRunner, vm: StarfaitVM, roomIndex: Int): String {
-        return runner.gameWAD.strg.getString(runner.gameWAD.room.rooms[roomIndex].name)
+        return runner.resources.strg.getString(runner.resources.room.rooms[roomIndex].name)
     }
 
     @GMLFunction
@@ -523,7 +525,7 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun audio_play_sound(runner: StarfaitRunner, index: Int, priority: Int, loop: Boolean): Int {
-        val sound = runner.gameWAD.sond.sounds[index]
+        val sound = runner.resources.sond.sounds[index]
         return runner.audioManager.playSound(index, sound, loop)
     }
 
@@ -650,13 +652,13 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun draw_sprite(runner: StarfaitRunner, vm: StarfaitVM, spriteIndex: Int, subimg: Int, x: Float, y: Float) {
-        runner.renderer.drawSprite(vm.gameWAD.sprt.sprites[spriteIndex], subimg, x, y, 1f, 1f, 0f, GMLColor(0xFFFFFF), runner.drawState.alpha)
+        runner.renderer.drawSprite(runner.resources.sprites[spriteIndex], subimg, x, y, 1f, 1f, 0f, GMLColor(0xFFFFFF), runner.drawState.alpha)
     }
 
     @GMLFunction
     fun draw_sprite_ext(runner: StarfaitRunner, vm: StarfaitVM, spriteIndex: Int, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
         runner.renderer.drawSprite(
-            vm.gameWAD.sprt.sprites[spriteIndex],
+            runner.resources.sprites[spriteIndex],
             subimg,
             x,
             y,
@@ -843,7 +845,7 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun draw_set_font(runner: StarfaitRunner, fontIndex: Int) {
-        val font = runner.gameWAD.font.fonts.getOrNull(fontIndex)
+        val font = runner.resources.fonts.getOrNull(fontIndex)
         if (font == null)
             println("Runner: Tried setting invalid font with draw_set_font!")
         runner.drawState.font = font
@@ -954,14 +956,14 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun draw_sprite_part(runner: StarfaitRunner, spriteIndex: Int, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float) {
-        val sprite = runner.gameWAD.sprt.sprites[spriteIndex]
+        val sprite = runner.resources.sprites[spriteIndex]
 
         runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1f, 1f, GMLColor(0xFFFFFF), runner.drawState.alpha)
     }
 
     @GMLFunction
     fun draw_sprite_part_ext(runner: StarfaitRunner, spriteIndex: Int, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float) {
-        val sprite = runner.gameWAD.sprt.sprites[spriteIndex]
+        val sprite = runner.resources.sprites[spriteIndex]
 
         runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, xscale, yscale, color, alpha)
     }
@@ -983,11 +985,11 @@ object BuiltinFunctions {
         val currentRoom = runner.currentRoom
 
         // Contrary to what it *seems* like it is: What this does is draw a background ASSET somewhere
-        val background = runner.gameWAD.bgnd.backgrounds.getOrNull(backgroundId) ?: return
-        val tpag = runner.gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+        val background = runner.resources.backgrounds.getOrNull(backgroundId) ?: return
+        val tpag = background.texturePageEntry
 
         runner.renderer.drawBackground(
-            tpag,
+            tpag!!,
             x.toFloat(),
             y.toFloat(),
             tpag.sourceWidth.toFloat(),
@@ -998,5 +1000,42 @@ object BuiltinFunctions {
             currentRoom.height,
             runner.drawState.alpha // TODO: Is this actually correct? The docs say that it is "without transparency" but who knows
         )
+    }
+
+    @GMLFunction
+    fun sprite_create_from_surface(runner: StarfaitRunner, index: Int, x: Float, y: Float, width: Float, height: Float, removeback: Boolean, smooth: Boolean, xorig: Float, yorig: Float): Int {
+        val handle = runner.renderer.createTextureFromSurface(0, x.toInt(), y.toInt(), width.toInt(), height.toInt(), removeback, smooth)
+        val newSprite = RunnerSprite.fromDynamic(
+            0,
+            width.toInt(),
+            height.toInt(),
+            xorig.toInt(),
+            yorig.toInt(),
+            listOf(
+                RunnerTexturePageEntry(
+                    0.toUShort(),
+                    0.toUShort(),
+                    width.toInt().toUShort(),
+                    height.toInt().toUShort(),
+                    0.toUShort(),
+                    0.toUShort(),
+                    width.toInt().toUShort(),
+                    height.toInt().toUShort(),
+                    width.toInt().toUShort(),
+                    height.toInt().toUShort(),
+                    handle
+                )
+            )
+        )
+        val index = runner.resources.sprites.size
+        runner.resources.sprites.add(newSprite)
+        return index
+    }
+
+    @GMLFunction
+    fun sprite_delete(runner: StarfaitRunner, index: Int) {
+        // TODO: I'm pretty sure we should always allocate +1
+        val sprite = runner.resources.sprites.removeAt(index)
+        runner.renderer.deleteTextures(sprite.frames.map { it.textureIndex })
     }
 }

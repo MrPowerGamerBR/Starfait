@@ -331,7 +331,7 @@ class StarfaitCLI : CliktCommand() {
 
                         for (y in 0 until maskHeight) {
                             for (x in 0 until maskWidth) {
-                                val isSet = collisionMask.isPixelSolid(sprite, x, y)
+                                val isSet = collisionMask.isPixelSolid(maskWidth, maskHeight, x, y)
                                 image.setRGB(x, y, if (isSet) Color.BLACK.rgb else Color.WHITE.rgb)
                             }
                         }

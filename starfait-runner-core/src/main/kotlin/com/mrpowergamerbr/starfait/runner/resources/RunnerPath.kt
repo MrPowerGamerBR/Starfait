@@ -1,4 +1,4 @@
-package com.mrpowergamerbr.starfait.runner
+package com.mrpowergamerbr.starfait.runner.resources
 
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.wad.Path

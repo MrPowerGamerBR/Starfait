@@ -4,17 +4,17 @@ import com.mrpowergamerbr.starfait.WADUtils
 import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.renderer.Renderer
+import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.runner.textfiles.TextFileManager
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameObject
-import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Room
 import com.mrpowergamerbr.starfait.wad.RoomFlags
 import kotlin.comparisons.compareBy
 import kotlin.random.Random
 
 class StarfaitRunner(
-    val gameWAD: GameWAD,
+    val resources: RunnerResources,
     val vm: StarfaitVM,
     val renderer: Renderer,
     val audioManager: AudioManager,
@@ -31,7 +31,7 @@ class StarfaitRunner(
     }
 
     lateinit var currentRoom: RunnerRoom
-    val paths = gameWAD.path.paths.map { RunnerPath(it) }
+
     val operatingSystem = YYOperatingSystem.WINDOWS
     var currentInstanceId = BASE_INSTANCE_ID
     private var pendingRoom: PendingRoom? = null
@@ -41,7 +41,7 @@ class StarfaitRunner(
     val keyboard = RunnerKeyboard()
     val random = Random(seed)
     val persistentRooms = mutableMapOf<Int, RunnerRoom>()
-    var drawState = DrawState(gameWAD)
+    var drawState = DrawState(resources)
     var openINI: OpenINI? = null
     val textFiles = TextFileManager(layeredFileSystem)
 
@@ -79,8 +79,8 @@ class StarfaitRunner(
     }
 
     fun initializeFirstRoom() {
-        val firstRoomId = gameWAD.gen8.roomOrder.first()
-        val room = gameWAD.room.rooms[firstRoomId]
+        val firstRoomId = resources.roomOrder.first()
+        val room = resources.room.rooms[firstRoomId]
 
         initializeRoom(firstRoomId, room, false)
 
@@ -89,7 +89,7 @@ class StarfaitRunner(
 
     fun initializeRoom(roomId: Int, room: Room, keepPersistentInstances: Boolean) {
         val persistentRoom = persistentRooms.remove(roomId)
-        println("Runner: Initializing room $roomId (${gameWAD.strg.getString(room.name)}) - Has persistent room? ${persistentRoom != null}")
+        println("Runner: Initializing room $roomId (${resources.strg.getString(room.name)}) - Has persistent room? ${persistentRoom != null}")
 
         if (persistentRoom != null) {
             val previousRoom = this.currentRoom
@@ -188,7 +188,7 @@ class StarfaitRunner(
             for ((roomInstance, instance) in newlyCreatedInstances) {
                 instance.dispatchEvent(EventType.CREATE, 0, null)
                 if (roomInstance.creationCodeId != WADUtils.NO_CREATION_CODE_ID) {
-                    vm.executeCode(gameWAD.code.codes[roomInstance.creationCodeId], instance, null, instance.gameObject, 0, 0, arrayOf())
+                    vm.executeCode(resources.code.codes[roomInstance.creationCodeId], instance, null, instance.gameObject, 0, 0, arrayOf())
                 }
             }
         }
@@ -203,8 +203,8 @@ class StarfaitRunner(
             // So that's why it is this horrible horrid hack
             // PS: I did test, and the original YoYo Runner doesn't crash if there isn't any object while using "event_perform(0, 0)"
             // Oh well, let's just pretend that any competent game will at least have ONE object on the list, right?
-            val dummyGameObject = gameWAD.objt.objects[0]
-            vm.executeCode(gameWAD.code.codes[room.creationCodeId], dummy, null, dummyGameObject, 0, 0, arrayOf())
+            val dummyGameObject = resources.objt.objects[0]
+            vm.executeCode(resources.code.codes[room.creationCodeId], dummy, null, dummyGameObject, 0, 0, arrayOf())
         }
 
         forEachInstance {
@@ -338,8 +338,8 @@ class StarfaitRunner(
             if (0 > backgroundIndex)
                 continue
 
-            val background = gameWAD.bgnd.backgrounds[runnerBackground.backgroundIndex]
-            val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+            val background = resources.backgrounds[runnerBackground.backgroundIndex]
+            val tpag = background.texturePageEntry ?: continue
 
             renderer.drawBackground(
                 tpag,
@@ -378,8 +378,11 @@ class StarfaitRunner(
                     val tile = drawable.tile
 
                     if (tile.visible) {
-                        val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
-                        val tpag = gameWAD.tpag.entries[background.texturePageEntryPointer]!!
+                        val background = resources.backgrounds[tile.backgroundIndex]
+                        val tpag = background.texturePageEntry
+
+                        if (tpag == null)
+                            continue
 
                         renderer.drawTile(tpag, tile)
                     }
@@ -501,7 +504,7 @@ class StarfaitRunner(
     // This is baaaaaad and needs to be optimized later
     // Some events like step, alarms, keyboards, mouse, joystick, outside room/intersect, collisions... are iterated based on the objectIndex, NOT the instance list!
     inline fun forEachInstanceObjectIndex(action: (Instance) -> Unit) {
-        for ((index, obj) in gameWAD.objt.objects.withIndex()) {
+        for ((index, obj) in resources.objt.objects.withIndex()) {
             // Duplicate list to avoid ConcurrentModificationExceptions
             // This also needs to be iterated oldest first, when two instances have the same objectIndex
             for (instance in this.currentRoom.instances.toList()) {
@@ -556,12 +559,12 @@ class StarfaitRunner(
     }
 
     fun getGameObjectFromInstance(instance: Instance): GameObject {
-        return gameWAD.objt.objects[instance.objectIndex]
+        return resources.objt.objects[instance.objectIndex]
     }
 
     fun setPendingRoom(roomId: Int) {
         val roomId = replaceRooms[roomId] ?: roomId
-        pendingRoom = PendingRoom(roomId, gameWAD.room.rooms[roomId])
+        pendingRoom = PendingRoom(roomId, resources.room.rooms[roomId])
     }
 
     /**
@@ -569,8 +572,8 @@ class StarfaitRunner(
      */
     private fun generateFlattenedEvents() {
         // The Flattening:tm:
-        for ((objectIndex, obj) in gameWAD.objt.objects.withIndex()) {
-            val objectTree = gameWAD.objt.getGameObjectTree(objectIndex, obj).map { it.gameObject }
+        for ((objectIndex, obj) in resources.objt.objects.withIndex()) {
+            val objectTree = resources.objt.getGameObjectTree(objectIndex, obj).map { it.gameObject }
 
             // It seems that SOMETIMES GameMaker events are out of bounds
             // Even though that we are only targeting 1.4.1804 (for Undertale), their events have IDs 11 (TRIGGER) and 12 (CLEANUP) which are only used in GM:S 2
@@ -615,10 +618,10 @@ class StarfaitRunner(
         // We first use a set to avoid duplicates, then we convert to a ArrayList for fast iteration (yippee)
         val collisionPairs = mutableSetOf<CollisionPair>()
 
-        for ((selfGameObjectIndex, selfGameObject) in gameWAD.objt.objects.withIndex()) {
+        for ((selfGameObjectIndex, selfGameObject) in resources.objt.objects.withIndex()) {
             // Which events do we have?
-            for ((otherGameObjectIndex, otherGameObject) in gameWAD.objt.objects.withIndex()) {
-                val objectTree = gameWAD.objt.getGameObjectTree(otherGameObjectIndex, otherGameObject)
+            for ((otherGameObjectIndex, otherGameObject) in resources.objt.objects.withIndex()) {
+                val objectTree = resources.objt.getGameObjectTree(otherGameObjectIndex, otherGameObject)
 
                 // We now iterate all the ancestors, if ANY of them have a collision event, we register the pair
                 for ((ancestorGameObjectIndex, _) in objectTree) {
@@ -638,7 +641,7 @@ class StarfaitRunner(
 
     private fun resetCurrentInstanceId() {
         // This looks and sounds stupid, but if you create a room with an instance, and that instance creates a new instance, the ID of the first instance will be 100_000 and the ID of the new instance will be 100_002
-        this.currentInstanceId = gameWAD.gen8.maxRoomInstanceId + 1
+        this.currentInstanceId = this.resources.maxRoomInstanceId + 1
     }
 
     private fun reset() {
@@ -646,7 +649,7 @@ class StarfaitRunner(
         this.persistentRooms.clear()
         this.audioManager.stopAllSounds()
         resetCurrentInstanceId()
-        this.drawState = DrawState(this.gameWAD)
+        this.drawState = DrawState(this.resources)
         this.openINI = null
     }
 }

@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.MathUtils
+import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
 import com.mrpowergamerbr.starfait.wad.GameObject
@@ -78,12 +79,12 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     private var _speed = 0.0f
 
     val gameObject: GameObject
-        get() = runner.gameWAD.objt.objects[this.objectIndex]
+        get() = runner.resources.objt.objects[this.objectIndex]
     @DumpRunnerField val objectName: String
-        get() = runner.gameWAD.strg.getString(gameObject.name)
+        get() = runner.resources.strg.getString(gameObject.name)
     @DumpRunnerField val spriteName: String?
         get() = if (spriteIndex >= 0.0f) {
-            runner.gameWAD.strg.getString(runner.gameWAD.sprt.sprites[spriteIndex.toInt()].name)
+            runner.resources.sprites[spriteIndex.toInt()].name
         } else {
             null
         }
@@ -120,7 +121,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         if (0.0f > this.spriteIndex)
             return
 
-        val num = runner.gameWAD.sprt.sprites[this.spriteIndex.toInt()].frames.size
+        val num = runner.resources.sprites[this.spriteIndex.toInt()].frames.size
         if (this.imageIndex >= num) {
             this.imageIndex -= num
             dispatchEvent(EventType.OTHER, EventType.OtherSubType.ANIMATION_END, this)
@@ -134,7 +135,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     fun assignPath(ind: Int, speed: Float, scale: Float, orient: Float, absolute: Boolean, endact: Int) {
         // First validate the path exists, and assign the index.
         this.pathIndex = -1
-        val pPath = runner.paths.getOrNull(ind) ?: return
+        val pPath = runner.resources.paths.getOrNull(ind) ?: return
         if (0.0f >= pPath.length) return
         if (0.0f > scale) return
         this.pathIndex = ind
@@ -163,7 +164,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     // See GameMaker-HTML5's yyInstance.js Adapt_Path, with the end actions of the bytecode 16 runner (libyoyo.so.c CInstance::Adapt_Path)
     fun adaptPath() {
         // check whether the path exists
-        val pPath = runner.paths.getOrNull(this.pathIndex) ?: return
+        val pPath = runner.resources.paths.getOrNull(this.pathIndex) ?: return
         if (0.0f >= pPath.length) return
 
         // get the new path position
@@ -308,7 +309,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         val previousRelative = this.runner.vm.dragAndDropRelativeValues
         this.runner.vm.dragAndDropRelativeValues = false
         for (action in subtypeEvents) {
-            val code = this.runner.gameWAD.code.codes[action.codeId]
+            val code = this.runner.resources.code.codes[action.codeId]
 
             if (runner.vm.eventsToBeTraced.contains("*") || runner.vm.eventsToBeTraced.contains(objectName)) {
                 val eventTypeName = EventType.getEventTypeName(eventType)
@@ -349,7 +350,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
             )
         }
 
-        val sprite = runner.gameWAD.sprt.sprites[maskIndex]
+        val sprite = runner.resources.sprites[maskIndex]
 
         if (imageAngle == 0f) {
             val width = (sprite.bboxRight + 1) - sprite.bboxLeft
@@ -514,9 +515,9 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         return CollisionMaskQuery.checkPreciseCollisionInstanceInstance(this, selfBBox, sprite1, other, otherBBox, sprite2, runner.collisionCompatibilityMode)
     }
 
-    fun getCollisionSprite(): Sprite? {
+    fun getCollisionSprite(): RunnerSprite? {
         val index = if (this.maskIndex >= 0.0f) this.maskIndex else this.spriteIndex
-        return runner.gameWAD.sprt.sprites.getOrNull(index.toInt())
+        return runner.resources.sprites.getOrNull(index.toInt())
     }
 
     fun matchesObjectOrInstanceId(
@@ -566,7 +567,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
                     if (parentGameObjectId == queryId)
                         return true
 
-                    parentGameObjectId = runner.gameWAD.objt.objects[parentGameObjectId].parentId
+                    parentGameObjectId = runner.resources.objt.objects[parentGameObjectId].parentId
                 }
             }
 

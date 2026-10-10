@@ -3,6 +3,7 @@ package net.perfectdreams.harmony.gl.shaders
 import net.perfectdreams.harmony.gl.textures.Texture
 import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
 import org.lwjgl.opengl.GL11.glBindTexture
+import org.lwjgl.opengl.GL13.GL_TEXTURE0
 import org.lwjgl.opengl.GL13.glActiveTexture
 import org.lwjgl.opengl.GL20.glUseProgram
 import org.lwjgl.opengl.GL41
@@ -123,12 +124,12 @@ abstract class GameShader(val programId: Int) {
                 return
 
             // Hacky!!!
-            val pos = slot - 0x84C0
+            val pos = slot + GL_TEXTURE0
 
-            glActiveTexture(slot)
+            glActiveTexture(pos)
             glBindTexture(GL_TEXTURE_2D, textureId)
 
-            GL41.glProgramUniform1i(shader.programId, location, pos)
+            GL41.glProgramUniform1i(shader.programId, location, slot)
         }
     }
 

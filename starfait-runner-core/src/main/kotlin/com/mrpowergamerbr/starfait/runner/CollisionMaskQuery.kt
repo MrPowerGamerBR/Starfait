@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.runner
 
 import com.mrpowergamerbr.starfait.MathUtils
+import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.wad.Sprite
 import org.joml.Matrix3x2f
 import org.joml.Vector2f
@@ -9,7 +10,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 class CollisionMaskQuery(
-    val sprite: Sprite,
+    val sprite: RunnerSprite,
     val spriteX: Float,
     val spriteY: Float,
     val imageXScale: Float,
@@ -31,10 +32,10 @@ class CollisionMaskQuery(
         fun checkPreciseCollisionInstanceInstance(
             inst1: Instance,
             bb1: BoundingBox,
-            sprite1: Sprite,
+            sprite1: RunnerSprite,
             inst2: Instance,
             bb2: BoundingBox,
-            sprite2: Sprite,
+            sprite2: RunnerSprite,
             collisionCompatibilityMode: Boolean
         ): Boolean {
             val query1 = CollisionMaskQuery(sprite1, inst1.x, inst1.y, inst1.imageXScale, inst1.imageYScale, inst1.imageAngle, collisionCompatibilityMode)
@@ -55,7 +56,7 @@ class CollisionMaskQuery(
         fun checkPreciseCollisionInstanceRectangle(
             inst1: Instance,
             bb1: BoundingBox,
-            sprite1: Sprite,
+            sprite1: RunnerSprite,
             bb2: BoundingBox,
             collisionCompatibilityMode: Boolean
         ): Boolean {
@@ -77,7 +78,7 @@ class CollisionMaskQuery(
         fun checkPreciseCollisionInstanceCircle(
             inst1: Instance,
             bb1: BoundingBox,
-            sprite1: Sprite,
+            sprite1: RunnerSprite,
             circle: Circle,
             collisionCompatibilityMode: Boolean
         ): Boolean {
@@ -101,7 +102,7 @@ class CollisionMaskQuery(
 
         fun checkPreciseCollisionInstancePoint(
             inst1: Instance,
-            sprite1: Sprite,
+            sprite1: RunnerSprite,
             x: Float,
             y: Float,
             collisionCompatibilityMode: Boolean

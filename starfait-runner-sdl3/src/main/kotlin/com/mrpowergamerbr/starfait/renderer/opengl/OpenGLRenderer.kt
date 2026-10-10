@@ -3,14 +3,15 @@ package com.mrpowergamerbr.starfait.renderer.opengl
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.renderer.Renderer
+import com.mrpowergamerbr.starfait.renderer.TextureHandle
 import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
-import com.mrpowergamerbr.starfait.wad.Font
+import com.mrpowergamerbr.starfait.runner.resources.RunnerFont
+import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
+import com.mrpowergamerbr.starfait.runner.resources.RunnerTexturePageEntry
 import com.mrpowergamerbr.starfait.wad.GameWAD
-import com.mrpowergamerbr.starfait.wad.Sprite
-import com.mrpowergamerbr.starfait.wad.TexturePageEntry
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
@@ -21,20 +22,27 @@ import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.GL_SCISSOR_TEST
+import org.lwjgl.opengl.GL11.glDeleteTextures
 import org.lwjgl.opengl.GL11.glDisable
 import org.lwjgl.opengl.GL11.glEnable
+import org.lwjgl.opengl.GL11.glReadPixels
 import org.lwjgl.opengl.GL11.glScissor
 import org.lwjgl.opengl.GL11.glViewport
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER
+import org.lwjgl.opengl.GL30.glBindFramebuffer
+import org.lwjgl.system.MemoryStack
+import java.nio.ByteBuffer
+import java.nio.IntBuffer
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.sin
 import kotlin.text.iterator
 
-class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
+class OpenGLRenderer : Renderer() {
     companion object {
         private const val MAX_BATCH_ELEMENTS = 512
         private const val FIELDS_PER_ELEMENT = 48
@@ -58,7 +66,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
     val vao = GL30.glGenVertexArrays()
     val vbo = GL15.glGenBuffers()
     val white1x1Texture = textureManager.load1x1WhiteTexture()
-    val textures = gameWAD.txtr.textures.map { this.textureManager.loadTexture(it.blob, GL11.GL_NEAREST) }
+    val textures = mutableMapOf<TextureHandle, Texture>()
+    var currentTextureId = 0
 
     init {
         // For transparency in sprites
@@ -84,10 +93,25 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         GL20.glEnableVertexAttribArray(2)
     }
 
+    private fun getGLTextureFromStarfaitHandle(handle: TextureHandle): Texture {
+        return this.textures[handle]!!
+    }
+
+    override fun uploadTexture(texture: com.mrpowergamerbr.starfait.wad.Texture): TextureHandle {
+        val uploadedTexture = this.textureManager.loadTexture(texture.blob, GL11.GL_NEAREST)
+        return allocateAndStoreTextureHandle(uploadedTexture)
+    }
+
+    private fun allocateAndStoreTextureHandle(texture: Texture): TextureHandle {
+        val textureHandle = TextureHandle(this.currentTextureId++)
+        this.textures[textureHandle] = texture
+        return textureHandle
+    }
+
     override fun drawInstance(instance: Instance) {
         // Only attempt to render instances that DO have a sprite index
         if (instance.spriteIndex >= 0) {
-            val sprite = runner.gameWAD.sprt.sprites[instance.spriteIndex.toInt()]
+            val sprite = runner.resources.sprites[instance.spriteIndex.toInt()]
             drawSprite(
                 sprite,
                 instance.imageIndex.toInt(),
@@ -104,13 +128,11 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         }
     }
 
-    override fun drawSprite(sprite: Sprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
+    override fun drawSprite(sprite: RunnerSprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
         // Only attempt to render instances that DO have a sprite index
         // See GameMaker-HTML5's yySprite.js Draw, which wraps the subimage: _ind = (~ ~_ind) % this.numb
-        val framePointer = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
-        val tpag = runner.gameWAD.tpag.entries[framePointer]!!
-
-        val texture = textures[tpag.textureIndex.toInt()]
+        val tpag = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
+        val texture = this.textures[tpag.textureIndex]!!
 
         val rad = Math.toRadians(rot.toDouble())
 
@@ -145,7 +167,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             tpag.sourceY.toFloat() / texture.height,
             (tpag.sourceX.toFloat() + tpag.sourceWidth.toFloat()) / texture.width,
             (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
-            textures[tpag.textureIndex.toInt()],
+            texture,
             color,
             color,
             color,
@@ -155,7 +177,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
     }
 
     override fun drawSpritePart(
-        sprite: Sprite,
+        sprite: RunnerSprite,
         subimg: Int,
         left: Float,
         top: Float,
@@ -168,10 +190,9 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         color: GMLColor,
         alpha: Float
     ) {
-        val framePointer = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
-        val tpag = runner.gameWAD.tpag.entries[framePointer]!!
+        val tpag = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
 
-        val texture = textures[tpag.textureIndex.toInt()]
+        val texture = textures[tpag.textureIndex]!!
         // See GameMaker-HTML5's yyWebGL.js WebGL_DrawPart_RELEASE
         var partLeft = left
         var partTop = top
@@ -223,8 +244,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         )
     }
 
-    override fun drawBackground(texturePageEntry: TexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, alpha: Float) {
-        val texture = textures[texturePageEntry.textureIndex.toInt()]
+    override fun drawBackground(texturePageEntry: RunnerTexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, alpha: Float) {
+        val texture = textures[texturePageEntry.textureIndex]!!
 
         val tpag = texturePageEntry
 
@@ -247,7 +268,7 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
                     (tpag.sourceY.toFloat() + tpag.sourceHeight.toFloat()) / texture.height,
                     width,
                     height,
-                    textures[tpag.textureIndex.toInt()],
+                    textures[tpag.textureIndex]!!,
                     GMLColor(0xFFFFFF),
                     alpha
                 )
@@ -255,8 +276,8 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         }
     }
 
-    override fun drawTile(texturePageEntry: TexturePageEntry, tile: RunnerRoom.RunnerTile) {
-        val texture = textures[texturePageEntry.textureIndex.toInt()]
+    override fun drawTile(texturePageEntry: RunnerTexturePageEntry, tile: RunnerRoom.RunnerTile) {
+        val texture = textures[texturePageEntry.textureIndex]!!
 
         val tpag = texturePageEntry
 
@@ -274,15 +295,15 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
             (entryY + entryHeight.toFloat()) / texture.height,
             tile.width.toFloat(),
             tile.height.toFloat(),
-            textures[tpag.textureIndex.toInt()],
+            textures[tpag.textureIndex]!!,
             GMLColor(0xFFFFFF),
             1.0f
         )
     }
 
-    override fun drawText(font: Font, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String) {
-        val tpag = requireNotNull(gameWAD.tpag.entries[font.texturePageEntryPointer])
-        val texture = textures[tpag.textureIndex.toInt()]
+    override fun drawText(font: RunnerFont, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String) {
+        val tpag = font.texturePageEntry
+        val texture = getGLTextureFromStarfaitHandle(tpag.textureIndex)
 
         val startX = x
         val startY = y
@@ -609,6 +630,74 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
         }
     }
 
+    override fun createTextureFromSurface(surfaceId: Int, x: Int, y: Int, width: Int, height: Int, removeback: Boolean, smooth: Boolean): TextureHandle {
+        // This is a bit painful but it is what it is
+
+        // We flush anything pending so that we actually COPY the screen with anything that hasn't been flushed recently
+        flush()
+
+        // TODO: Other surfaces
+
+        // This sadly very much sucks quite a bit
+        // TODO: Maybe replace this with a framebuffer? We draw directly to the fb and flip it on the GPU
+        val flippedByteBuffer = ByteBuffer.allocateDirect(width * height * 4)
+        glReadPixels(x, VIEWPORT_HEIGHT - y - height, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, flippedByteBuffer)
+
+        // We can't use ".array()" directly because it is a ooo allocateDirect
+        val flippedByteArray = ByteArray(width * height * 4)
+        flippedByteBuffer.get(flippedByteArray)
+        val byteBuffer = ByteBuffer.allocateDirect(width * height * 4)
+        for (i in (height - 1) downTo 0) {
+            byteBuffer.put(flippedByteArray, i * width * 4, width * 4)
+        }
+        byteBuffer.position(0)
+
+        // 1. Generate and bind a new texture ID
+        val textureId = GL11.glGenTextures()
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId)
+
+        // 2. Tell OpenGL how to unpack the RGBA bytes.
+        // Each component is 1 byte size
+        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
+
+        // Create the texture first
+        GL11.glTexImage2D(
+            GL11.GL_TEXTURE_2D,
+            0,
+            GL11.GL_RGBA,
+            width,
+            height,
+            0,
+            GL11.GL_RGBA,
+            GL11.GL_UNSIGNED_BYTE,
+            byteBuffer
+        )
+
+        // 3. Set texture parameters
+        // Repeat image in both directions
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT)
+        // When stretching the image, pixelate
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
+        // When shrinking the image, pixelate
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
+
+        return allocateAndStoreTextureHandle(Texture(textureId, width, height))
+    }
+
+    override fun deleteTextures(textures: List<TextureHandle>) {
+        val texturesToBeDeleted = textures.mapNotNull { this.textures.remove(it) }
+
+        if (texturesToBeDeleted.isNotEmpty()) {
+            MemoryStack.stackPush().use {
+                val textures = it.ints(*texturesToBeDeleted.map { it.textureId }.toIntArray())
+                glDeleteTextures(textures)
+            }
+        }
+    }
+
     override fun withView(view: RunnerRoom.RunnerView?, block: () -> Unit) {
         flush()
 
@@ -684,28 +773,24 @@ class OpenGLRenderer(val gameWAD: GameWAD) : Renderer() {
                 if (instance.spriteIndex >= 0f) {
                     val collisionSprite = instance.getCollisionSprite()
                     if (collisionSprite != null && collisionSprite.hasCollisionMask) {
-                        val collisionMask = collisionSprite.collisionMasks.getOrNull(instance.imageIndex.toInt())
-
                         // This is very much NOT optimized
                         // I think the best way would be to convert the mask into a image, then blit it to a texture
-                        if (collisionMask != null) {
-                            for (y in 0 until (collisionSprite.height * instance.imageYScale).toInt()) {
-                                for (x in 0 until (collisionSprite.width * instance.imageXScale).toInt()) {
-                                    if (collisionMask.isPixelSolid(collisionSprite, (x / instance.imageXScale).toInt(), (y / instance.imageYScale).toInt())) {
-                                        drawQuad(
-                                            x + instance.x,
-                                            y + instance.y,
-                                            0.0f,
-                                            0.0f,
-                                            1.0f,
-                                            1.0f,
-                                            1f,
-                                            1f,
-                                            white1x1Texture,
-                                            GMLColor(0x00ffff),
-                                            0.25f
-                                        )
-                                    }
+                        for (y in 0 until (collisionSprite.height * instance.imageYScale).toInt()) {
+                            for (x in 0 until (collisionSprite.width * instance.imageXScale).toInt()) {
+                                if (collisionSprite.isPixelSolidOnCollisionMask(instance.imageIndex.toInt(), (x / instance.imageXScale).toInt(), (y / instance.imageYScale).toInt(), runner.collisionCompatibilityMode)) {
+                                    drawQuad(
+                                        x + instance.x,
+                                        y + instance.y,
+                                        0.0f,
+                                        0.0f,
+                                        1.0f,
+                                        1.0f,
+                                        1f,
+                                        1f,
+                                        white1x1Texture,
+                                        GMLColor(0x00ffff),
+                                        0.25f
+                                    )
                                 }
                             }
                         }

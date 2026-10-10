@@ -8,6 +8,7 @@ import com.mrpowergamerbr.starfait.runner.BufferedGameOutput
 import com.mrpowergamerbr.starfait.runner.CollisionPair
 import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
+import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.vm.RValue
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.vm.VariableContainer
@@ -48,9 +49,9 @@ object GameMakerFeatureTests {
             // obj_collision1 -> [obj_collision2, obj_collision3]
             // obj_collision2 -> [obj_collision3]
             // (the obj_collision3 doesn't have one by itself because the only possible collision for it already exists)
-            val objCollision1 = it.gameWAD.objectIndexByObjectName("obj_collision1")
-            val objCollision2 = it.gameWAD.objectIndexByObjectName("obj_collision2")
-            val objCollision3 = it.gameWAD.objectIndexByObjectName("obj_collision3")
+            val objCollision1 = it.resources.objectIndexByObjectName("obj_collision1")
+            val objCollision2 = it.resources.objectIndexByObjectName("obj_collision2")
+            val objCollision3 = it.resources.objectIndexByObjectName("obj_collision3")
 
             val requiredCollisionPairs = listOf(
                 CollisionPair.of(objCollision1, objCollision2),
@@ -320,7 +321,7 @@ object GameMakerFeatureTests {
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
         val renderer = NoopRenderer
-        val runner = StarfaitRunner(vm.gameWAD, vm, renderer, NoopAudioManager(), LayeredFileSystem(VirtualFileSystem(), VirtualFileSystem()), BufferedGameOutput(), seed, emptyMap())
+        val runner = StarfaitRunner(RunnerResources.create(vm.gameWAD, renderer), vm, renderer, NoopAudioManager(), LayeredFileSystem(VirtualFileSystem(), VirtualFileSystem()), BufferedGameOutput(), seed, emptyMap())
         vm.runner = runner
         runner.start()
 
@@ -366,7 +367,7 @@ object GameMakerFeatureTests {
         return matchedInstance
     }
 
-    fun GameWAD.objectIndexByObjectName(objectName: String): Int {
+    fun RunnerResources.objectIndexByObjectName(objectName: String): Int {
         val index = this.objt.objects.indexOfFirst { this.strg.getString(it.name) == objectName }
         if (index == -1)
             error("Couldn't find object index for object name \"$objectName\"!")

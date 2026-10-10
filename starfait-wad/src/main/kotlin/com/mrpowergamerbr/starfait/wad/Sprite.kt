@@ -26,22 +26,6 @@ class Sprite(
     // So "has a mask" is decided by the precise flag
     val hasCollisionMask get() = precise && collisionMasks.isNotEmpty()
 
-    fun getCollisionMask(imageIndex: Int) = if (this.hasCollisionMask) this.collisionMasks[imageIndex] else null
-
-    fun isPixelSolidOnBoundingBox(x: Int, y: Int, collisionCompatibilityMode: Boolean): Boolean {
-        return if (collisionCompatibilityMode)
-            (x in bboxLeft..bboxRight && y in bboxTop..bboxBottom)
-        else
-            (x in bboxLeft until bboxRight && y in bboxTop until bboxBottom)
-    }
-
-    fun isPixelSolidOnCollisionMask(imageIndex: Int, x: Int, y: Int, collisionCompatibilityMode: Boolean): Boolean {
-        // If a sprite doesn't has a collision mask, then we assume it's entirely solid as long as the x, y falls into the sprite's width and height
-        val thisCollisionMaskSprite = getCollisionMask(imageIndex) ?: return isPixelSolidOnBoundingBox(x, y, collisionCompatibilityMode)
-
-        return thisCollisionMaskSprite.isPixelSolid(this, x, y)
-    }
-
     enum class Type(val value: Int) {
         NORMAL(0),
         SWF(1),

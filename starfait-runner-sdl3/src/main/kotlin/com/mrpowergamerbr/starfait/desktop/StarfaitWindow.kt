@@ -6,6 +6,7 @@ import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.filesystem.disk.DiskFileSystem
 import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.opengl.OpenGLRenderer
+import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DELETE
@@ -39,6 +40,7 @@ import com.mrpowergamerbr.starfait.vm.RValue
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlinx.serialization.json.Json
+import net.perfectdreams.harmony.gl.debug.OpenGLDebugging
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.sdl.SDLAudio.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK
@@ -107,6 +109,7 @@ class StarfaitWindow(
         check(context != MemoryUtil.NULL) { "SDL_GL_CreateContext failed: ${SDL_GetError()}" }
         SDL_GL_MakeCurrent(window, context)
         GL.createCapabilities() // required before any GL call
+        OpenGLDebugging.enableReportGLErrors()
         SDL_GL_SetSwapInterval(1) // vsync
 
         val device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, null)
@@ -122,9 +125,9 @@ class StarfaitWindow(
         val bundleFileSystem = DiskFileSystem(wadFile.parentFile)
         val layeredFileSystem = LayeredFileSystem(saveFileSystem, bundleFileSystem)
 
-        val renderer = OpenGLRenderer(vm.gameWAD)
+        val renderer = OpenGLRenderer()
         val runner = StarfaitRunner(
-            vm.gameWAD,
+            RunnerResources.create(vm.gameWAD, renderer),
             vm,
             renderer,
             SDLAudioManager(vm.gameWAD, bundleFileSystem, device),

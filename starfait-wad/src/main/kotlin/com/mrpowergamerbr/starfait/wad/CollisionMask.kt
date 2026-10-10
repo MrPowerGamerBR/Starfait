@@ -18,14 +18,13 @@ value class CollisionMask(val data: ByteArray) {
      *
      * If the coordinates are out of bounds, it will return false
      *
-     * @param thisCollisionMaskSprite the sprite that uses this mask
+     * @param maskWidth the width of the sprite that holds this mask
+     * @param maskHeight the height of the sprite that holds this mask
      * @param x the x coordinate that will be checked
      * @param y the y coordinate that will be checked
      * @return true if the pixel is solid, false otherwise
      */
-    fun isPixelSolid(thisCollisionMaskSprite: Sprite, x: Int, y: Int): Boolean {
-        val maskWidth = thisCollisionMaskSprite.width
-        val maskHeight = thisCollisionMaskSprite.height
+    fun isPixelSolid(maskWidth: Int, maskHeight: Int, x: Int, y: Int): Boolean {
         if (x !in 0 until maskWidth || y !in 0 until maskHeight)
             return false
 

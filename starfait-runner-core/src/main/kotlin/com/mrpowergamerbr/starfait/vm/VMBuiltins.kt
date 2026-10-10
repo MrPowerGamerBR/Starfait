@@ -1,11 +1,8 @@
 package com.mrpowergamerbr.starfait.vm
 
 import com.mrpowergamerbr.starfait.GMLColor
-import com.mrpowergamerbr.starfait.MathUtils
-import com.mrpowergamerbr.starfait.ini.INI
 import com.mrpowergamerbr.starfait.runner.*
 import com.mrpowergamerbr.starfait.vm.builtins.registerBuiltinFunctions
-import kotlin.math.*
 import kotlin.reflect.KMutableProperty1
 
 
@@ -187,15 +184,15 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerInstanceRealVariable("xstart", Instance::xStart)
         registerInstanceRealVariable("ystart", Instance::yStart)
         registerReadOnlyInstanceVariable("sprite_width") { instance, _ ->
-            val sprite = runner.gameWAD.sprt.sprites.getOrNull(instance.spriteIndex.toInt())
+            val sprite = runner.resources.sprites.getOrNull(instance.spriteIndex.toInt())
             RValue.Real((sprite?.width?.toDouble() ?: 0.0) * instance.imageXScale)
         }
         registerReadOnlyInstanceVariable("sprite_height") { instance, _ ->
-            val sprite = runner.gameWAD.sprt.sprites.getOrNull(instance.spriteIndex.toInt())
+            val sprite = runner.resources.sprites.getOrNull(instance.spriteIndex.toInt())
             RValue.Real((sprite?.height?.toDouble() ?: 0.0) * instance.imageYScale)
         }
         registerReadOnlyInstanceVariable("image_number") { instance, _ ->
-            val sprite = runner.gameWAD.sprt.sprites.getOrNull(instance.spriteIndex.toInt())
+            val sprite = runner.resources.sprites.getOrNull(instance.spriteIndex.toInt())
             RValue.Real((sprite?.frames?.size?.toDouble() ?: 0.0))
         }
         registerInstanceBooleanVariable("solid", Instance::solid)
@@ -254,16 +251,16 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerReadOnlyVariable(
             "background_width",
             { _, arrayIndex ->
-                val background = runner.gameWAD.bgnd.backgrounds[runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex]
-                val tpag = runner.gameWAD.tpag.entries[background.texturePageEntryPointer]
+                val background = runner.resources.backgrounds[runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex]
+                val tpag = background.texturePageEntry
                 RValue.Real(tpag!!.sourceWidth.toDouble())
             }
         )
         registerReadOnlyVariable(
             "background_height",
             { _, arrayIndex ->
-                val background = runner.gameWAD.bgnd.backgrounds[runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex]
-                val tpag = runner.gameWAD.tpag.entries[background.texturePageEntryPointer]
+                val background = runner.resources.backgrounds[runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex]
+                val tpag = background.texturePageEntry
                 RValue.Real(tpag!!.sourceHeight.toDouble())
             }
         )

@@ -250,6 +250,24 @@ class VMBuiltins(val vm: StarfaitVM) {
                 runner.currentRoom.backgrounds[arrayIndex!!].y = value.convertToInt32()
             }
         )
+        // TODO: Are these writable? Is this affected by the stretch field?
+        registerReadOnlyVariable(
+            "background_width",
+            { _, arrayIndex ->
+                val background = runner.gameWAD.bgnd.backgrounds[runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex]
+                val tpag = runner.gameWAD.tpag.entries[background.texturePageEntryPointer]
+                RValue.Real(tpag!!.sourceWidth.toDouble())
+            }
+        )
+        registerReadOnlyVariable(
+            "background_height",
+            { _, arrayIndex ->
+                val background = runner.gameWAD.bgnd.backgrounds[runner.currentRoom.backgrounds[arrayIndex!!].backgroundIndex]
+                val tpag = runner.gameWAD.tpag.entries[background.texturePageEntryPointer]
+                RValue.Real(tpag!!.sourceHeight.toDouble())
+            }
+        )
+
         registerVariable(
             "background_alpha",
             { _, arrayIndex ->

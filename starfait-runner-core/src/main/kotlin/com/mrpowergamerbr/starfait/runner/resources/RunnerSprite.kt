@@ -74,7 +74,7 @@ class RunnerSprite private constructor(
     // So "has a mask" is decided by the precise flag
     val hasCollisionMask get() = precise && collisionMasks.isNotEmpty()
 
-    fun getCollisionMask(imageIndex: Int) = if (this.hasCollisionMask) this.collisionMasks[imageIndex] else null
+    fun getCollisionMask(imageIndex: Int) = if (this.hasCollisionMask) this.collisionMasks.getOrNull(imageIndex) else null
 
     fun isPixelSolidOnBoundingBox(x: Int, y: Int, collisionCompatibilityMode: Boolean): Boolean {
         return if (collisionCompatibilityMode)

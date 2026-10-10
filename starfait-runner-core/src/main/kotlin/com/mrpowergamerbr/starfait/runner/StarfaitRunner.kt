@@ -282,12 +282,14 @@ class StarfaitRunner(
                 renderer.withView(view) {
                     drawBackgrounds()
                     drawDrawables(drawables)
+                    drawDrawablesEnd(drawables)
                 }
             }
         } else {
             renderer.withView(null) {
                 drawBackgrounds()
                 drawDrawables(drawables)
+                drawDrawablesEnd(drawables)
             }
         }
 
@@ -387,6 +389,23 @@ class StarfaitRunner(
                         renderer.drawTile(tpag, tile)
                     }
                 }
+            }
+        }
+    }
+
+    private fun drawDrawablesEnd(drawables: List<Drawable>) {
+        for (drawable in drawables.sortedByDescending { it.depth }) {
+            when (drawable) {
+                is Drawable.Instance -> {
+                    val instance = drawable.instance
+
+                    // "This works by telling GameMaker to skip Draw Events for this instance, so care must be taken when using this as it means that
+                    // no code placed in any of the Draw events will be run while the instance is not visible."
+                    if (instance.visible || this.drawInvisibleInstances) {
+                        instance.dispatchEvent(EventType.DRAW, EventType.DrawSubType.DRAW_END, null)
+                    }
+                }
+                is Drawable.Tile -> {}
             }
         }
     }

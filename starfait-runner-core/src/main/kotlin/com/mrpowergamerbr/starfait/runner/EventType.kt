@@ -51,6 +51,7 @@ object EventType {
     @SubtypesOf(DRAW)
     object DrawSubType {
         @Subevent const val DRAW = 0
+        @Subevent const val DRAW_END = 77
     }
 
     val MAX_EVENT_ID = MaxEventId

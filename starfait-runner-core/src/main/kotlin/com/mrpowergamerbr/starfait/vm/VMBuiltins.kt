@@ -66,7 +66,7 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerVariable(name, readHandler, { _, _, _ -> error("Cannot write to read-only variable $name!") })
     }
 
-    fun registerRealStubbedVariable(name: String, value: Double) = registerReadOnlyVariable(name) { _, _ -> warnVariableSemiStub(name); RValue.Real(value) }
+    fun registerRealStubbedVariable(name: String, value: Double) = registerReadOnlyVariable(name) { _, _ -> warnVariableStub(name); RValue.Real(value) }
 
     fun registerInstanceVariable(name: String, readHandler: (Instance, Int?) -> (RValue), writeHandler: (Instance, RValue, Int?) -> (Unit)) {
         registerVariable(
@@ -285,7 +285,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         // TODO: Actually provide the correct FPS
         registerReadOnlyVariable("fps") { _, arrayIndex ->
-            warnVariableStub("fps");
+            warnVariableSemiStub("fps");
             RValue.Real(runner.currentRoom.speed.toDouble())
         }
 

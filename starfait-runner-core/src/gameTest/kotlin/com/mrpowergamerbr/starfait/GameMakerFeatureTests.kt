@@ -320,6 +320,17 @@ object GameMakerFeatureTests {
         }
     }
 
+    @Test
+    fun `test sequential pending room loads`() = runTestGame(
+        "sequential-pending-room",
+        0,
+        5
+    ) {
+        withRunnerAtFrame(4) {
+            assertEquals("room2", it.resources.strg.getString(it.resources.room.rooms[it.currentRoom.roomId].name))
+        }
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))

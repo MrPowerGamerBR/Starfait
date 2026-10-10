@@ -307,8 +307,12 @@ class StarfaitRunner(
             val hasPendingRoom = pendingRoom != null
 
             if (hasPendingRoom) {
-                initializeRoom(pendingRoom.roomId, pendingRoom.room, true)
+                // We MUST null it BEFORE we initialize the room!
+                // If we don't, an object's Create event that tries to move to another room WHILE we were already moved from another pending room won't work!
+                // Example: room0 -> room1 would work, but room0 -> room1 -> room2 wouldn't because the pendingRoom state would be reset after initializing room1
+                // (even though it has room2's pending room)
                 this.pendingRoom = null
+                initializeRoom(pendingRoom.roomId, pendingRoom.room, true)
             }
 
             this.currentRoom.instances.removeAll { it.destroyed }

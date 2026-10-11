@@ -12,6 +12,7 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.runner.resources.RunnerFont
 import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.runner.resources.RunnerTexturePageEntry
+import com.mrpowergamerbr.starfait.runner.text.TextHorizontalAlign
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
@@ -37,10 +38,8 @@ import org.lwjgl.system.MemoryStack
 import java.nio.ByteBuffer
 import kotlin.math.ceil
 import kotlin.math.cos
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
-import kotlin.text.iterator
 
 class OpenGLRenderer : Renderer() {
     companion object {
@@ -306,7 +305,10 @@ class OpenGLRenderer : Renderer() {
         )
     }
 
-    override fun drawText(font: RunnerFont, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, text: String) {
+    override fun drawText(font: RunnerFont, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, horizontalAlign: TextHorizontalAlign, text: String) {
+        var x = x
+        var y = y
+
         val tpag = font.texturePageEntry
         val texture = getGLTextureFromStarfaitHandle(tpag.textureIndex)
 
@@ -314,24 +316,51 @@ class OpenGLRenderer : Renderer() {
 
         val rad = Math.toRadians(rot.toDouble())
 
-        val metrics = TextUtils.getTextMetrics(font, text, xscale, yscale)
+        val textMetrics = TextUtils.getTextMetrics(font, text, xscale, yscale)
 
-        // Where the text will be rotated around (the center of the string)
-        val pivotX = x + (metrics.width / 2f)
-        val pivotY = y + (metrics.height / 2f)
+        // When testing, it seems that the alignment changes from where the string will be rotated
+        // 1. left = rotates around the top left
+        // 2. center = rotates around the center
+        // 3. right = rotates around the top right
+        val pivotX: Float
+        val pivotY: Float
+        val translateX: Float
+        val translateY: Float
+
+        when (horizontalAlign) {
+            TextHorizontalAlign.LEFT -> {
+                pivotX = x
+                pivotY = y
+                translateX = 0f
+                translateY = 0f
+            }
+            TextHorizontalAlign.CENTER -> {
+                pivotX = x + textMetrics.width / 2f
+                pivotY = y
+                translateX = -(textMetrics.width / 2f)
+                translateY = 0f
+            }
+            TextHorizontalAlign.RIGHT -> {
+                pivotX = x + textMetrics.width
+                pivotY = y
+                translateX = -(textMetrics.width)
+                translateY = 0f
+            }
+        }
 
         // Render around center (backwards!)
         val matrix = Matrix3x2f()
+            .translate(translateX, translateY)
             // Translate it back to the pivot
             .translate(pivotX, pivotY)
             // Rotate it
-            .rotate(rad.toFloat())
+            .rotate(-rad.toFloat())
             // Translate it to the world's origin
             .translate(-pivotX, -pivotY)
 
         // Now we ACTUALLY draw it
-        for (line in metrics.lines) {
-            for (char in line) {
+        for (lineMetrics in textMetrics.lines) {
+            for (char in lineMetrics.characters) {
                 val glyph = char.glyph
 
                 val width = (glyph.width.toFloat() * xscale)

@@ -18,16 +18,15 @@ object TextUtils {
         // TODO: We need to change this for GameMaker: Studio 2+!
         val lines = text.split("#")
 
-        var stringWidth = 0f
-        var stringHeight = 0f
-
         var x = 0f
         var y = 0f
 
-        val characterLines = mutableListOf<List<TextMetrics.Character>>()
+        val characterLines = mutableListOf<TextMetrics.LineMetrics>()
 
         for (line in lines) {
             val characters = mutableListOf<TextMetrics.Character>()
+
+            var stringWidth = 0f
 
             var maxHeightOnThisLine = 0f
             for (char in line) {
@@ -52,16 +51,15 @@ object TextUtils {
                 }
             }
 
-            stringHeight += maxHeightOnThisLine
             x = 0.0f
             y += maxHeightOnThisLine
-            characterLines.add(characters)
 
+            characterLines.add(TextMetrics.LineMetrics(stringWidth, maxHeightOnThisLine, characters))
         }
 
         return TextMetrics(
-            width = stringWidth,
-            height = stringHeight,
+            width = characterLines.maxOfOrNull { it.width } ?: 0f,
+            height = characterLines.maxOfOrNull { it.height } ?: 0f,
             lines = characterLines
         )
     }

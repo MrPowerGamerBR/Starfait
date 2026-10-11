@@ -16,6 +16,7 @@ import com.mrpowergamerbr.starfait.runner.OpenINI
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.runner.resources.RunnerTexturePageEntry
+import com.mrpowergamerbr.starfait.runner.text.TextHorizontalAlign
 import com.mrpowergamerbr.starfait.vm.DSMap
 import com.mrpowergamerbr.starfait.vm.InstanceReferenceType
 import com.mrpowergamerbr.starfait.vm.RValue
@@ -193,7 +194,7 @@ object BuiltinFunctions {
             return
         }
 
-        runner.renderer.drawText(font, x.toFloat(), y.toFloat(), 1f, 1f, 0f, string)
+        runner.renderer.drawText(font, x.toFloat(), y.toFloat(), 1f, 1f, 0f, runner.drawState.textHorizontalAlign, string)
     }
 
     @GMLFunction
@@ -204,7 +205,7 @@ object BuiltinFunctions {
             return
         }
 
-        runner.renderer.drawText(font, x.toFloat(), y.toFloat(), xscale.toFloat(), yscale.toFloat(), angle.toFloat(), string)
+        runner.renderer.drawText(font, x.toFloat(), y.toFloat(), xscale.toFloat(), yscale.toFloat(), angle.toFloat(), runner.drawState.textHorizontalAlign, string)
     }
 
 
@@ -216,6 +217,12 @@ object BuiltinFunctions {
     @GMLFunction
     fun draw_set_alpha(runner: StarfaitRunner, vm: StarfaitVM, alpha: Float) {
         runner.drawState.alpha = alpha
+    }
+
+    @GMLFunction
+    fun draw_set_halign(runner: StarfaitRunner, vm: StarfaitVM, halign: Int) {
+        // When an invalid value is passed, the original runner just seems to set it to the first option (which is left align)
+        runner.drawState.textHorizontalAlign = TextHorizontalAlign.entries.getOrNull(halign) ?: TextHorizontalAlign.entries[0]
     }
 
     @GMLFunction

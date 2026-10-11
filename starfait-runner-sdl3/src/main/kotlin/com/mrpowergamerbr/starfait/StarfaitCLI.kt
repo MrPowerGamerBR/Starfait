@@ -4,16 +4,8 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.defaultLazy
-import com.github.ajalt.clikt.parameters.options.flag
-import com.github.ajalt.clikt.parameters.options.multiple
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.double
-import com.github.ajalt.clikt.parameters.types.file
-import com.github.ajalt.clikt.parameters.types.float
-import com.github.ajalt.clikt.parameters.types.int
-import com.github.ajalt.clikt.parameters.types.long
+import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.*
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.desktop.StarfaitWindow.SaveFolderKind
 import com.mrpowergamerbr.starfait.disasm.StarfaitDisassembler
@@ -28,11 +20,9 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
-import kotlin.collections.map
-import kotlin.let
 import kotlin.reflect.KProperty1
 
-class StarfaitCLI : CliktCommand() {
+class StarfaitCLI : CliktCommand(name = "starfait-runner") {
     companion object {
         private val WAD_FILTERS = listOf(
             "*.win"
@@ -40,50 +30,50 @@ class StarfaitCLI : CliktCommand() {
     }
 
     val wadFile by argument().file(mustExist = true).optional()
-    val printGameObjects by option()
-    val printBackgrounds by option()
-    val printSounds by option()
-    val printFonts by option()
-    val printRooms by option()
-    val printScripts by option()
-    val printCodes by option()
-    val printVariables by option()
-    val printFunctions by option()
-    val printUnimplementedFunctions by option().flag(default = false)
-    val printTexturePages by option()
-    val printSprites by option()
-    val printObjectTree by option()
-    val dumpSprites by option()
-    val dumpSpriteMasks by option()
-    val dumpTiles by option()
-    val traceOpcodes by option()
-    val traceFunctionCalls by option()
-    val traceAlarms by option()
-    val traceEvents by option()
-    val traceVariableReads by option()
-    val traceVariableWrites by option()
-    val traceFrameDuration by option().multiple()
-    val traceCodeExecution by option()
-    val enableCollisionRendering by option().flag(default = false)
-    val drawInvisibleInstances by option().flag(default = false)
-    val recordInputs by option().file()
-    val playbackInputs by option().file()
-    val screenshot by option().file()
-    val screenshotAtFrame by option().int().multiple()
-    val exitAtFrame by option().int()
-    val exitWhenPlaybackEnds by option().flag(default = false)
-    val speed by option().double().default(1.0)
-    val fastForwardSpeed by option().double().default(2.0)
-    val runFullSpeedUntilFrame by option().int()
-    val pauseAtFrame by option().int().multiple()
-    val headless by option().flag(default = false)
-    val replaceRoom by option().multiple()
-    val dumpState by option().file()
-    val dumpStateAtFrame by option().int().multiple()
-    val disassemble by option().multiple()
-    val masterVolume by option().float().default(1.0f)
-    val seed by option().long().defaultLazy { System.currentTimeMillis() }
-    val saveFolder by option()
+    val printGameObjects by option(metavar = "regex", help = "Prints the game objects' fields to the console and exits")
+    val printBackgrounds by option(metavar = "regex", help = "Prints the backgrounds' fields to the console and exits")
+    val printSounds by option(metavar = "regex", help = "Prints the sounds' fields to the console and exits")
+    val printFonts by option(metavar = "regex", help = "Prints the fonts' fields to the console and exits")
+    val printRooms by option(metavar = "regex", help = "Prints the rooms' fields to the console and exits")
+    val printScripts by option(metavar = "regex", help = "Prints the scripts' fields to the console and exits")
+    val printCodes by option(metavar = "regex", help = "Prints the codes' fields to the console and exits")
+    val printVariables by option(metavar = "regex", help = "Prints the variables' fields to the console and exits")
+    val printFunctions by option(metavar = "regex", help = "Prints the functions' fields to the console and exits")
+    val printTexturePages by option(help = "Prints the texture pages' fields to the console and exits")
+    val printSprites by option(help = "Prints the sprites' fields to the console and exits")
+    val printUnimplementedFunctions by option(help = "Prints the unimplemented functions that the game uses").flag(default = false)
+    val printObjectTree by option(help = "Prints the object tree")
+    val dumpSprites by option(help = "Dumps all the game's sprites to a specific folder").file()
+    val dumpSpriteMasks by option(help = "Dumps all the game's sprite masks to a specific folder").file()
+    val dumpTiles by option(help = "Dumps all the game's tiles to a specific folder").file()
+    val traceOpcodes by option(help = "Traces opcodes")
+    val traceFunctionCalls by option(help = "Traces function calls")
+    val traceAlarms by option(help = "Traces alarms")
+    val traceEvents by option(help = "Traces events")
+    val traceVariableReads by option(help = "Traces variable reads")
+    val traceVariableWrites by option(help = "Traces variable writes")
+    val traceFrameDuration by option(help = "Traces frame durations").multiple()
+    val traceCodeExecution by option(help = "Traces code execution")
+    val enableCollisionRendering by option(help = "If enabled, enables the collision rendering debug overlay by default (can be toggled during runtime using F5)").flag(default = false)
+    val drawInvisibleInstances by option(help = "If enabled, draws invisible instances by default (can be toggled during runtime using F6)").flag(default = false)
+    val recordInputs by option(help = "Records your inputs to a file").file()
+    val playbackInputs by option(help = "Playbacks inputs from a file").file()
+    val screenshot by option(help = "Sets the name of the screenshot file, if the filename contains %d the %d token will be replaced with the current frame count").file()
+    val screenshotAtFrame by option(help = "Screenshots the runner at a specific frame").int().multiple()
+    val exitAtFrame by option(help = "Automatically exit the runner at a specific frame").int()
+    val exitWhenPlaybackEnds by option(help = "Automatically exit the runner when the input playback is finished").flag(default = false)
+    val speed by option(help = "Changes the game speed").double().default(1.0)
+    val fastForwardSpeed by option(help = "Changes the game speed when fast-forwarding, toggle fast-forward mode by pressing TAB").double().default(2.0)
+    val runFullSpeedUntilFrame by option(help = "Runs the game at full speed until a specific frame").int()
+    val pauseAtFrame by option(help = "Automatically pauses the runner at a specific frame").int().multiple()
+    val headless by option(help = "Runs Starfait in headless mode").flag(default = false)
+    val replaceRoom by option(help = "Replaces a specific room with another one, uses the following format: RoomNameOrIndexToBeReplaced=RoomNameOrIndexToBeTheNewRoom").multiple()
+    val dumpState by option(help = "Sets the name of the runner state dump file, if the filename contains %d the %d token will be replaced with the current frame count").file()
+    val dumpStateAtFrame by option(help = "Automatically dump the runner state at a specific frame").int().multiple()
+    val disassemble by option(help = "Disassembles bytecode").multiple()
+    val masterVolume by option(help = "Controls the master volume of the game").float().default(1.0f)
+    val seed by option(help = "Changes the seed of the game, useful for reproducible runs").long().defaultLazy { System.currentTimeMillis() }
+    val saveFolder by option(help = "Sets where the game's saves will be saved, by default it is saved to \"saves/GameName/\"")
 
     fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: Regex) {
         for ((index, element) in list.withIndex()) {
@@ -255,7 +245,7 @@ class StarfaitCLI : CliktCommand() {
         }
 
         if (dumpTiles != null) {
-            val outputFolder = File(dumpTiles!!)
+            val outputFolder = dumpTiles!!
             outputFolder.mkdirs()
 
             // TODO: Allow customizing this somehow?
@@ -293,7 +283,7 @@ class StarfaitCLI : CliktCommand() {
         }
 
         if (dumpSprites != null) {
-            val outputFolder = File(dumpSprites!!)
+            val outputFolder = dumpSprites!!
             outputFolder.mkdirs()
 
             // Preload all atlas so that we don't need to keep recreating them
@@ -317,7 +307,7 @@ class StarfaitCLI : CliktCommand() {
         }
 
         if (dumpSpriteMasks != null) {
-            val outputFolder = File(dumpSpriteMasks!!)
+            val outputFolder = dumpSpriteMasks!!
             outputFolder.mkdirs()
 
             for (sprite in gameWAD.sprt.sprites) {

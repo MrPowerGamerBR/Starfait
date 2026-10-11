@@ -47,24 +47,33 @@ Supporting all games is *hard* because GameMaker has TONS of builtin functions a
 ## Downloads
 
 > [!WARNING]  
-> Starfait requires Java 27!
+> Starfait requires Java 27! (with the exception of the AppImage build)
 
 <table>
   <tr>
-    <td><b>Linux</td>
-    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build/main/Starfait%20Linux%20x64.zip">Download</td>
+    <td><b>Linux</b></td>
+    <td><img src="https://github.com/MrPowerGamerBR/Starfait/actions/workflows/build-linux-x64.yml/badge.svg" align="center"></td>
+    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build-linux-x64/main/Starfait%20Runner%20%28SDL3%29%20%28Linux%20x64%29.zip">Download</a> </td>
   </tr>
   <tr>
-    <td><b>Windows</td>
-    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build/main/Starfait%20Windows%20x64.zip">Download</td>
+    <td><b>Linux (AppImage)</b></td>
+    <td><img src="https://github.com/MrPowerGamerBR/Starfait/actions/workflows/build-linux-x64.yml/badge.svg" align="center"></td>
+    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build-linux-x64/main/starfait-appimage.zip">Download</a></td>
   </tr>
   <tr>
-    <td><b>macOS</td>
-    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build/main/Starfait%20macOS%20x64.zip">Download</td>
+    <td><b>Windows</b></td>
+    <td><img src="https://github.com/MrPowerGamerBR/Starfait/actions/workflows/build-windows-x64.yml/badge.svg" align="center"></td>
+    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build-windows-x64/main/Starfait%20Runner%20%28SDL3%29%20%28Windows%20x64%29.zip">Download</a></td>
   </tr>
   <tr>
-    <td><b>FreeBSD</td>
-    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build/main/Starfait%20FreeBSD%20x64.zip">Download</td>
+    <td><b>macOS</b></td>
+    <td><img src="https://github.com/MrPowerGamerBR/Starfait/actions/workflows/build-macos-x64.yml/badge.svg" align="center"></td>
+    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build-macos-x64/main/Starfait%20Runner%20%28SDL3%29%20%28macOS%20x64%29.zip">Download</a></td>
+  </tr>
+  <tr>
+    <td><b>FreeBSD</b></td>
+    <td><img src="https://github.com/MrPowerGamerBR/Starfait/actions/workflows/build-freebsd-x64.yml/badge.svg" align="center"></td>
+    <td><a href="https://nightly.link/MrPowerGamerBR/Starfait/workflows/build-freebsd-x64/main/Starfait%20Runner%20%28SDL3%29%20%28FreeBSD%20x64%29.zip">Download</a></td>
   </tr>
 </table>
 

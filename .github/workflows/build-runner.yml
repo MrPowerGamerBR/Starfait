@@ -1,0 +1,56 @@
+name: Starfait Runner (SDL3)
+
+on:
+  workflow_call:
+    inputs:
+      label:
+        type: string
+        required: true
+      lwjglNativesPlatform:
+        type: string
+        required: true
+      appImage:
+        type: boolean
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "27"
+          cache: "gradle"
+
+      - name: Build
+        env:
+          # GitHub Actions has 7GBs of available RAM for workers, so let's bump it a bit up!
+          GRADLE_OPTS: -Xmx4096m -Xms4096m
+        run: ./gradlew build gameTest :starfait-runner-sdl3:installDist -PlwjglNativesPlatform=${{ inputs.lwjglNativesPlatform }} --no-daemon
+
+      - name: Upload Starfait distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: Starfait Runner (SDL3) (${{ inputs.label }})
+          path: starfait-runner-sdl3/build/install/starfait-runner-sdl3
+          if-no-files-found: error
+
+      - name: "Build AppImage"
+        if: ${{ inputs.appImage }}
+        run: ./scripts/build-appimage.sh
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ inputs.appImage }}
+        with:
+          name: starfait-appimage
+          path: "/tmp/starfait-appimage/Starfait*.AppImage"
+          if-no-files-found: error

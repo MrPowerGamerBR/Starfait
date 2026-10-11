@@ -1,0 +1,13 @@
+name: Starfait Runner (SDL3) (FreeBSD x64)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-runner.yml
+    with:
+      label: FreeBSD x64
+      lwjglNativesPlatform: natives-freebsd
+      appImage: false

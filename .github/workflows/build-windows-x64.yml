@@ -1,0 +1,13 @@
+name: Starfait Runner (SDL3) (Windows x64)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-runner.yml
+    with:
+      label: Windows x64
+      lwjglNativesPlatform: natives-windows
+      appImage: false

@@ -1,0 +1,13 @@
+name: Starfait Runner (SDL3) (Linux x64)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-runner.yml
+    with:
+      label: Linux x64
+      lwjglNativesPlatform: natives-linux
+      appImage: true

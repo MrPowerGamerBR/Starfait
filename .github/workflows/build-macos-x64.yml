@@ -1,0 +1,13 @@
+name: Starfait Runner (SDL3) (macOS x64)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-runner.yml
+    with:
+      label: macOS x64
+      lwjglNativesPlatform: natives-macos
+      appImage: false

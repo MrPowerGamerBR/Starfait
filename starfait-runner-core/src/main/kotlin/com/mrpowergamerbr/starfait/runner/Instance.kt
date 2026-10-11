@@ -161,7 +161,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         }
     }
 
-    // See GameMaker-HTML5's yyInstance.js Adapt_Path, with the end actions of the bytecode 16 runner (libyoyo.so.c CInstance::Adapt_Path)
+    // See GameMaker-HTML5's yyInstance.js Adapt_Path
     fun adaptPath() {
         // check whether the path exists
         val pPath = runner.resources.paths.getOrNull(this.pathIndex) ?: return
@@ -179,7 +179,6 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
             when (this.pathEndAction) {
                 // stop moving
                 PathEndAction.STOP -> {
-                    // Unlike GameMaker-HTML5, the native runner rewinds to the start when going backwards, which matters for Undertale's blt_handbullet
                     if (0.0f > this.pathSpeed) {
                         this.pathPosition = 0.0f
                         this.pathIndex = -1

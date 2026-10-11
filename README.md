@@ -151,8 +151,10 @@ Options:
 
 ## Building
 
+If you don't specify the `lwjglNativesPlatform` Gradle property the runner will default to `natives-linux`.
+
 ```bash
-./gradlew build
+./gradlew :starfait-runner-sdl3:installDist -PlwjglNativesPlatform=natives-linux
 ```
 
 ## Notes and Write-Ups

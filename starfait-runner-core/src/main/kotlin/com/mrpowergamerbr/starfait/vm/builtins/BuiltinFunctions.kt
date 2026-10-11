@@ -139,11 +139,8 @@ object BuiltinFunctions {
     }
 
     @GMLFunction
-    fun string_pos(stringValue: RValue, substrValue: RValue): Int {
-        val string = (stringValue as RValue.String).value
-        val substr = (substrValue as RValue.String).value
-
-        val index = string.indexOf(substr)
+    fun string_pos(whatToFind: String, string: String): Int {
+        val index = string.indexOf(whatToFind)
 
         // "The function will return 0 if it's not found at all, or the position of the first character of the sub-string if it is found.
         // Keep in mind that for legacy support strings are indexed from 1, so 1 is the first position in the string, not 0 as you may expect."

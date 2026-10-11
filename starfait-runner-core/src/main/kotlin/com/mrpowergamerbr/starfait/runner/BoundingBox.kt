@@ -40,10 +40,10 @@ data class BoundingBox private constructor(
         val bbox1 = this
         val bbox2 = other
 
-        if (bbox1.left          >= (bbox2.right + col_delta))   return false;
-        if ((bbox1.right + col_delta)   <= bbox2.left)          return false;
-        if (bbox1.top           >= (bbox2.bottom + col_delta))  return false;
-        if ((bbox1.bottom + col_delta)  <= bbox2.top)           return false;
+        if (bbox1.left          >= (bbox2.right + col_delta))   return false
+        if ((bbox1.right + col_delta)   <= bbox2.left)          return false
+        if (bbox1.top           >= (bbox2.bottom + col_delta))  return false
+        if ((bbox1.bottom + col_delta)  <= bbox2.top)           return false
         return true
     }
 

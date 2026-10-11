@@ -299,7 +299,7 @@ class VMBuiltins(val vm: StarfaitVM) {
 
         // TODO: Actually provide the correct FPS
         registerReadOnlyVariable("fps") { _, arrayIndex ->
-            warnVariableSemiStub("fps");
+            warnVariableSemiStub("fps")
             RValue.Real(runner.currentRoom.speed.toDouble())
         }
 

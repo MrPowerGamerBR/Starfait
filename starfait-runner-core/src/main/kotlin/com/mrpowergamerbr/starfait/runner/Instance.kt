@@ -586,21 +586,21 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         {
             if (this.vspeed > 0)
             {
-                this._direction = 270.0f;
+                this._direction = 270.0f
             }
             else if (this.vspeed < 0)
             {
-                this._direction = 90.0f;
+                this._direction = 90.0f
             }
             //else { this.__direction = 0; }
         }
         else
         {
-            var dd = MathUtils.clampFloat(180 * (atan2(this.vspeed, this.hspeed)) / Math.PI).toFloat()
+            val dd = MathUtils.clampFloat(180 * (atan2(this.vspeed, this.hspeed)) / Math.PI).toFloat()
             if (dd <= 0) { this._direction = -dd; } else { this._direction = 360.0f - dd; }
         }
 
-        if (Math.abs(this._direction - MathUtils.delphiRound(this._direction)) < 0.0001)
+        if (abs(this._direction - MathUtils.delphiRound(this._direction)) < 0.0001)
         {
             this._direction = MathUtils.delphiRound(this._direction).toFloat()
         }
@@ -608,7 +608,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
 
         // speed
         this._speed = sqrt(MathUtils.squared(this.hspeed) + MathUtils.squared(this.vspeed))
-        if (Math.abs(this.speed - MathUtils.delphiRound(this.speed)) < 0.0001) this._speed = MathUtils.delphiRound(this._speed).toFloat()
+        if (abs(this.speed - MathUtils.delphiRound(this.speed)) < 0.0001) this._speed = MathUtils.delphiRound(this._speed).toFloat()
     }
 
     private fun computeSpeed2() {

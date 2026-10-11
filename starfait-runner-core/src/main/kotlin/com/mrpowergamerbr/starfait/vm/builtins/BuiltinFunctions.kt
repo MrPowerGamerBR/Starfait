@@ -1012,8 +1012,12 @@ object BuiltinFunctions {
             false,
             currentRoom.width,
             currentRoom.height,
-            runner.drawState.color,
-            runner.drawState.alpha, // TODO: Is this actually correct? The docs say that it is "without transparency" but who knows
+            // This is a bit confusing, the docs say:
+            // "Draw a background without colour blending or transparency"
+            // But when testing, alpha DOES affect the background BUT blending is not affected
+            // (and transparent backgrounds do render fine too)
+            GMLColor(0xFFFFFF),
+            runner.drawState.alpha
         )
     }
 

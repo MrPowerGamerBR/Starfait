@@ -42,7 +42,7 @@ Undertale's True Pacifist route is playable in Starfait, with some minor graphic
 
 By virtue of it being a GameMaker runner re-implementation, other games do work as long as they were built with GM:S 1.4.1773..1.4.9999 and only use the same features and builtins that Undertale uses.
 
-Supporting all games is *hard* because GameMaker has TONS of builtin functions and features. Re-implementing the runner is more akin to Wine or a high-level emulator than to a console emulator.
+I'm not planning on going out of my way to support any other games, because that's a recipe for burnout. Supporting all games is *hard* because GameMaker has TONS of builtin functions and features. Re-implementing the runner is more akin to Wine or a high-level emulator than to a console emulator.
 
 ## Downloads
 

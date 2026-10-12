@@ -552,7 +552,7 @@ class StarfaitVM(
                 // This happens when...
                 // * Op.EXIT is called
                 // * The script exits without any "return" or "exit" statement
-                stack.pushUndefinedVariable()
+                stack.pushVariable(RValue.Real(0.0))
                 return
             }
 

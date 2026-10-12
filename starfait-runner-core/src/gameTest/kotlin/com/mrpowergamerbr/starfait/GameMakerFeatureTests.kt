@@ -331,6 +331,23 @@ object GameMakerFeatureTests {
         }
     }
 
+    @Test
+    fun `test return real on script exit`() = runTestGame(
+        "return-real-on-script-exit",
+        0,
+        1
+    ) {
+        withRunnerAtFrame(0) {
+            it.firstInstanceByName("obj_main").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "value1", RValue.Boolean(false))
+            it.firstInstanceByName("obj_main").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "value2", RValue.Boolean(true))
+            it.firstInstanceByName("obj_main").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "value3", RValue.Boolean(false))
+
+            it.firstInstanceByName("obj_main").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "value4", RValue.Boolean(false))
+            it.firstInstanceByName("obj_main").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "value5", RValue.Boolean(false))
+            it.firstInstanceByName("obj_main").assertBooleanVariable(it.vm, VariableInstanceType.SELF, "value6", RValue.Boolean(true))
+        }
+    }
+
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))

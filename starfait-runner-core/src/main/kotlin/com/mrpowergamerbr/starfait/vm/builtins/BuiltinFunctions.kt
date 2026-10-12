@@ -35,6 +35,8 @@ object BuiltinFunctions {
     @GMLFunction fun string(value: String) = value
     @GMLFunction fun real(value: Double) = value
     @GMLFunction fun is_undefined(value: RValue) = value is RValue.Undefined
+    @GMLFunction fun is_string(value: RValue) = value is RValue.String
+    @GMLFunction fun is_real(value: RValue) = value is RValue.Real
 
     @GMLFunction(stub = true) fun steam_initialised() = true
     @GMLFunction(stub = true) fun steam_file_exists(fileName: String) = false

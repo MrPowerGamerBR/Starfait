@@ -214,6 +214,7 @@ class StarfaitWindow(
                             )
 
                             runner.setPendingRoom(runner.resources.room.rooms.indexOfFirst { runner.resources.strg.getString(it.name) == selectedRoomName })
+                            runner.audioManager.stopAllSounds()
                         }
 
                         if (event.key().key() == SDLK_F11) {

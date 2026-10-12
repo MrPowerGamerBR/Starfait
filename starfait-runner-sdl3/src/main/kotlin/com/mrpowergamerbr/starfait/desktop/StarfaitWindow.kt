@@ -205,6 +205,17 @@ class StarfaitWindow(
                             runner.drawInvisibleInstances = !runner.drawInvisibleInstances
                         }
 
+                        if (event.key().key() == SDLK_F12) {
+                            println("Platform: You haven't configured a dump state file!")
+                            val selectedRoomName = TinyFileDialogs.tinyfd_inputBox(
+                                "Room Name",
+                                "To which room do you want to jump to?",
+                                ""
+                            )
+
+                            runner.setPendingRoom(runner.resources.room.rooms.indexOfFirst { runner.resources.strg.getString(it.name) == selectedRoomName })
+                        }
+
                         if (event.key().key() == SDLK_F11) {
                             if (dumpStateFile == null) {
                                 println("Platform: You haven't configured a dump state file!")

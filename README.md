@@ -145,6 +145,7 @@ Options:
 * F6: Toggles invisible instances
 * F10: Resets the `global.interact` variable in Undertale back to `0`
 * F11: Dumps the current runner state to a file
+* F12: Jumps to a room of your choosing by typing the room name into a input box
 * P: Pauses the runner
 * O: If paused, steps one frame
 * TAB: Toggles fast-forward

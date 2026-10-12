@@ -59,7 +59,8 @@ object TextUtils {
 
         return TextMetrics(
             width = characterLines.maxOfOrNull { it.width } ?: 0f,
-            height = characterLines.maxOfOrNull { it.height } ?: 0f,
+            // We need to do this because Kotlin doesn't have a sumOf for floats
+            height = characterLines.sumOf { it.height.toDouble() }.toFloat(),
             lines = characterLines
         )
     }

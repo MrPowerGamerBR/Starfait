@@ -13,6 +13,7 @@ val lwjglNatives = findProperty("lwjglNativesPlatform") ?: "natives-linux"
 
 dependencies {
     api(project(":starfait-runner-core"))
+    api(project(":starfait-renderer-opengl"))
 
     implementation("com.github.ajalt.clikt:clikt:5.1.0")
 

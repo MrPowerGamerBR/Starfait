@@ -2,11 +2,9 @@ package com.mrpowergamerbr.starfait.renderer.opengl
 
 import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.runner.text.TextUtils
-import com.mrpowergamerbr.starfait.desktop.StarfaitWindow
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.renderer.TextureHandle
 import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
-import com.mrpowergamerbr.starfait.runner.Instance
 import com.mrpowergamerbr.starfait.runner.RunnerRoom
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.runner.resources.RunnerFont
@@ -56,8 +54,8 @@ class OpenGLRenderer : Renderer() {
     val textureManager = TextureManager()
     val shaderManager = ShaderManager()
     val minimalShader: MinimalShader = shaderManager.loadShader(
-        StarfaitWindow::class.java.getResourceAsStream("/shaders/minimal.vsh").readAllBytes().toString(Charsets.UTF_8),
-        StarfaitWindow::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
+        OpenGLRenderer::class.java.getResourceAsStream("/shaders/minimal.vsh").readAllBytes().toString(Charsets.UTF_8),
+        OpenGLRenderer::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
         ::MinimalShader
     )
     val batch = FloatArray(TOTAL_BATCH_SIZE)

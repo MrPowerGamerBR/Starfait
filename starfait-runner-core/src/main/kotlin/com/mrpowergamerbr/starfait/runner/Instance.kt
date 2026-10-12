@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.runner
 
+import com.mrpowergamerbr.starfait.GMLColor
 import com.mrpowergamerbr.starfait.MathUtils
 import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.statedumper.DumpRunnerField
@@ -89,6 +90,22 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         } else {
             null
         }
+
+    fun draw() {
+        // Only attempt to render instances that DO have a sprite index
+        val sprite = this.runner.resources.sprites.getOrNull(this.spriteIndex.toInt()) ?: return
+        this.runner.renderer.drawSprite(
+            sprite,
+            this.imageIndex.toInt(),
+            this.x,
+            this.y,
+            this.imageXScale,
+            this.imageYScale,
+            this.imageAngle,
+            GMLColor(this.imageBlend.toInt()),
+            this.imageAlpha
+        )
+    }
 
     fun adaptSpeed() {
         if (this.friction != 0.0f) {

@@ -14,7 +14,6 @@ import com.mrpowergamerbr.starfait.wad.Texture
 object NoopRenderer : Renderer() {
     override fun uploadTexture(texture: Texture) = TextureHandle(0)
 
-    override fun drawInstance(instance: Instance) {}
     override fun drawSprite(sprite: RunnerSprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {}
     override fun drawSpritePart(sprite: RunnerSprite, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float) {}
     override fun drawBackground(texturePageEntry: RunnerTexturePageEntry, x: Float, y: Float, width: Float, height: Float, tileX: Boolean, tileY: Boolean, roomWidth: Int, roomHeight: Int, color: GMLColor, alpha: Float) {}

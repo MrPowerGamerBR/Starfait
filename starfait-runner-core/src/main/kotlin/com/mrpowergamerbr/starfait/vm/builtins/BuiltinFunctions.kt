@@ -181,7 +181,7 @@ object BuiltinFunctions {
     @GMLFunction("make_colour_hsv") fun make_color_hsv(hue: Int, saturation: Int, value: Int) = GMLColor.fromHSV(hue, saturation, value).value
     @GMLFunction("merge_colour") fun merge_color(col1: GMLColor, col2: GMLColor, amount: Double) = GMLColor.lerp(col1, col2, amount).value
 
-    @GMLFunction fun draw_self(runner: StarfaitRunner, vm: StarfaitVM) = runner.renderer.drawInstance(vm.currentSelfInstance)
+    @GMLFunction fun draw_self(runner: StarfaitRunner, vm: StarfaitVM) = vm.currentSelfInstance.draw()
 
     @GMLFunction
     fun draw_text(runner: StarfaitRunner, x: Double, y: Double, string: String) {

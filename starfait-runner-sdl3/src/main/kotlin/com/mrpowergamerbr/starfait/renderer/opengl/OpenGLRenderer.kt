@@ -108,22 +108,6 @@ class OpenGLRenderer : Renderer() {
         return textureHandle
     }
 
-    override fun drawInstance(instance: Instance) {
-        // Only attempt to render instances that DO have a sprite index
-        val sprite = runner.resources.sprites.getOrNull(instance.spriteIndex.toInt()) ?: return
-        drawSprite(
-            sprite,
-            instance.imageIndex.toInt(),
-            instance.x,
-            instance.y,
-            instance.imageXScale,
-            instance.imageYScale,
-            instance.imageAngle,
-            GMLColor(instance.imageBlend.toInt()),
-            instance.imageAlpha
-        )
-    }
-
     override fun drawSprite(sprite: RunnerSprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
         // Only attempt to render instances that DO have a sprite index
         // See GameMaker-HTML5's yySprite.js Draw, which wraps the subimage: _ind = (~ ~_ind) % this.numb

@@ -96,7 +96,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
         val sprite = this.runner.resources.sprites.getOrNull(this.spriteIndex.toInt()) ?: return
         this.runner.renderer.drawSprite(
             sprite,
-            this.imageIndex.toInt(),
+            sprite.getTexturePageEntryForSubImageIndex(this.imageIndex.toInt()),
             this.x,
             this.y,
             this.imageXScale,

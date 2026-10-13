@@ -106,10 +106,7 @@ class OpenGLRenderer : Renderer() {
         return textureHandle
     }
 
-    override fun drawSprite(sprite: RunnerSprite, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
-        // Only attempt to render instances that DO have a sprite index
-        // See GameMaker-HTML5's yySprite.js Draw, which wraps the subimage: _ind = (~ ~_ind) % this.numb
-        val tpag = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
+    override fun drawSprite(sprite: RunnerSprite, tpag: RunnerTexturePageEntry, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
         val texture = this.textures[tpag.textureIndex]!!
 
         val rad = Math.toRadians(rot.toDouble())
@@ -156,7 +153,7 @@ class OpenGLRenderer : Renderer() {
 
     override fun drawSpritePart(
         sprite: RunnerSprite,
-        subimg: Int,
+        tpag: RunnerTexturePageEntry,
         left: Float,
         top: Float,
         width: Float,
@@ -168,8 +165,6 @@ class OpenGLRenderer : Renderer() {
         color: GMLColor,
         alpha: Float
     ) {
-        val tpag = sprite.frames[Math.floorMod(subimg, sprite.frames.size)]
-
         val texture = textures[tpag.textureIndex]!!
         // See GameMaker-HTML5's yyWebGL.js WebGL_DrawPart_RELEASE
         var partLeft = left

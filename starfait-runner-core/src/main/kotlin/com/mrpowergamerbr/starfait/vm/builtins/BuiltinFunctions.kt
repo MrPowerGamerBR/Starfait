@@ -658,14 +658,16 @@ object BuiltinFunctions {
 
     @GMLFunction
     fun draw_sprite(runner: StarfaitRunner, vm: StarfaitVM, spriteIndex: Int, subimg: Int, x: Float, y: Float) {
-        runner.renderer.drawSprite(runner.resources.sprites[spriteIndex], subimg, x, y, 1f, 1f, 0f, GMLColor(0xFFFFFF), runner.drawState.alpha)
+        val sprite = runner.resources.sprites[spriteIndex]
+        runner.renderer.drawSprite(sprite, sprite.getTexturePageEntryForSubImageIndex(subimg), x, y, 1f, 1f, 0f, GMLColor(0xFFFFFF), runner.drawState.alpha)
     }
 
     @GMLFunction
     fun draw_sprite_ext(runner: StarfaitRunner, vm: StarfaitVM, spriteIndex: Int, subimg: Int, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
+        val sprite = runner.resources.sprites[spriteIndex]
         runner.renderer.drawSprite(
             runner.resources.sprites[spriteIndex],
-            subimg,
+            sprite.getTexturePageEntryForSubImageIndex(subimg),
             x,
             y,
             xscale,
@@ -973,15 +975,13 @@ object BuiltinFunctions {
     @GMLFunction
     fun draw_sprite_part(runner: StarfaitRunner, spriteIndex: Int, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float) {
         val sprite = runner.resources.sprites[spriteIndex]
-
-        runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, 1f, 1f, GMLColor(0xFFFFFF), runner.drawState.alpha)
+        runner.renderer.drawSpritePart(sprite, sprite.getTexturePageEntryForSubImageIndex(subimg), left, top, width, height, x, y, 1f, 1f, GMLColor(0xFFFFFF), runner.drawState.alpha)
     }
 
     @GMLFunction
     fun draw_sprite_part_ext(runner: StarfaitRunner, spriteIndex: Int, subimg: Int, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float) {
         val sprite = runner.resources.sprites[spriteIndex]
-
-        runner.renderer.drawSpritePart(sprite, subimg, left, top, width, height, x, y, xscale, yscale, color, alpha)
+        runner.renderer.drawSpritePart(sprite, sprite.getTexturePageEntryForSubImageIndex(subimg), left, top, width, height, x, y, xscale, yscale, color, alpha)
     }
 
     @GMLFunction fun file_exists(runner: StarfaitRunner, fileName: String) = runner.layeredFileSystem.fileExists(fileName)

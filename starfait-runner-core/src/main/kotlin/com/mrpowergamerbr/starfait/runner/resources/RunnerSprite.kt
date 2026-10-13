@@ -89,4 +89,9 @@ class RunnerSprite private constructor(
 
         return thisCollisionMaskSprite.isPixelSolid(this.width, this.height, x, y)
     }
+
+    fun getTexturePageEntryForSubImageIndex(subimg: Int): RunnerTexturePageEntry {
+        // See GameMaker-HTML5's yySprite.js Draw, which wraps the subimage: _ind = (~ ~_ind) % this.numb
+        return this.frames[Math.floorMod(subimg, this.frames.size)]
+    }
 }

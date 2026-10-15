@@ -166,7 +166,8 @@ Things that I learned along the way while developing Starfait.
 * [Bytecode](docs/bytecode.md)
 * [Precise Collision Masks](docs/precise-collision-masks.md)
 * [Quirks and Miscellaneous Things](docs/quirks.md)
-
+* [TinyGameMakerVM](https://github.com/MrPowerGamerBR/TinyGameMakerVM)
+ 
 ## Why Kotlin?
 
 Because I love Kotlin. <img src="docs/images/kodee-loving.png" width="32">
@@ -196,3 +197,4 @@ If you want to see a what-if scenario, [here's what Starfait would look like if 
 * [UndertaleModTool](https://github.com/UnderminersTeam/UndertaleModTool)
 * [OpenGM](https://github.com/misternebula/OpenGM)
 * [Luna](https://github.com/nommiin/Luna)
+* [TinyGameMakerVM](https://github.com/MrPowerGamerBR/TinyGameMakerVM)

@@ -6,7 +6,7 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 
 class STBImageDecoder : ImageDecoder {
-    override fun decodeRGBA(data: ByteArray): ImageDecoder.DecodedImage {
+    override suspend fun decodeRGBA(data: ByteArray): DecodedImage {
         stbi_set_flip_vertically_on_load(false)
 
         val imageBuffer = MemoryUtil.memAlloc(data.size)
@@ -33,7 +33,7 @@ class STBImageDecoder : ImageDecoder {
                 decodedImage.get(0, pixels)
                 STBImage.stbi_image_free(decodedImage)
 
-                return ImageDecoder.DecodedImage(w.get(), h.get(), pixels)
+                return RawPixelsDecodedImage(w.get(), h.get(), pixels)
             }
         } finally {
             MemoryUtil.memFree(imageBuffer)

@@ -1,6 +1,8 @@
 package net.perfectdreams.harmony.gl.textures
 
+import com.mrpowergamerbr.starfait.renderer.opengl.DecodedImage
 import com.mrpowergamerbr.starfait.renderer.opengl.ImageDecoder
+import com.mrpowergamerbr.starfait.renderer.opengl.RawPixelsDecodedImage
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGL
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGLConstants
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGLConstants.GL_NEAREST
@@ -29,19 +31,21 @@ class TextureManager(val gl: StarfaitGL, val imageDecoder: ImageDecoder) {
             StarfaitGLConstants.GL_TEXTURE_2D,
             0,
             StarfaitGLConstants.GL_RGBA8,
-            1,
-            1,
+            RawPixelsDecodedImage(1, 1, byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte())),
             0,
             StarfaitGLConstants.GL_RGBA,
-            StarfaitGLConstants.GL_UNSIGNED_BYTE,
-            byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte())
+            StarfaitGLConstants.GL_UNSIGNED_BYTE
         )
 
         return Texture(textureId, 1, 1)
     }
 
-    fun loadTexture(data: ByteArray, textureInterpolationType: Int): Texture {
+    suspend fun loadTexture(data: ByteArray, textureInterpolationType: Int): Texture {
         val decodedImage = imageDecoder.decodeRGBA(data)
+        return loadTexture(decodedImage, textureInterpolationType)
+    }
+
+    fun loadTexture(decodedImage: DecodedImage, textureInterpolationType: Int): Texture {
         val width = decodedImage.width
         val height = decodedImage.height
 
@@ -69,12 +73,10 @@ class TextureManager(val gl: StarfaitGL, val imageDecoder: ImageDecoder) {
             StarfaitGLConstants.GL_TEXTURE_2D,
             0,
             StarfaitGLConstants.GL_RGBA,
-            width,
-            height,
+            decodedImage,
             0,
             StarfaitGLConstants.GL_RGBA,
-            StarfaitGLConstants.GL_UNSIGNED_BYTE,
-            decodedImage.pixels
+            StarfaitGLConstants.GL_UNSIGNED_BYTE
         )
 
         // 5. Generate Mipmaps

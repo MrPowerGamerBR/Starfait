@@ -54,11 +54,8 @@ kotlin {
             kotlin.srcDir(layout.buildDirectory.dir("generated/ksp/metadata/commonMain/kotlin"))
 
             dependencies {
-                // ksp(project(":starfait-annotation-processor"))
-
                 api(project(":starfait-wad"))
                 api(project(":starfait-annotations"))
-
 
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0-RC")
             }

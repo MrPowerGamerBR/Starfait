@@ -12,7 +12,7 @@ import com.mrpowergamerbr.starfait.runner.text.TextHorizontalAlign
 import com.mrpowergamerbr.starfait.wad.Texture
 
 object NoopRenderer : Renderer() {
-    override fun uploadTexture(texture: Texture) = TextureHandle(0)
+    override suspend fun uploadTexture(texture: Texture) = TextureHandle(0)
 
     override fun drawSprite(sprite: RunnerSprite, tpag: RunnerTexturePageEntry, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {}
     override fun drawSpritePart(sprite: RunnerSprite, tpag: RunnerTexturePageEntry, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float) {}

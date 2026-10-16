@@ -28,7 +28,7 @@ abstract class StarfaitGL {
     abstract fun enableVertexAttribArray(index: Int)
     abstract fun readPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int): ByteArray
     abstract fun pixelStorei(pname: Int, param: Int)
-    abstract fun texImage2D(target: Int, level: Int, internalFormat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, pixels: ByteArray)
+    abstract fun texImage2D(target: Int, level: Int, internalFormat: Int, decodedImage: DecodedImage, border: Int, format: Int, type: Int)
     abstract fun texParameteri(target: Int, pname: Int, param: Int)
     abstract fun generateMipmap(target: Int)
     abstract fun bindFramebuffer(target: Int, framebuffer: Int)

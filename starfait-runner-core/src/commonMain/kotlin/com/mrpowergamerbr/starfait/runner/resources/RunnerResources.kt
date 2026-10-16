@@ -28,7 +28,7 @@ class RunnerResources(
     val sond: SOND
 ) {
     companion object {
-        fun create(gameWAD: GameWAD, renderer: Renderer): RunnerResources {
+        suspend fun create(gameWAD: GameWAD, renderer: Renderer): RunnerResources {
             // Look: This royally sucks, because we essentially duplicate the WAD versions of the classes with our own classes
             // But it is the only way we can do things like *dynamic* sprites in a way that doesn't want me to cry
             // TODO: Maybe intern the strings?

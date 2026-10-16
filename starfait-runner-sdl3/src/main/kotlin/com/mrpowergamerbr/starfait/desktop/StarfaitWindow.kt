@@ -41,6 +41,7 @@ import com.mrpowergamerbr.starfait.runner.StdoutGameOutput
 import com.mrpowergamerbr.starfait.vm.RValue
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.vm.VariableInstanceType
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import net.perfectdreams.harmony.gl.debug.OpenGLDebugging
 import org.lwjgl.opengl.GL
@@ -135,7 +136,7 @@ class StarfaitWindow(
             STBImageDecoder()
         )
         val runner = StarfaitRunner(
-            RunnerResources.create(vm.gameWAD, renderer),
+            runBlocking { RunnerResources.create(vm.gameWAD, renderer) },
             vm,
             renderer,
             SDLAudioManager(vm.gameWAD, bundleFileSystem, device),

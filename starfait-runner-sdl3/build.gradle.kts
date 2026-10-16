@@ -15,6 +15,8 @@ dependencies {
     api(project(":starfait-runner-core"))
     api(project(":starfait-renderer-opengl"))
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+
     implementation("com.github.ajalt.clikt:clikt:5.1.0")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))

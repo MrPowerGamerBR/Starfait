@@ -18,7 +18,7 @@ abstract class Renderer {
      * @param texture the texture to upload
      * @return a texture handle specific to the renderer
      */
-    abstract fun uploadTexture(texture: Texture): TextureHandle
+    abstract suspend fun uploadTexture(texture: Texture): TextureHandle
 
     abstract fun drawSprite(sprite: RunnerSprite, tpag: RunnerTexturePageEntry, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float)
     abstract fun drawSpritePart(sprite: RunnerSprite, tpag: RunnerTexturePageEntry, left: Float, top: Float, width: Float, height: Float, x: Float, y: Float, xscale: Float, yscale: Float, color: GMLColor, alpha: Float)

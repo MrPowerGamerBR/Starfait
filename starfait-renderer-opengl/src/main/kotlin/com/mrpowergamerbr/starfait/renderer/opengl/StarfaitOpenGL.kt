@@ -93,17 +93,16 @@ class StarfaitOpenGL : StarfaitGL() {
         target: Int,
         level: Int,
         internalFormat: Int,
-        width: Int,
-        height: Int,
+        decodedImage: DecodedImage,
         border: Int,
         format: Int,
-        type: Int,
-        pixels: ByteArray
+        type: Int
     ) {
-        val byteBuffer = ByteBuffer.allocateDirect(pixels.size)
-        byteBuffer.put(pixels)
+        decodedImage as RawPixelsDecodedImage
+        val byteBuffer = ByteBuffer.allocateDirect(decodedImage.pixels.size)
+        byteBuffer.put(decodedImage.pixels)
         byteBuffer.position(0)
-        glTexImage2D(target, level, internalFormat, width, height, border, format, type, byteBuffer)
+        glTexImage2D(target, level, internalFormat, decodedImage.width, decodedImage.height, border, format, type, byteBuffer)
     }
 
     override fun texParameteri(target: Int, pname: Int, param: Int) = glTexParameteri(target, pname, param)

@@ -85,7 +85,7 @@ class GLRenderer(
         return this.textures[handle]!!
     }
 
-    override fun uploadTexture(texture: com.mrpowergamerbr.starfait.wad.Texture): TextureHandle {
+    override suspend fun uploadTexture(texture: com.mrpowergamerbr.starfait.wad.Texture): TextureHandle {
         val uploadedTexture = this.textureManager.loadTexture(texture.blob, StarfaitGLConstants.GL_NEAREST)
         return allocateAndStoreTextureHandle(uploadedTexture)
     }
@@ -630,12 +630,14 @@ class GLRenderer(
             StarfaitGLConstants.GL_TEXTURE_2D,
             0,
             StarfaitGLConstants.GL_RGBA,
-            width,
-            height,
+            RawPixelsDecodedImage(
+                width,
+                height,
+                byteArray
+            ),
             0,
             StarfaitGLConstants.GL_RGBA,
-            StarfaitGLConstants.GL_UNSIGNED_BYTE,
-            byteArray
+            StarfaitGLConstants.GL_UNSIGNED_BYTE
         )
 
         // 3. Set texture parameters

@@ -68,9 +68,10 @@ class StarfaitWeb {
                     runner.start()
 
                     repeat(200) {
-                        runner.tick()
+                        renderer.frame {
+                            runner.tick()
+                        }
                     }
-
                 }
             }
     }

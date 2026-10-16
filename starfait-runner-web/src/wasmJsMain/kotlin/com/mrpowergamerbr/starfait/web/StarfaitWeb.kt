@@ -8,6 +8,7 @@ import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.opengl.GLRenderer
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGLConstants.GL_COLOR_BUFFER_BIT
+import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
@@ -89,40 +90,16 @@ class StarfaitWeb {
                             precision highp float;
                             precision highp int;
                             precision highp sampler2D;
-
-                            // For batching, we store the position of each quad directly on the position, so we don't actually *need* to have a uModel
-                            layout(location = 0) in vec2 aPosition;
-                            layout(location = 1) in vec2 aTexCoord;
-                            layout(location = 2) in vec4 aBlendColor;
-
-                            uniform vec4 uColor;
-                            uniform mat4 uProjection;
-
-                            out vec2 vTexCoord;
-                            out vec4 vBlendColor;
-
-                            void main() {
-                                vTexCoord = aTexCoord;
-                                vBlendColor = aBlendColor;
-                                gl_Position =  uProjection * vec4(aPosition, 0.0, 1.0);
-                            }
+                            
+                            ${MinimalShader.VERTEX_SHADER_CODE}
                         """.trimIndent(),
                         """
                             #version 300 es
                             precision highp float;
                             precision highp int;
                             precision highp sampler2D;
-
-                            in vec2 vTexCoord;
-                            in vec4 vBlendColor;
-
-                            uniform sampler2D uTexture;
-
-                            out vec4 fragColor;
-
-                            void main() {
-                                fragColor = texture(uTexture, vTexCoord) * vBlendColor;
-                            }
+                            
+                            ${MinimalShader.FRAGMENT_SHADER_CODE}
                         """.trimIndent(),
                         BrowserImageDecoder()
                     )

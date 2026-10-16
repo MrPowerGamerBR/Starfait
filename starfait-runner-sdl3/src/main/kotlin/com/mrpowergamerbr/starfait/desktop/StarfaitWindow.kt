@@ -9,6 +9,7 @@ import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.opengl.GLRenderer
 import com.mrpowergamerbr.starfait.renderer.opengl.STBImageDecoder
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitOpenGL
+import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
@@ -131,8 +132,16 @@ class StarfaitWindow(
 
         val renderer = GLRenderer(
             StarfaitOpenGL(),
-            GLRenderer::class.java.getResourceAsStream("/shaders/minimal.vsh").readAllBytes().toString(Charsets.UTF_8),
-            GLRenderer::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
+            """
+                #version 330
+                
+                ${MinimalShader.VERTEX_SHADER_CODE}
+            """.trimIndent(),
+            """
+                #version 330
+                
+                ${MinimalShader.FRAGMENT_SHADER_CODE}
+            """.trimIndent(),
             STBImageDecoder()
         )
         val runner = StarfaitRunner(

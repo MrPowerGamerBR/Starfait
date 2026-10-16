@@ -17,6 +17,7 @@ import com.mrpowergamerbr.starfait.wad.GameWAD
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.File
+import kotlinx.coroutines.runBlocking
 
 object GameMakerFeatureTests {
     @Test
@@ -366,7 +367,7 @@ object GameMakerFeatureTests {
         vm.associateBuiltins(StarfaitUtils.remapReferences(gameWAD))
 
         val renderer = NoopRenderer
-        val runner = StarfaitRunner(RunnerResources.create(vm.gameWAD, renderer), vm, renderer, NoopAudioManager(), LayeredFileSystem(VirtualFileSystem(), VirtualFileSystem()), BufferedGameOutput(), seed, emptyMap())
+        val runner = StarfaitRunner(runBlocking { RunnerResources.create(vm.gameWAD, renderer) }, vm, renderer, NoopAudioManager(), LayeredFileSystem(VirtualFileSystem(), VirtualFileSystem()), BufferedGameOutput(), seed, emptyMap())
         vm.runner = runner
         runner.start()
 

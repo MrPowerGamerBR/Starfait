@@ -1,8 +1,8 @@
 package com.mrpowergamerbr.starfait
 
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.roundToLong
 import kotlin.math.sign
 
 object MathUtils {
@@ -22,7 +22,9 @@ object MathUtils {
         if (asLong.toDouble() == value)
             return asLong.toString()
 
-        return String.format(Locale.ROOT, "%.2f", value)
+        val hundredths = (abs(value) * 100).roundToLong()
+        val sign = if (0 > value) "-" else ""
+        return "$sign${hundredths / 100}.${(hundredths % 100).toString().padStart(2, '0')}"
     }
 
     /**

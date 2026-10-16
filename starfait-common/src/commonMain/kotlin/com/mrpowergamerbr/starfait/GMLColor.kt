@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait
 
+import kotlin.jvm.JvmInline
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor

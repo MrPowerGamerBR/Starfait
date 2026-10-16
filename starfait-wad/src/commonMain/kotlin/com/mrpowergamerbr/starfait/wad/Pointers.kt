@@ -1,5 +1,7 @@
 package com.mrpowergamerbr.starfait.wad
 
+import kotlin.jvm.JvmInline
+
 sealed interface WadPointer {
     val address: Int
 

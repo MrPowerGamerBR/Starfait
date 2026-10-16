@@ -1,5 +1,7 @@
 package com.mrpowergamerbr.starfait.wad
 
+import kotlin.jvm.JvmInline
+
 @JvmInline
 value class OPTNFlags(val flags: UInt) {
     operator fun contains(flag: Flag) = flags and (1u shl flag.bit) != 0u

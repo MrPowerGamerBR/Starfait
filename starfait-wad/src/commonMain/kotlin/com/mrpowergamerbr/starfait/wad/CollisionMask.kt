@@ -1,5 +1,6 @@
 package com.mrpowergamerbr.starfait.wad
 
+import kotlin.jvm.JvmInline
 import kotlin.math.ceil
 
 /**

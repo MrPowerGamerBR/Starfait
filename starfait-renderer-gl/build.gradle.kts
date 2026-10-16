@@ -8,7 +8,5 @@ repositories {
 
 dependencies {
     api(project(":starfait-runner-core"))
-
-    implementation(kotlin("reflect"))
-    testImplementation(kotlin("test"))
+    api("org.joml:joml:1.10.9")
 }

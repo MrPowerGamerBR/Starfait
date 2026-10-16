@@ -1,3 +1,8 @@
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
+}
+
+kotlin {
+    jvm()
+    wasmJs()
 }

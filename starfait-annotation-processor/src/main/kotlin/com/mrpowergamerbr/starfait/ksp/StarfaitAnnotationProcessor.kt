@@ -167,9 +167,10 @@ class StarfaitAnnotationProcessor(val codeGenerator: CodeGenerator, val logger: 
 
                     val returnType = func.returnType!!.resolve().declaration.simpleName.asString()
                     val annotation = func.annotations.first { it.shortName.asString() == "GMLFunction" }
-                    val names = (annotation.arguments.first { it.name!!.asString() == "names" }.value as List<String>).toMutableList()
+                    // Arguments left at their default value are missing when the annotation comes from KMP metadata, so we need to fall back to the defaults ourselves
+                    val names = ((annotation.arguments.firstOrNull { it.name!!.asString() == "names" }?.value as List<String>?) ?: emptyList()).toMutableList()
                     names.addFirst(func.simpleName.asString())
-                    val stub = annotation.arguments.first { it.name!!.asString() == "stub" }.value as Boolean
+                    val stub = annotation.arguments.firstOrNull { it.name!!.asString() == "stub" }?.value as Boolean? ?: false
 
                     val wrapperName = "GMLFunction_${func.simpleName.asString()}_Wrapper"
                     generatedFunctionNames.add(wrapperName)

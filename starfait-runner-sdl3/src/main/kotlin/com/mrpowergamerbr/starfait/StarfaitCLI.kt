@@ -81,7 +81,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
 
             if (name?.matches(match) == true || index.toString().matches(match)) {
                 println("$type #$index:")
-                StarfaitUtils.dump(gameWAD, element, 1, null)
+                ReflectionUtils.dump(gameWAD, element, 1, null)
 
                 println()
             }

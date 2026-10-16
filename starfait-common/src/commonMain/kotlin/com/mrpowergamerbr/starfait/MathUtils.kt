@@ -1,7 +1,9 @@
 package com.mrpowergamerbr.starfait
 
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.math.roundToLong
 import kotlin.math.sign
 
@@ -22,9 +24,14 @@ object MathUtils {
         if (asLong.toDouble() == value)
             return asLong.toString()
 
-        val hundredths = (abs(value) * 100).roundToLong()
+        return formatRealToDecimalPlaces(value, 2)
+    }
+
+    fun formatRealToDecimalPlaces(value: Double, decimalPlaces: Int): String {
+        val whole = abs(value).toLong()
+        val decimal = ((abs(value) % 1) * 10.0.pow(decimalPlaces)).roundToLong()
         val sign = if (0 > value) "-" else ""
-        return "$sign${hundredths / 100}.${(hundredths % 100).toString().padStart(2, '0')}"
+        return "$sign$whole.${decimal.toString().padStart(decimalPlaces, '0')}"
     }
 
     /**
@@ -140,4 +147,7 @@ object MathUtils {
     }
 
     fun convertInt32ToBoolean(value: Int) = value > 0
+
+    fun toRadians(value: Double) = value * PI / 180.0
+    fun toDegrees(value: Double) = value * 180.0 / PI
 }

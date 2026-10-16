@@ -1,6 +1,7 @@
 package com.mrpowergamerbr.starfait.desktop
 
 import com.mrpowergamerbr.starfait.RecordedFrame
+import com.mrpowergamerbr.starfait.ReflectionUtils
 import com.mrpowergamerbr.starfait.audio.sdl.SDLAudioManager
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.filesystem.disk.DiskFileSystem
@@ -37,7 +38,6 @@ import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_SUBTRACT
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_UP
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.runner.StdoutGameOutput
-import com.mrpowergamerbr.starfait.statedumper.StateDumper
 import com.mrpowergamerbr.starfait.vm.RValue
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.vm.VariableInstanceType
@@ -359,7 +359,7 @@ class StarfaitWindow(
 
     fun dumpRunnerStateAsJsonToFile(runner: StarfaitRunner, dumpStateFile: File) {
         val output = File(dumpStateFile.parentFile, dumpStateFile.name.format(frameCount))
-        output.writeText(JsonPrettyPrint.encodeToString(StateDumper.dumpRunnerStateAsJson(runner)))
+        output.writeText(JsonPrettyPrint.encodeToString(ReflectionUtils.dumpRunnerStateAsJson(runner)))
         println("Platform: Dumped runner state!")
     }
 

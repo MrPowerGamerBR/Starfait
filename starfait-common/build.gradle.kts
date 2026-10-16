@@ -1,19 +1,22 @@
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
 }
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    testImplementation(kotlin("test"))
-}
+kotlin {
+    jvm()
 
-testing {
-    suites {
-        getByName<JvmTestSuite>("test") {
-            useJUnitJupiter()
+    sourceSets {
+        jvmTest.dependencies {
+            implementation(kotlin("test"))
+            implementation("org.junit.jupiter:junit-jupiter:5.11.0")
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

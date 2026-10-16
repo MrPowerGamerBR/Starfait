@@ -30,7 +30,7 @@ class StarfaitByteBuffer private constructor(
     fun readByte() = this.byteArray[position++]
 
     fun readBytes(size: Int): ByteArray {
-        require(this.sliceSize > this.position + size)
+        require(this.sliceSize >= this.position + size)
 
         val data = this.byteArray.copyOfRange(this.position, this.position + size)
         this.position += size

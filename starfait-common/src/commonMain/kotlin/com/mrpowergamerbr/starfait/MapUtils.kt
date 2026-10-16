@@ -16,10 +16,11 @@ fun <K, V> MutableMap<K, V>.putIfAbsent(key: K, value: V): V? {
 
 fun <K, V> LinkedHashMap<K, V>.putFirst(key: K, value: V) {
     // This sucks a lot, but there's no other way to do this (the JVM does have a putFirst, but alas...)
-    val oldEntries = this.entries.toList()
+    // In Kotlin/Wasm we need to copy the entries because if we don't it throws "The backing map has been modified after this entry was obtained."
+    val oldEntries = this.entries.map { it.key to it.value }
     this.clear()
     this[key] = value
-    for (entry in oldEntries) {
-        this[entry.key] = entry.value
+    for ((key, value) in oldEntries) {
+        this[key] = value
     }
 }

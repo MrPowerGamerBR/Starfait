@@ -10,7 +10,6 @@ import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.wad.Code
 import com.mrpowergamerbr.starfait.wad.GameObject
 import com.mrpowergamerbr.starfait.wad.GameWAD
-import java.nio.ByteBuffer
 import kotlin.collections.mutableMapOf
 
 class StarfaitVM(
@@ -71,12 +70,8 @@ class StarfaitVM(
         this.currentOrNullCallFrame = callFrame
 
         // We need to remap the bytecode relative offset field position
-        val bytecodeInstructions = ByteBuffer.wrap(
-            gameWAD.code.bytecode,
-            // We do + on the offset because the offset is negative
-            code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
-            code.length.toInt() - code.offset
-        )
+        val start = code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition
+        val bytecodeInstructions = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode, start, code.length.toInt())
 
         try {
             executeBytecodeInstructions(bytecodeInstructions)
@@ -100,9 +95,7 @@ class StarfaitVM(
         return callFrame.returnValue
     }
 
-    private fun executeBytecodeInstructions(bytecodeStream: ByteBuffer) {
-        val reader = StarfaitByteBuffer.fromByteBuffer(bytecodeStream)
-
+    private fun executeBytecodeInstructions(reader: StarfaitByteBuffer) {
         while (reader.hasRemaining()) {
             val start = reader.position
             val word = OpWord(reader.readInt())
@@ -116,7 +109,7 @@ class StarfaitVM(
             if (gmlScriptsOpcodesToBeTraced.contains("*") || gmlScriptsOpcodesToBeTraced.contains(scriptName) || gmlScriptsOpcodesToBeTraced.contains(currentCallFrame.self.objectName)) {
                 val beforeDisassembling = reader.position
                 reader.position = start
-                print("VM: [$currentCallFrameCodeName] ${StarfaitDisassembler.readAndDisassembleOp(gameWAD, bytecodeStream, stack)}")
+                print("VM: [$currentCallFrameCodeName] ${StarfaitDisassembler.readAndDisassembleOp(gameWAD, reader, stack)}")
                 reader.position = beforeDisassembling
             }
 

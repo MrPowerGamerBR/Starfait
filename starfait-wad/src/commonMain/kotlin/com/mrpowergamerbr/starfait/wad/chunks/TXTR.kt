@@ -1,8 +1,8 @@
 package com.mrpowergamerbr.starfait.wad.chunks
 
+import com.mrpowergamerbr.starfait.ByteOrder
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Texture
-import java.nio.ByteOrder
 
 class TXTR(val textures: List<Texture>) {
     companion object {

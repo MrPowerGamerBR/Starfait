@@ -113,7 +113,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
         } else
             wadFile!!
 
-        val byteReader = StarfaitByteBuffer.fromByteArray(wadFile.readBytes())
+        val byteReader = StarfaitByteBuffer.fromByteArray(wadFile.readBytes(), 0)
         val gameWAD = GameWAD.read(byteReader)
         println("Loaded \"${gameWAD.strg.getString(gameWAD.gen8.gameDisplayName)}\" successfully! [WAD Version ${gameWAD.gen8.wadVersion}]")
 
@@ -342,14 +342,13 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
 
             for (code in codeToBeDisassembled) {
                 println("CODE ${gameWAD.strg.getString(code.name)}:")
-                disassembler.disassembleAndPrint(
-                    ByteBuffer.wrap(
-                        gameWAD.code.bytecode,
-                        // We do + on the offset because the offset is negative
-                        code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition,
-                        code.length.toInt() - code.offset
-                    )
+                val start = code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition
+                val bytecodeInstructions = gameWAD.code.bytecode.copyOfRange(
+                    start,
+                    start + code.length.toInt() - code.offset
                 )
+
+                disassembler.disassembleAndPrint(bytecodeInstructions)
             }
             return
         }

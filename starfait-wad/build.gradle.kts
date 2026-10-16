@@ -1,20 +1,27 @@
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
 }
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    api(project(":starfait-common"))
-    testImplementation(kotlin("test"))
-}
+kotlin {
+    jvm()
+    wasmJs()
 
-testing {
-    suites {
-        getByName<JvmTestSuite>("test") {
-            useJUnitJupiter()
+    sourceSets {
+        commonMain.dependencies {
+            api(project(":starfait-common"))
+        }
+
+        jvmTest.dependencies {
+            implementation(kotlin("test"))
+            implementation("org.junit.jupiter:junit-jupiter:5.11.0")
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

@@ -351,7 +351,7 @@ object GameMakerFeatureTests {
     fun runTestGame(gameId: String, seed: Long, exitAtFrame: Int, block: TestConfig.() -> Unit = {}) {
         val config = TestConfig().apply(block)
         val gamesDir = File(System.getProperty("games.dir"))
-        val byteReader = StarfaitByteBuffer.fromByteArray(File(File(gamesDir, "$gameId/data.win").absolutePath).readBytes())
+        val byteReader = StarfaitByteBuffer.fromByteArray(File(File(gamesDir, "$gameId/data.win").absolutePath).readBytes(), 0)
         val gameWAD = GameWAD.read(byteReader)
         val vm = StarfaitVM(
             gameWAD,

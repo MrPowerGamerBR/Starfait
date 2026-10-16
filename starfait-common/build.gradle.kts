@@ -8,6 +8,7 @@ repositories {
 
 kotlin {
     jvm()
+    wasmJs()
 
     sourceSets {
         jvmTest.dependencies {

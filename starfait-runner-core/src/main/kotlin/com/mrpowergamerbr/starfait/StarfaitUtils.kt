@@ -22,7 +22,7 @@ object StarfaitUtils {
      */
     fun remapReferences(gameWAD: GameWAD): RemapResult {
         // I'm not sure WHY the YoYo Runner does this!!
-        val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode)
+        val reader = StarfaitByteBuffer.fromByteArray(gameWAD.code.bytecode, 0)
         val allocatedBuiltinVariables = mutableListOf<Variable>()
         val allocatedRegularVariables = mutableListOf<Variable>()
 

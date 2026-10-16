@@ -6,13 +6,10 @@ import com.mrpowergamerbr.starfait.vm.Op
 import com.mrpowergamerbr.starfait.vm.OpWord
 import com.mrpowergamerbr.starfait.vm.VMStack
 import com.mrpowergamerbr.starfait.wad.GameWAD
-import java.nio.ByteBuffer
 
 class StarfaitDisassembler(val gameWAD: GameWAD) {
     companion object {
-        fun readAndDisassembleOp(gameWAD: GameWAD, bytecodeStream: ByteBuffer, stack: VMStack?): String {
-            val reader = StarfaitByteBuffer.fromByteBuffer(bytecodeStream)
-
+        fun readAndDisassembleOp(gameWAD: GameWAD, reader: StarfaitByteBuffer, stack: VMStack?): String {
             val start = reader.position
             val word = OpWord(reader.readInt())
 
@@ -71,11 +68,11 @@ class StarfaitDisassembler(val gameWAD: GameWAD) {
         }
     }
 
-    fun disassembleAndPrint(bytecodeStream: ByteBuffer) {
-        val reader = StarfaitByteBuffer.fromByteBuffer(bytecodeStream)
+    fun disassembleAndPrint(bytecodeStream: ByteArray) {
+        val reader = StarfaitByteBuffer.fromByteArray(bytecodeStream, 0)
 
         while (reader.hasRemaining()) {
-            print(readAndDisassembleOp(gameWAD, bytecodeStream, null))
+            print(readAndDisassembleOp(gameWAD, reader, null))
         }
     }
 }

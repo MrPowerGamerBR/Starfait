@@ -8,7 +8,10 @@ repositories {
 
 kotlin {
     jvm()
-    wasmJs()
+
+    wasmJs {
+        browser()
+    }
 
     sourceSets {
         commonMain.dependencies {

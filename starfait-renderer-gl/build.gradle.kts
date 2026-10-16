@@ -1,12 +1,22 @@
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
 }
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    api(project(":starfait-runner-core"))
-    api("org.joml:joml:1.10.9")
+kotlin {
+    jvm()
+    wasmJs {
+        browser()
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(project(":starfait-runner-core"))
+            }
+        }
+    }
 }

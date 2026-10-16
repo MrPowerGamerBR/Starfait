@@ -128,7 +128,12 @@ class StarfaitWindow(
         val bundleFileSystem = DiskFileSystem(wadFile.parentFile)
         val layeredFileSystem = LayeredFileSystem(saveFileSystem, bundleFileSystem)
 
-        val renderer = GLRenderer(StarfaitOpenGL(), STBImageDecoder())
+        val renderer = GLRenderer(
+            StarfaitOpenGL(),
+            GLRenderer::class.java.getResourceAsStream("/shaders/minimal.vsh").readAllBytes().toString(Charsets.UTF_8),
+            GLRenderer::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
+            STBImageDecoder()
+        )
         val runner = StarfaitRunner(
             RunnerResources.create(vm.gameWAD, renderer),
             vm,

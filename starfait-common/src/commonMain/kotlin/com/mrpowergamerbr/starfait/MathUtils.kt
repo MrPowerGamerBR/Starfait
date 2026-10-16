@@ -1,11 +1,6 @@
 package com.mrpowergamerbr.starfait
 
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.roundToLong
-import kotlin.math.sign
+import kotlin.math.*
 
 object MathUtils {
     const val EPSILON = 1e-5
@@ -150,4 +145,8 @@ object MathUtils {
 
     fun toRadians(value: Double) = value * PI / 180.0
     fun toDegrees(value: Double) = value * 180.0 / PI
+
+    fun invsqrt(r: Float): Float {
+        return 1.0f / sqrt(r)
+    }
 }

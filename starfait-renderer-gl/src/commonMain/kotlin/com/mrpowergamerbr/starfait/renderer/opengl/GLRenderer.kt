@@ -1,6 +1,11 @@
 package com.mrpowergamerbr.starfait.renderer.opengl
 
 import com.mrpowergamerbr.starfait.GMLColor
+import com.mrpowergamerbr.starfait.MathUtils
+import com.mrpowergamerbr.starfait.Matrix3x2f
+import com.mrpowergamerbr.starfait.Matrix4f
+import com.mrpowergamerbr.starfait.Vector2f
+import com.mrpowergamerbr.starfait.Vector3f
 import com.mrpowergamerbr.starfait.runner.text.TextUtils
 import com.mrpowergamerbr.starfait.renderer.Renderer
 import com.mrpowergamerbr.starfait.renderer.TextureHandle
@@ -15,16 +20,17 @@ import net.perfectdreams.harmony.gl.shaders.ShaderManager
 import net.perfectdreams.harmony.gl.shaders.bind
 import net.perfectdreams.harmony.gl.textures.Texture
 import net.perfectdreams.harmony.gl.textures.TextureManager
-import org.joml.Matrix3x2f
-import org.joml.Matrix4f
-import org.joml.Vector2f
-import org.joml.Vector3f
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class GLRenderer(val gl: StarfaitGL, imageDecoder: ImageDecoder) : Renderer() {
+class GLRenderer(
+    val gl: StarfaitGL,
+    vertexShaderSource: String,
+    fragmentShaderSource: String,
+    imageDecoder: ImageDecoder
+) : Renderer() {
     companion object {
         private const val MAX_BATCH_ELEMENTS = 512
         private const val FIELDS_PER_ELEMENT = 48
@@ -39,8 +45,8 @@ class GLRenderer(val gl: StarfaitGL, imageDecoder: ImageDecoder) : Renderer() {
     val textureManager = TextureManager(gl, imageDecoder)
     val shaderManager = ShaderManager(gl)
     val minimalShader: MinimalShader = shaderManager.loadShader(
-        GLRenderer::class.java.getResourceAsStream("/shaders/minimal.vsh").readAllBytes().toString(Charsets.UTF_8),
-        GLRenderer::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
+        vertexShaderSource,
+        fragmentShaderSource,
         { MinimalShader(gl, it) }
     )
     val batch = FloatArray(TOTAL_BATCH_SIZE)
@@ -93,7 +99,7 @@ class GLRenderer(val gl: StarfaitGL, imageDecoder: ImageDecoder) : Renderer() {
     override fun drawSprite(sprite: RunnerSprite, tpag: RunnerTexturePageEntry, x: Float, y: Float, xscale: Float, yscale: Float, rot: Float, color: GMLColor, alpha: Float) {
         val texture = this.textures[tpag.textureIndex]!!
 
-        val rad = Math.toRadians(rot.toDouble())
+        val rad = MathUtils.toRadians(rot.toDouble())
 
         val matrix4f = Matrix4f()
             .translate(x, y, 0f)
@@ -275,7 +281,7 @@ class GLRenderer(val gl: StarfaitGL, imageDecoder: ImageDecoder) : Renderer() {
 
         flushIfNeeded(texture)
 
-        val rad = Math.toRadians(rot.toDouble())
+        val rad = MathUtils.toRadians(rot.toDouble())
 
         val textMetrics = TextUtils.getTextMetrics(font, text, xscale, yscale)
 
@@ -531,7 +537,7 @@ class GLRenderer(val gl: StarfaitGL, imageDecoder: ImageDecoder) : Renderer() {
 
         repeat(steps) {
             val degrees = (it / steps.toFloat()) * 360f
-            val rads = Math.toRadians(degrees.toDouble()).toFloat()
+            val rads = MathUtils.toRadians(degrees.toDouble()).toFloat()
             val x = cos(rads) * radius
             val y = sin(rads) * radius
 
@@ -674,7 +680,7 @@ class GLRenderer(val gl: StarfaitGL, imageDecoder: ImageDecoder) : Renderer() {
                     )
                     // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
                     .translate(halfWidth + view.viewX.toFloat(), halfHeight + view.viewY.toFloat(), 0f)
-                    .rotateZ(Math.toRadians(-view.angle.toDouble()).toFloat())
+                    .rotateZ(MathUtils.toRadians(-view.angle.toDouble()).toFloat())
                     .translate(-halfWidth - view.viewX.toFloat(), -halfHeight - view.viewY.toFloat(), 0f)
                     .get(FloatArray(16))
             )

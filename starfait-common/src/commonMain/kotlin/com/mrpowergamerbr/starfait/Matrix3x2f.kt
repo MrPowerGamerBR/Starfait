@@ -193,4 +193,32 @@ class Matrix3x2f {
         v.set(m00 * v.x + m10 * v.y + m20, m01 * v.x + m11 * v.y + m21)
         return v
     }
+
+    /**
+     * Transform/multiply the given 2D-vector, as if it was a 3D-vector with z=1, by
+     * this matrix and store the result in `dest`.
+     *
+     *
+     * The given 2D-vector is treated as a 3D-vector with its z-component being 1.0, so it
+     * will represent a position/location in 2D-space rather than a direction.
+     *
+     *
+     * In order to store the result in the same vector, use [.transformPosition].
+     *
+     * @see .transformPosition
+     * @see .transform
+     * @param v
+     * the vector to transform
+     * @param dest
+     * will hold the result
+     * @return dest
+     */
+    fun transformPosition(v: Vector2f, dest: Vector2f): Vector2f {
+        dest.set(
+            m00 * v.x + m10 * v.y + m20,
+            m01 * v.x + m11 * v.y + m21
+        )
+        return dest
+    }
+
 }

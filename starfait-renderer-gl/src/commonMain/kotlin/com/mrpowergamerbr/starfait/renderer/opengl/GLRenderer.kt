@@ -659,43 +659,45 @@ class GLRenderer(
 
         gl.enable(StarfaitGLConstants.GL_SCISSOR_TEST)
 
-        if (view != null) {
-            val halfWidth = view.viewWidth.toFloat() / 2f
-            val halfHeight = view.viewHeight.toFloat() / 2f
+        minimalShader.bind {
+            if (view != null) {
+                val halfWidth = view.viewWidth.toFloat() / 2f
+                val halfHeight = view.viewHeight.toFloat() / 2f
 
-            // portX/portY = where it will be rendered in the screen
-            // We do - for the Y because OpenGL is y up
-            gl.viewport(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
-            gl.scissor(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+                // portX/portY = where it will be rendered in the screen
+                // We do - for the Y because OpenGL is y up
+                gl.viewport(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+                gl.scissor(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
 
-            minimalShader.uProjection.set(
-                Matrix4f()
-                    .ortho(
-                        view.viewX.toFloat(),
-                        view.viewX.toFloat() + view.viewWidth.toFloat(),
-                        view.viewY.toFloat() + view.viewHeight.toFloat(),
-                        view.viewY.toFloat(),
-                        1.0f,
-                        -1.0f
-                    )
-                    // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
-                    .translate(halfWidth + view.viewX.toFloat(), halfHeight + view.viewY.toFloat(), 0f)
-                    .rotateZ(MathUtils.toRadians(-view.angle.toDouble()).toFloat())
-                    .translate(-halfWidth - view.viewX.toFloat(), -halfHeight - view.viewY.toFloat(), 0f)
-                    .get(FloatArray(16))
-            )
-        } else {
-            gl.viewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
-            gl.scissor(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+                minimalShader.uProjection.set(
+                    Matrix4f()
+                        .ortho(
+                            view.viewX.toFloat(),
+                            view.viewX.toFloat() + view.viewWidth.toFloat(),
+                            view.viewY.toFloat() + view.viewHeight.toFloat(),
+                            view.viewY.toFloat(),
+                            1.0f,
+                            -1.0f
+                        )
+                        // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
+                        .translate(halfWidth + view.viewX.toFloat(), halfHeight + view.viewY.toFloat(), 0f)
+                        .rotateZ(MathUtils.toRadians(-view.angle.toDouble()).toFloat())
+                        .translate(-halfWidth - view.viewX.toFloat(), -halfHeight - view.viewY.toFloat(), 0f)
+                        .get(FloatArray(16))
+                )
+            } else {
+                gl.viewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+                gl.scissor(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
 
-            minimalShader.uProjection.set(
-                Matrix4f()
-                    .ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f)
-                    .get(FloatArray(16))
-            )
+                minimalShader.uProjection.set(
+                    Matrix4f()
+                        .ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f)
+                        .get(FloatArray(16))
+                )
+            }
+
+            block()
         }
-
-        block()
 
         gl.disable(StarfaitGLConstants.GL_SCISSOR_TEST)
     }

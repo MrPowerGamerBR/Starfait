@@ -34,18 +34,18 @@ import org.lwjgl.opengl.GL20.glGetShaderi
 import org.lwjgl.opengl.GL20.glGetUniformLocation
 import org.lwjgl.opengl.GL20.glLinkProgram
 import org.lwjgl.opengl.GL20.glShaderSource
+import org.lwjgl.opengl.GL20.glUniform1f
+import org.lwjgl.opengl.GL20.glUniform1i
+import org.lwjgl.opengl.GL20.glUniform2f
+import org.lwjgl.opengl.GL20.glUniform3f
+import org.lwjgl.opengl.GL20.glUniform4f
+import org.lwjgl.opengl.GL20.glUniformMatrix4fv
 import org.lwjgl.opengl.GL20.glUseProgram
 import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.glBindFramebuffer
 import org.lwjgl.opengl.GL30.glBindVertexArray
 import org.lwjgl.opengl.GL30.glGenVertexArrays
 import org.lwjgl.opengl.GL30.glGenerateMipmap
-import org.lwjgl.opengl.GL41.glProgramUniform1f
-import org.lwjgl.opengl.GL41.glProgramUniform1i
-import org.lwjgl.opengl.GL41.glProgramUniform2f
-import org.lwjgl.opengl.GL41.glProgramUniform3f
-import org.lwjgl.opengl.GL41.glProgramUniform4f
-import org.lwjgl.opengl.GL41.glProgramUniformMatrix4fv
 import org.lwjgl.system.MemoryStack
 import java.nio.ByteBuffer
 
@@ -122,13 +122,39 @@ class StarfaitOpenGL : StarfaitGL() {
     override fun linkProgram(program: Int) = glLinkProgram(program)
     override fun getProgrami(program: Int, pname: Int) = glGetProgrami(program, pname)
     override fun getProgramInfoLog(program: Int, maxLength: Int): String = glGetProgramInfoLog(program, maxLength)
-    override fun useProgram(program: Int) = glUseProgram(program)
+    override fun useProgram(program: Int) {
+        this.activeProgram = program
+        glUseProgram(program)
+    }
 
     override fun getUniformLocation(program: Int, name: String) = glGetUniformLocation(program, name)
-    override fun programUniform1i(program: Int, location: Int, x: Int) = glProgramUniform1i(program, location, x)
-    override fun programUniform1f(program: Int, location: Int, x: Float) = glProgramUniform1f(program, location, x)
-    override fun programUniform2f(program: Int, location: Int, x: Float, y: Float) = glProgramUniform2f(program, location, x, y)
-    override fun programUniform3f(program: Int, location: Int, x: Float, y: Float, z: Float) = glProgramUniform3f(program, location, x, y, z)
-    override fun programUniform4f(program: Int, location: Int, x: Float, y: Float, z: Float, w: Float) = glProgramUniform4f(program, location, x, y, z, w)
-    override fun programUniformMatrix4fv(program: Int, location: Int, transpose: Boolean, value: FloatArray) = glProgramUniformMatrix4fv(program, location, transpose, value)
+    override fun programUniform1i(program: Int, location: Int, x: Int) {
+        checkActiveProgram(program)
+        glUniform1i(location, x)
+    }
+
+    override fun programUniform1f(program: Int, location: Int, x: Float) {
+        checkActiveProgram(program)
+        glUniform1f( location, x)
+    }
+
+    override fun programUniform2f(program: Int, location: Int, x: Float, y: Float) {
+        checkActiveProgram(program)
+        glUniform2f( location, x, y)
+    }
+
+    override fun programUniform3f(program: Int, location: Int, x: Float, y: Float, z: Float) {
+        checkActiveProgram(program)
+        glUniform3f(location, x, y, z)
+    }
+
+    override fun programUniform4f(program: Int, location: Int, x: Float, y: Float, z: Float, w: Float) {
+        checkActiveProgram(program)
+        glUniform4f(location, x, y, z, w)
+    }
+
+    override fun programUniformMatrix4fv(program: Int, location: Int, transpose: Boolean, value: FloatArray) {
+        checkActiveProgram(program)
+        glUniformMatrix4fv(location, transpose, value)
+    }
 }

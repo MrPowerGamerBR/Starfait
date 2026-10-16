@@ -4,6 +4,8 @@ package com.mrpowergamerbr.starfait.renderer.opengl
  * Abstractions for OpenGL-like renderers
  */
 abstract class StarfaitGL {
+    var activeProgram = 0
+
     abstract fun enable(target: Int)
     abstract fun disable(target: Int)
     abstract fun clearColor(red: Float, green: Float, blue: Float, alpha: Float)
@@ -44,6 +46,7 @@ abstract class StarfaitGL {
     abstract fun getProgrami(program: Int, pname: Int): Int
     abstract fun getProgramInfoLog(program: Int, maxLength: Int): String
     abstract fun useProgram(program: Int)
+    fun checkActiveProgram(program: Int) = check(this.activeProgram == program) { "We want $program to be bound, but the current active program is ${this.activeProgram}!" }
 
     abstract fun getUniformLocation(program: Int, name: String): Int
     abstract fun programUniform1i(program: Int, location: Int, x: Int)

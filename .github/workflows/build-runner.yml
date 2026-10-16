@@ -35,7 +35,7 @@ jobs:
         env:
           # GitHub Actions has 7GBs of available RAM for workers, so let's bump it a bit up!
           GRADLE_OPTS: -Xmx4096m -Xms4096m
-        run: ./gradlew build gameTest :starfait-runner-sdl3:installDist -PlwjglNativesPlatform=${{ inputs.lwjglNativesPlatform }} --no-daemon
+        run: ./gradlew build jvmGameTest :starfait-runner-sdl3:installDist -PlwjglNativesPlatform=${{ inputs.lwjglNativesPlatform }} --no-daemon
 
       - name: Upload Starfait distribution
         uses: actions/upload-artifact@v4

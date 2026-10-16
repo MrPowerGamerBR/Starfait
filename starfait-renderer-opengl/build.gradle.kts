@@ -11,6 +11,7 @@ val lwjglNatives = findProperty("lwjglNativesPlatform") ?: "natives-linux"
 
 dependencies {
     api(project(":starfait-runner-core"))
+    api(project(":starfait-renderer-gl"))
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
     implementation("org.lwjgl:lwjgl-opengl")

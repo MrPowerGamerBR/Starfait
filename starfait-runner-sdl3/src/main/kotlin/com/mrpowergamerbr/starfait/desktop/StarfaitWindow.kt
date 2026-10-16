@@ -5,7 +5,9 @@ import com.mrpowergamerbr.starfait.audio.sdl.SDLAudioManager
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.filesystem.disk.DiskFileSystem
 import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
-import com.mrpowergamerbr.starfait.renderer.opengl.OpenGLRenderer
+import com.mrpowergamerbr.starfait.renderer.opengl.GLRenderer
+import com.mrpowergamerbr.starfait.renderer.opengl.STBImageDecoder
+import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitOpenGL
 import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_DECIMAL
@@ -126,7 +128,7 @@ class StarfaitWindow(
         val bundleFileSystem = DiskFileSystem(wadFile.parentFile)
         val layeredFileSystem = LayeredFileSystem(saveFileSystem, bundleFileSystem)
 
-        val renderer = OpenGLRenderer()
+        val renderer = GLRenderer(StarfaitOpenGL(), STBImageDecoder())
         val runner = StarfaitRunner(
             RunnerResources.create(vm.gameWAD, renderer),
             vm,

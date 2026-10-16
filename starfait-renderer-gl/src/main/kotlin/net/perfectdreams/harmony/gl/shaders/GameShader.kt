@@ -1,16 +1,12 @@
 package net.perfectdreams.harmony.gl.shaders
 
+import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGL
+import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGLConstants
 import net.perfectdreams.harmony.gl.textures.Texture
-import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
-import org.lwjgl.opengl.GL11.glBindTexture
-import org.lwjgl.opengl.GL13.GL_TEXTURE0
-import org.lwjgl.opengl.GL13.glActiveTexture
-import org.lwjgl.opengl.GL20.glUseProgram
-import org.lwjgl.opengl.GL41
 
-abstract class GameShader(val programId: Int) {
+abstract class GameShader(val gl: StarfaitGL, val programId: Int) {
     private fun getUniformLocation(name: String): Int {
-        val location = GL41.glGetUniformLocation(programId, name)
+        val location = gl.getUniformLocation(programId, name)
         if (location == -1) {
             println("Program $programId does not have uniform \"$name\"!")
             return -1
@@ -67,7 +63,7 @@ abstract class GameShader(val programId: Int) {
             if (isUniformLocationInvalidAndLog())
                 return
 
-            GL41.glProgramUniform1f(shader.programId, location, x)
+            shader.gl.programUniform1f(shader.programId, location, x)
         }
     }
 
@@ -76,7 +72,7 @@ abstract class GameShader(val programId: Int) {
             if (isUniformLocationInvalidAndLog())
                 return
 
-            GL41.glProgramUniform2f(shader.programId, location, x, y)
+            shader.gl.programUniform2f(shader.programId, location, x, y)
         }
     }
 
@@ -85,7 +81,7 @@ abstract class GameShader(val programId: Int) {
             if (isUniformLocationInvalidAndLog())
                 return
 
-            GL41.glProgramUniform3f(shader.programId, location, x, y, z)
+            shader.gl.programUniform3f(shader.programId, location, x, y, z)
         }
     }
 
@@ -94,7 +90,7 @@ abstract class GameShader(val programId: Int) {
             if (isUniformLocationInvalidAndLog())
                 return
 
-            GL41.glProgramUniform4f(shader.programId, location, x, y, z, w)
+            shader.gl.programUniform4f(shader.programId, location, x, y, z, w)
         }
     }
 
@@ -103,7 +99,7 @@ abstract class GameShader(val programId: Int) {
             if (isUniformLocationInvalidAndLog())
                 return
 
-            GL41.glProgramUniformMatrix4fv(shader.programId, location, false, value)
+            shader.gl.programUniformMatrix4fv(shader.programId, location, false, value)
         }
     }
 
@@ -112,7 +108,7 @@ abstract class GameShader(val programId: Int) {
             if (isUniformLocationInvalidAndLog())
                 return
 
-            GL41.glProgramUniform1i(shader.programId, location, x)
+            shader.gl.programUniform1i(shader.programId, location, x)
         }
     }
 
@@ -124,12 +120,12 @@ abstract class GameShader(val programId: Int) {
                 return
 
             // Hacky!!!
-            val pos = slot + GL_TEXTURE0
+            val pos = slot + StarfaitGLConstants.GL_TEXTURE0
 
-            glActiveTexture(pos)
-            glBindTexture(GL_TEXTURE_2D, textureId)
+            shader.gl.activeTexture(pos)
+            shader.gl.bindTexture(StarfaitGLConstants.GL_TEXTURE_2D, textureId)
 
-            GL41.glProgramUniform1i(shader.programId, location, slot)
+            shader.gl.programUniform1i(shader.programId, location, slot)
         }
     }
 
@@ -138,13 +134,13 @@ abstract class GameShader(val programId: Int) {
             if (isUniformLocationInvalidAndLog())
                 return
 
-            GL41.glProgramUniform1i(shader.programId, location, if (x) 1 else 0)
+            shader.gl.programUniform1i(shader.programId, location, if (x) 1 else 0)
         }
     }
 }
 
 fun <T : GameShader> T.bind(block: T.() -> (Unit)) {
-    glUseProgram(this.programId)
+    gl.useProgram(this.programId)
 
     block.invoke(this)
 }

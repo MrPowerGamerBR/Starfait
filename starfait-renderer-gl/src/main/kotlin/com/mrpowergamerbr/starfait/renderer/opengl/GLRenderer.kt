@@ -19,27 +19,12 @@ import org.joml.Matrix3x2f
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL11.GL_SCISSOR_TEST
-import org.lwjgl.opengl.GL11.glDeleteTextures
-import org.lwjgl.opengl.GL11.glDisable
-import org.lwjgl.opengl.GL11.glEnable
-import org.lwjgl.opengl.GL11.glReadPixels
-import org.lwjgl.opengl.GL11.glScissor
-import org.lwjgl.opengl.GL11.glViewport
-import org.lwjgl.opengl.GL15
-import org.lwjgl.opengl.GL20
-import org.lwjgl.opengl.GL30
-import org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER
-import org.lwjgl.opengl.GL30.glBindFramebuffer
-import org.lwjgl.system.MemoryStack
-import java.nio.ByteBuffer
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class OpenGLRenderer : Renderer() {
+class GLRenderer(val gl: StarfaitGL, imageDecoder: ImageDecoder) : Renderer() {
     companion object {
         private const val MAX_BATCH_ELEMENTS = 512
         private const val FIELDS_PER_ELEMENT = 48
@@ -51,44 +36,43 @@ class OpenGLRenderer : Renderer() {
     }
 
     lateinit var runner: StarfaitRunner
-    val textureManager = TextureManager()
-    val shaderManager = ShaderManager()
+    val textureManager = TextureManager(gl, imageDecoder)
+    val shaderManager = ShaderManager(gl)
     val minimalShader: MinimalShader = shaderManager.loadShader(
-        OpenGLRenderer::class.java.getResourceAsStream("/shaders/minimal.vsh").readAllBytes().toString(Charsets.UTF_8),
-        OpenGLRenderer::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
-        ::MinimalShader
+        GLRenderer::class.java.getResourceAsStream("/shaders/minimal.vsh").readAllBytes().toString(Charsets.UTF_8),
+        GLRenderer::class.java.getResourceAsStream("/shaders/minimal.fsh").readAllBytes().toString(Charsets.UTF_8),
+        { MinimalShader(gl, it) }
     )
     val batch = FloatArray(TOTAL_BATCH_SIZE)
     var activeBatchTexture: Texture? = null
     var currentIndex = 0
-    val vao = GL30.glGenVertexArrays()
-    val vbo = GL15.glGenBuffers()
+    val vao = gl.genVertexArrays()
+    val vbo = gl.genBuffers()
     val white1x1Texture = textureManager.load1x1WhiteTexture()
     val textures = mutableMapOf<TextureHandle, Texture>()
     var currentTextureId = 0
 
     init {
         // For transparency in sprites
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+        gl.enable(StarfaitGLConstants.GL_BLEND)
+        gl.blendFunc(StarfaitGLConstants.GL_SRC_ALPHA, StarfaitGLConstants.GL_ONE_MINUS_SRC_ALPHA)
 
-        GL30.glBindVertexArray(vao)
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
-
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, Float.SIZE_BYTES * FIELDS_PER_ELEMENT.toLong() * MAX_BATCH_ELEMENTS, GL15.GL_DYNAMIC_DRAW)
+        gl.bindVertexArray(vao)
+        gl.bindBuffer(StarfaitGLConstants.GL_ARRAY_BUFFER, vbo)
+        gl.bufferData(StarfaitGLConstants.GL_ARRAY_BUFFER, Float.SIZE_BYTES * FIELDS_PER_ELEMENT.toLong() * MAX_BATCH_ELEMENTS, StarfaitGLConstants.GL_DYNAMIC_DRAW)
 
         // aPosition
         // stride is from the START of the current "section"!
-        GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 0L)
-        GL20.glEnableVertexAttribArray(0)
+        gl.vertexAttribPointer(0, 2, StarfaitGLConstants.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 0L)
+        gl.enableVertexAttribArray(0)
 
         // aTexCoord
-        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
-        GL20.glEnableVertexAttribArray(1)
+        gl.vertexAttribPointer(1, 2, StarfaitGLConstants.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
+        gl.enableVertexAttribArray(1)
 
         // aBlendColor
-        GL20.glVertexAttribPointer(2, 4, GL11.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
-        GL20.glEnableVertexAttribArray(2)
+        gl.vertexAttribPointer(2, 4, StarfaitGLConstants.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
+        gl.enableVertexAttribArray(2)
     }
 
     private fun getGLTextureFromStarfaitHandle(handle: TextureHandle): Texture {
@@ -96,7 +80,7 @@ class OpenGLRenderer : Renderer() {
     }
 
     override fun uploadTexture(texture: com.mrpowergamerbr.starfait.wad.Texture): TextureHandle {
-        val uploadedTexture = this.textureManager.loadTexture(texture.blob, GL11.GL_NEAREST)
+        val uploadedTexture = this.textureManager.loadTexture(texture.blob, StarfaitGLConstants.GL_NEAREST)
         return allocateAndStoreTextureHandle(uploadedTexture)
     }
 
@@ -620,68 +604,54 @@ class OpenGLRenderer : Renderer() {
 
         // This sadly very much sucks quite a bit
         // TODO: Maybe replace this with a framebuffer? We draw directly to the fb and flip it on the GPU
-        val flippedByteBuffer = ByteBuffer.allocateDirect(width * height * 4)
-        glReadPixels(x, VIEWPORT_HEIGHT - y - height, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, flippedByteBuffer)
+        val flippedByteArray = gl.readPixels(x, VIEWPORT_HEIGHT - y - height, width, height, StarfaitGLConstants.GL_RGBA, StarfaitGLConstants.GL_UNSIGNED_BYTE)
 
-        // We can't use ".array()" directly because it is a ooo allocateDirect
-        val flippedByteArray = ByteArray(width * height * 4)
-        flippedByteBuffer.get(flippedByteArray)
-        val byteBuffer = ByteBuffer.allocateDirect(width * height * 4)
+        val byteArray = ByteArray(flippedByteArray.size)
         for (i in (height - 1) downTo 0) {
-            byteBuffer.put(flippedByteArray, i * width * 4, width * 4)
+            flippedByteArray.copyInto(byteArray, (height - 1 - i) * width * 4, i * width * 4, (i + 1) * width * 4)
         }
-        byteBuffer.position(0)
 
         // 1. Generate and bind a new texture ID
-        val textureId = GL11.glGenTextures()
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId)
+        val textureId = gl.genTextures()
+        gl.bindTexture(StarfaitGLConstants.GL_TEXTURE_2D, textureId)
 
         // 2. Tell OpenGL how to unpack the RGBA bytes.
         // Each component is 1 byte size
-        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
+        gl.pixelStorei(StarfaitGLConstants.GL_UNPACK_ALIGNMENT, 1)
 
         // Create the texture first
-        GL11.glTexImage2D(
-            GL11.GL_TEXTURE_2D,
+        gl.texImage2D(
+            StarfaitGLConstants.GL_TEXTURE_2D,
             0,
-            GL11.GL_RGBA,
+            StarfaitGLConstants.GL_RGBA,
             width,
             height,
             0,
-            GL11.GL_RGBA,
-            GL11.GL_UNSIGNED_BYTE,
-            byteBuffer
+            StarfaitGLConstants.GL_RGBA,
+            StarfaitGLConstants.GL_UNSIGNED_BYTE,
+            byteArray
         )
 
         // 3. Set texture parameters
         // Repeat image in both directions
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT)
+        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_WRAP_S, StarfaitGLConstants.GL_REPEAT)
+        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_WRAP_T, StarfaitGLConstants.GL_REPEAT)
         // When stretching the image, pixelate
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
+        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_MIN_FILTER, StarfaitGLConstants.GL_NEAREST)
         // When shrinking the image, pixelate
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
+        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_MAG_FILTER, StarfaitGLConstants.GL_NEAREST)
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
+        gl.bindFramebuffer(StarfaitGLConstants.GL_READ_FRAMEBUFFER, 0)
 
         return allocateAndStoreTextureHandle(Texture(textureId, width, height))
     }
 
-    override fun deleteTextures(textures: List<TextureHandle>) {
-        val texturesToBeDeleted = textures.mapNotNull { this.textures.remove(it) }
-
-        if (texturesToBeDeleted.isNotEmpty()) {
-            MemoryStack.stackPush().use {
-                val textures = it.ints(*texturesToBeDeleted.map { it.textureId }.toIntArray())
-                glDeleteTextures(textures)
-            }
-        }
-    }
+    override fun deleteTextures(textures: List<TextureHandle>) = gl.deleteTextures(textures.mapNotNull { this.textures.remove(it)?.textureId })
 
     override fun withView(view: RunnerRoom.RunnerView?, block: () -> Unit) {
         flush()
 
-        glEnable(GL_SCISSOR_TEST)
+        gl.enable(StarfaitGLConstants.GL_SCISSOR_TEST)
 
         if (view != null) {
             val halfWidth = view.viewWidth.toFloat() / 2f
@@ -689,8 +659,8 @@ class OpenGLRenderer : Renderer() {
 
             // portX/portY = where it will be rendered in the screen
             // We do - for the Y because OpenGL is y up
-            glViewport(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
-            glScissor(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+            gl.viewport(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+            gl.scissor(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
 
             minimalShader.uProjection.set(
                 Matrix4f()
@@ -709,8 +679,8 @@ class OpenGLRenderer : Renderer() {
                     .get(FloatArray(16))
             )
         } else {
-            glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
-            glScissor(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+            gl.viewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+            gl.scissor(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
 
             minimalShader.uProjection.set(
                 Matrix4f()
@@ -721,14 +691,14 @@ class OpenGLRenderer : Renderer() {
 
         block()
 
-        glDisable(GL_SCISSOR_TEST)
+        gl.disable(StarfaitGLConstants.GL_SCISSOR_TEST)
     }
 
     override fun frame(block: () -> Unit) {
         // TODO: Respect the room's drawBackgroundColor
         val color = runner.currentRoom.backgroundColor
-        GL11.glClearColor(color.redF, color.greenF, color.blueF, 1.0f)
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
+        gl.clearColor(color.redF, color.greenF, color.blueF, 1.0f)
+        gl.clear(StarfaitGLConstants.GL_COLOR_BUFFER_BIT)
 
         block()
 
@@ -921,16 +891,16 @@ class OpenGLRenderer : Renderer() {
     }
 
     fun flush() {
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
-        GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, 0, batch)
+        gl.bindBuffer(StarfaitGLConstants.GL_ARRAY_BUFFER, vbo)
+        gl.bufferSubData(StarfaitGLConstants.GL_ARRAY_BUFFER, 0, batch)
 
         val activeBatchTexture = this.activeBatchTexture
         if (activeBatchTexture != null)
             minimalShader.uTexture.set(0, activeBatchTexture)
 
         minimalShader.bind {
-            GL30.glBindVertexArray(vao)
-            GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, currentIndex / TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT)
+            gl.bindVertexArray(vao)
+            gl.drawArrays(StarfaitGLConstants.GL_TRIANGLES, 0, currentIndex / TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT)
         }
 
         this.currentIndex = 0

@@ -2,10 +2,11 @@ package com.mrpowergamerbr.starfait.wad.chunks
 
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Background
+import com.mrpowergamerbr.starfait.wad.TexturePageEntryRegistry
 
 class BGND(val backgrounds: List<Background>) {
     companion object {
-        fun read(reader: StarfaitByteBuffer): BGND {
+        fun read(reader: StarfaitByteBuffer, tpagRegistry: TexturePageEntryRegistry): BGND {
             val addresses = reader.readAddresses()
 
             val backgrounds = ArrayList<Background>(addresses.size)
@@ -17,6 +18,7 @@ class BGND(val backgrounds: List<Background>) {
                 val smooth = reader.readIntBoolean()
                 val preload = reader.readIntBoolean()
                 val pointer = reader.readTexturePageEntryPointer()
+                tpagRegistry.readTexturePageEntryAtPointer(reader, pointer, false)
 
                 backgrounds.add(
                     Background(

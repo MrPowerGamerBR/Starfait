@@ -41,14 +41,14 @@ class RunnerTexturePageEntry(
             if (texturePageEntryPointer.isNull)
                 return null
 
-            return fromWAD(gameWAD.tpag.entries[texturePageEntryPointer]!!, textureHandles)
+            return fromWAD(gameWAD.tpagRegistry.entries[texturePageEntryPointer]!!, textureHandles)
         }
 
         fun fromDynamic(gameWAD: GameWAD, texturePageEntryPointer: TexturePageEntryPointer, textureHandles: Map<Short, TextureHandle>): RunnerTexturePageEntry? {
             if (texturePageEntryPointer.isNull)
                 return null
 
-            return fromWAD(gameWAD.tpag.entries[texturePageEntryPointer]!!, textureHandles)
+            return fromWAD(gameWAD.tpagRegistry.entries[texturePageEntryPointer]!!, textureHandles)
         }
     }
 }

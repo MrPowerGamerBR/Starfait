@@ -36,7 +36,8 @@ class GameWAD(
     val room: ROOM,
     val code: CODE,
     val vari: VARI,
-    val func: FUNC
+    val func: FUNC,
+    val tpagRegistry: TexturePageEntryRegistry
 ) {
     companion object {
         fun read(reader: StarfaitByteBuffer): GameWAD {
@@ -67,18 +68,23 @@ class GameWAD(
                 return block(reader, chunkInfo.size)
             }
 
+            // You may be wondering "wow this SUCKS why does THIS EXIST?!?!"
+            // Because some WAD files were modded with WinPack/TranslaTale, and those WADs decided that it was a good idea:tm: to store data outside of the TPAG chunk!
+            // So we need to have a separate TPAG registry
+            val tpagRegistry = TexturePageEntryRegistry()
+
             val gen8 = readChunkAtPosition(chunkNameToPosition["GEN8"]!!) { reader, _ -> GEN8.read(reader) }
             val strg = readChunkAtPosition(chunkNameToPosition["STRG"]!!) { reader, _ -> STRG.read(reader) }
             val path = readChunkAtPosition(chunkNameToPosition["PATH"]!!) { reader, _ -> PATH.read(reader) }
             val audo = readChunkAtPosition(chunkNameToPosition["AUDO"]!!) { reader, _ -> AUDO.read(reader) }
             val sond = readChunkAtPosition(chunkNameToPosition["SOND"]!!) { reader, _ -> SOND.read(reader) }
             val scpt = readChunkAtPosition(chunkNameToPosition["SCPT"]!!) { reader, _ -> SCPT.read(reader) }
-            val tpag = readChunkAtPosition(chunkNameToPosition["TPAG"]!!) { reader, _ -> TPAG.read(reader) }
+            val tpag = readChunkAtPosition(chunkNameToPosition["TPAG"]!!) { reader, _ -> TPAG.read(reader, tpagRegistry) }
             val optn = readChunkAtPosition(chunkNameToPosition["OPTN"]!!) { reader, _ -> OPTN.read(reader) }
-            val bgnd = readChunkAtPosition(chunkNameToPosition["BGND"]!!) { reader, _ -> BGND.read(reader) }
+            val bgnd = readChunkAtPosition(chunkNameToPosition["BGND"]!!) { reader, _ -> BGND.read(reader, tpagRegistry) }
             val txtr = readChunkAtPosition(chunkNameToPosition["TXTR"]!!) { reader, _ -> TXTR.read(reader) }
-            val font = readChunkAtPosition(chunkNameToPosition["FONT"]!!) { reader, chunkSize -> FONT.read(reader, chunkSize) }
-            val sprt = readChunkAtPosition(chunkNameToPosition["SPRT"]!!) { reader, _ -> SPRT.read(reader) }
+            val font = readChunkAtPosition(chunkNameToPosition["FONT"]!!) { reader, chunkSize -> FONT.read(reader, chunkSize, tpagRegistry) }
+            val sprt = readChunkAtPosition(chunkNameToPosition["SPRT"]!!) { reader, _ -> SPRT.read(reader, tpagRegistry) }
             val objt = readChunkAtPosition(chunkNameToPosition["OBJT"]!!) { reader, _ -> OBJT.read(reader) }
             val room = readChunkAtPosition(chunkNameToPosition["ROOM"]!!) { reader, _ -> ROOM.read(reader, gen8.wadVersion) }
             val code = readChunkAtPosition(chunkNameToPosition["CODE"]!!) { reader, _ -> CODE.read(reader) }
@@ -102,7 +108,8 @@ class GameWAD(
                 room,
                 code,
                 vari,
-                func
+                func,
+                tpagRegistry
             )
         }
     }

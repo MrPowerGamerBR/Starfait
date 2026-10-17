@@ -5,13 +5,14 @@ import com.mrpowergamerbr.starfait.wad.CollisionMask
 import com.mrpowergamerbr.starfait.wad.Sprite
 import com.mrpowergamerbr.starfait.wad.Sprite.BoundingBoxMode
 import com.mrpowergamerbr.starfait.wad.TexturePageEntryPointer
+import com.mrpowergamerbr.starfait.wad.TexturePageEntryRegistry
 
 class SPRT(val sprites: List<Sprite>) {
     companion object {
         // A frame count of -1 means the sprite is a SWF or a Spine skeleton sprite instead of a regular one, which stores completely different data after this point
         private const val SPECIAL_SPRITE_FRAME_COUNT = -1
 
-        fun read(reader: StarfaitByteBuffer): SPRT {
+        fun read(reader: StarfaitByteBuffer, tpagRegistry: TexturePageEntryRegistry): SPRT {
             val addresses = reader.readAddresses()
 
             val sprites = ArrayList<Sprite>(addresses.size)
@@ -48,7 +49,9 @@ class SPRT(val sprites: List<Sprite>) {
 
                 val frames = ArrayList<TexturePageEntryPointer>(frameCount)
                 repeat(frameCount) {
-                    frames.add(reader.readTexturePageEntryPointer())
+                    val pointer = reader.readTexturePageEntryPointer()
+                    tpagRegistry.readTexturePageEntryAtPointer(reader, pointer, false)
+                    frames.add(pointer)
                 }
 
                 // Every mask is one bit per pixel, with each row padded to a whole byte

@@ -4,7 +4,6 @@ import com.mrpowergamerbr.starfait.renderer.TextureHandle
 import com.mrpowergamerbr.starfait.wad.Font
 import com.mrpowergamerbr.starfait.wad.Font.Glyph
 import com.mrpowergamerbr.starfait.wad.GameWAD
-import com.mrpowergamerbr.starfait.wad.StringPointer
 
 class RunnerFont private constructor(
     val name: String,
@@ -28,7 +27,7 @@ class RunnerFont private constructor(
             font.italic,
             font.rangeStart,
             font.rangeEnd,
-            RunnerTexturePageEntry.fromWAD(gameWAD.tpag.entries[font.texturePageEntryPointer]!!, textureHandles),
+            RunnerTexturePageEntry.fromWAD(gameWAD.tpagRegistry.entries[font.texturePageEntryPointer]!!, textureHandles),
             font.scaleX,
             font.scaleY,
             font.glyphs

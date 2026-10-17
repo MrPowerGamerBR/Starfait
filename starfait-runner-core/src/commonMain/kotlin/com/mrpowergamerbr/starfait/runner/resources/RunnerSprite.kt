@@ -44,7 +44,7 @@ class RunnerSprite private constructor(
             sprite.originX,
             sprite.originY,
             sprite.type,
-            sprite.frames.map { RunnerTexturePageEntry.fromWAD(gameWAD.tpag.entries[it]!!, textureHandles) },
+            sprite.frames.map { RunnerTexturePageEntry.fromWAD(gameWAD.tpagRegistry.entries[it]!!, textureHandles) },
             sprite.collisionMasks
         )
 

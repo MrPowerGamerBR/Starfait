@@ -2,6 +2,7 @@ package com.mrpowergamerbr.starfait.wad.chunks
 
 import com.mrpowergamerbr.starfait.StarfaitByteBuffer
 import com.mrpowergamerbr.starfait.wad.Font
+import com.mrpowergamerbr.starfait.wad.TexturePageEntryRegistry
 
 class FONT(
     val fonts: List<Font>,
@@ -11,7 +12,7 @@ class FONT(
         // The last 0x200 bytes of the chunk are a code page translation table
         private const val CODE_PAGE_TRANSLATION_SIZE = 0x200
 
-        fun read(reader: StarfaitByteBuffer, chunkSize: Int): FONT {
+        fun read(reader: StarfaitByteBuffer, chunkSize: Int, tpagRegistry: TexturePageEntryRegistry): FONT {
             val startOfChunk = reader.position
 
             val addresses = reader.readAddresses()
@@ -30,7 +31,8 @@ class FONT(
                 reader.readByte() // unknown
                 reader.readByte() // unknown
                 val rangeEnd = reader.readUInt()
-                val texturePageEntryPointer = reader.readTexturePageEntryPointer()
+                val pointer = reader.readTexturePageEntryPointer()
+                tpagRegistry.readTexturePageEntryAtPointer(reader, pointer, false)
                 val scaleX = reader.readFloat()
                 val scaleY = reader.readFloat()
                 val glyphAddresses = reader.readAddresses()
@@ -70,7 +72,7 @@ class FONT(
                         italic = italic,
                         rangeStart = rangeStart,
                         rangeEnd = rangeEnd,
-                        texturePageEntryPointer = texturePageEntryPointer,
+                        texturePageEntryPointer = pointer,
                         scaleX = scaleX,
                         scaleY = scaleY,
                         glyphs = glyphs

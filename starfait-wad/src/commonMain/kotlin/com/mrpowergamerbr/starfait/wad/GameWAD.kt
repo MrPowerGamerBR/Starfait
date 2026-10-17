@@ -86,7 +86,7 @@ class GameWAD(
                     "FONT" -> font = FONT.read(reader, chunkSize)
                     "SPRT" -> sprt = SPRT.read(reader)
                     "OBJT" -> objt = OBJT.read(reader)
-                    "ROOM" -> room = ROOM.read(reader)
+                    "ROOM" -> room = ROOM.read(reader, gen8!!.wadVersion)
                     "CODE" -> code = CODE.read(reader)
                     "VARI" -> vari = VARI.read(reader, chunkSize)
                     "FUNC" -> func = FUNC.read(reader, chunkSize)

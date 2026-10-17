@@ -7,7 +7,7 @@ import com.mrpowergamerbr.starfait.wad.RoomFlags
 
 class ROOM(val rooms: List<Room>) {
     companion object {
-        fun read(reader: StarfaitByteBuffer): ROOM {
+        fun read(reader: StarfaitByteBuffer, wadVersion: Byte): ROOM {
             val addresses = reader.readAddresses()
 
             val rooms = ArrayList<Room>(addresses.size)
@@ -118,7 +118,7 @@ class ROOM(val rooms: List<Room>) {
                     val scaleY = reader.readFloat()
                     val color = reader.readInt()
                     val rotation = reader.readFloat()
-                    val preCreateCodeId = reader.readInt()
+                    val preCreateCodeId = if (wadVersion >= 16) reader.readInt() else -1
 
                     Room.Instance(
                         x = x,

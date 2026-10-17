@@ -59,6 +59,7 @@ kotlin {
 
                 api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0-RC")
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
             }
         }
 

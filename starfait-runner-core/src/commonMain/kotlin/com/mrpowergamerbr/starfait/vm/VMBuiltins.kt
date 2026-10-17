@@ -5,7 +5,12 @@ import com.mrpowergamerbr.starfait.TimeUtils
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.runner.*
 import com.mrpowergamerbr.starfait.vm.builtins.registerBuiltinFunctions
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.number
+import kotlinx.datetime.toLocalDateTime
 import kotlin.reflect.KMutableProperty1
+import kotlin.time.Clock
 
 
 class VMBuiltins(val vm: StarfaitVM) {
@@ -356,6 +361,12 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerRealStubbedVariable("application_surface", -1.0)
 
         registerReadOnlyVariable("current_time") { _, _ -> RValue.Real((TimeUtils.currentTimeMillis() - runner.startedAt).toDouble()) }
+        registerReadOnlyVariable("current_day") { _, _ -> RValue.Real(getLocalDateTimeNow().day.toDouble()) }
+        registerReadOnlyVariable("current_minute") { _, _ -> RValue.Real(getLocalDateTimeNow().minute.toDouble()) }
+        registerReadOnlyVariable("current_second") { _, _ -> RValue.Real(getLocalDateTimeNow().second.toDouble()) }
+        registerReadOnlyVariable("current_weekday") { _, _ -> RValue.Real(getLocalDateTimeNow().dayOfWeek.isoDayNumber.toDouble()) }
+        registerReadOnlyVariable("current_hour") { _, _ -> RValue.Real(getLocalDateTimeNow().hour.toDouble()) }
+        registerReadOnlyVariable("current_month") { _, _ -> RValue.Real(getLocalDateTimeNow().month.number.toDouble()) }
 
         // TODO: This should be writeable
         registerReadOnlyVariable("room") { _, _ -> RValue.Int32(runner.currentRoom.roomId) }
@@ -380,4 +391,6 @@ class VMBuiltins(val vm: StarfaitVM) {
         registerReadOnlyInstanceVariable("xprevious") { instance, _ -> RValue.Real(instance.xPrevious.toDouble()) }
         registerReadOnlyInstanceVariable("yprevious") { instance, _ -> RValue.Real(instance.yPrevious.toDouble()) }
     }
+
+    private fun getLocalDateTimeNow() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 }

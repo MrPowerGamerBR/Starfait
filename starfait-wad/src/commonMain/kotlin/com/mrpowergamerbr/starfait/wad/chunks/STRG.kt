@@ -15,8 +15,10 @@ class STRG(
 
             for ((index, address) in addresses.withIndex()) {
                 reader.position = address
+                // The YoYo Runner ignores this field
+                // While for all games that were compiled with GameMaker this field can be trusted, some old modding tools (like WinPack/TranslaTale) uses incorrect string lengths
                 val length = reader.readInt()
-                val string = reader.readUTF8String(length)
+                val string = reader.readNullTerminatedString()
 
                 // The address includes the size of the string, however anywhere else in the WAD it references the string without the size
                 strings[StringPointer(address + 4)] = string

@@ -4,6 +4,7 @@ import com.mrpowergamerbr.starfait.renderer.opengl.DecodedImage
 import com.mrpowergamerbr.starfait.renderer.opengl.RawPixelsDecodedImage
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGL
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGLConstants
+import com.mrpowergamerbr.starfait.web.toFloat32ArrayFast
 import js.buffer.ArrayBufferLike
 import js.buffer.ArrayBufferView
 import js.buffer.toArrayBuffer
@@ -28,14 +29,6 @@ import kotlin.js.unsafeCast
 // Very sketchy!
 fun Int.asGLenum() = unsafeCast<GLenum>(this)
 fun Int.asGLbitfield() = unsafeCast<GLbitfield>(this)
-
-private fun FloatArray.toFloat32Array(): Float32Array<ArrayBufferLike> {
-    val array = Float32Array<ArrayBufferLike>(this.size)
-    for ((index, element) in this.withIndex()) {
-        array[index] = element.toJsFloat()
-    }
-    return array
-}
 
 // WebGL2 returns typed objects, but our interface expects raw values
 // Because I'm too lazy to create a proper typed interface, we'll for now just convert objects into ints
@@ -81,7 +74,7 @@ class StarfaitWebGL2(val context: WebGL2RenderingContext) : StarfaitGL() {
     override fun scissor(x: Int, y: Int, width: Int, height: Int) = context.scissor(x, y, width, height)
     override fun bindBuffer(target: Int, buffer: Int) = context.bindBuffer(target.asGLenum(), this.buffers.getObjectById(buffer)!!)
     override fun bufferData(target: Int, size: Long, usage: Int) = context.bufferData(target.asGLenum(), size.toInt(), usage.asGLenum())
-    override fun bufferSubData(target: Int, offset: Long, buffer: FloatArray) = context.bufferSubData(target.asGLenum(), offset.toInt(), buffer.toFloat32Array())
+    override fun bufferSubData(target: Int, offset: Long, buffer: FloatArray) = context.bufferSubData(target.asGLenum(), offset.toInt(), buffer.toFloat32ArrayFast())
     override fun bindVertexArray(array: Int) = context.bindVertexArray(this.vertexArrayObjects.getObjectById(array)!!)
     override fun drawArrays(mode: Int, first: Int, count: Int) = context.drawArrays(mode.asGLenum(), first, count)
     override fun genTextures() = textures.allocate(context.createTexture())
@@ -199,6 +192,6 @@ class StarfaitWebGL2(val context: WebGL2RenderingContext) : StarfaitGL() {
 
     override fun programUniformMatrix4fv(program: Int, location: Int, transpose: Boolean, value: FloatArray) {
         checkActiveProgram(program)
-        context.uniformMatrix4fv(this.uniformLocations.getObjectById(location), transpose, value.toFloat32Array())
+        context.uniformMatrix4fv(this.uniformLocations.getObjectById(location), transpose, value.toFloat32ArrayFast())
     }
 }

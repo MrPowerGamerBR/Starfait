@@ -17,12 +17,16 @@ import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.web.audio.web.WebAudioManager
+import com.mrpowergamerbr.starfait.web.filesystem.opfs.OPFSFileSystem
 import com.mrpowergamerbr.starfait.web.renderer.BrowserImageDecoder
 import com.mrpowergamerbr.starfait.web.renderer.StarfaitWebGL2
 import js.buffer.ArrayBuffer
 import js.buffer.toByteArray
+import js.iterable.`[@@asyncIterator]`
+import js.iterable.asFlow
 import js.iterable.iterator
 import js.objects.unsafeJso
+import js.promise.await
 import js.reflect.unsafeCast
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
@@ -36,6 +40,10 @@ import web.dom.ElementId
 import web.dom.document
 import web.events.addEventHandler
 import web.file.File
+import web.fs.FileSystemFileHandle
+import web.fs.FileSystemHandleKind
+import web.fs.file
+import web.fs.getFile
 import web.gl.GLbitfield
 import web.gl.ID
 import web.gl.WebGL2RenderingContext
@@ -48,6 +56,8 @@ import web.keyboard.KEY_DOWN
 import web.keyboard.KEY_PRESS
 import web.keyboard.KEY_UP
 import web.keyboard.KeyboardEvent
+import web.navigator.navigator
+import web.storage.getDirectory
 import web.window.window
 import kotlin.js.unsafeCast
 import kotlin.wasm.unsafe.UnsafeWasmMemoryApi
@@ -126,7 +136,19 @@ class StarfaitWeb {
                         """.trimIndent(),
                         BrowserImageDecoder()
                     )
-                    val layeredFileSystem = LayeredFileSystem(VirtualFileSystem(), bundleFS)
+
+
+                    val opfsRoot = navigator.storage.getDirectory()
+                    val saveFS = VirtualFileSystem()
+
+                    opfsRoot.values().asFlow().collect { handle ->
+                        if (handle.kind == FileSystemHandleKind.file) {
+                            val file = (handle as FileSystemFileHandle).getFile()
+                            saveFS.writeFile(file.name, file.arrayBuffer().toByteArrayFast())
+                        }
+                    }
+
+                    val layeredFileSystem = LayeredFileSystem(OPFSFileSystem(saveFS, navigator.storage.getDirectory()), bundleFS)
                     val audioManager = WebAudioManager(vm.gameWAD, bundleFS)
                     val runner = StarfaitRunner(
                         RunnerResources.create(vm.gameWAD, renderer),

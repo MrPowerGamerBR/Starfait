@@ -1,6 +1,8 @@
 package com.mrpowergamerbr.starfait.web
 
 import js.buffer.ArrayBuffer
+import js.buffer.ArrayBufferLike
+import js.typedarrays.Float32Array
 import web.audio.AudioContext
 import web.blob.Blob
 import kotlin.wasm.unsafe.UnsafeWasmMemoryApi
@@ -20,6 +22,10 @@ private external fun copyArrayBufferToLinearMemory(memory: JsAny, src: ArrayBuff
 // Slice without any parameters = copy
 @JsFun("(memory, src, size) => new Uint8Array(memory.buffer, src, size).slice().buffer")
 private external fun createArrayBufferFromLinearMemory(memory: JsAny, src: Int, size: Int): ArrayBuffer
+
+// Slice without any parameters = copy
+@JsFun("(memory, src, size) => new Float32Array(memory.buffer, src, size).slice()")
+private external fun createFloat32ArrayFromLinearMemory(memory: JsAny, src: Int, size: Int): Float32Array<ArrayBufferLike>
 
 @OptIn(UnsafeWasmMemoryApi::class, ExperimentalWasmJsInterop::class)
 fun ArrayBuffer.toByteArrayFast(): ByteArray {
@@ -49,5 +55,18 @@ fun ByteArray.toArrayBufferFast(): ArrayBuffer {
         }
 
         return createArrayBufferFromLinearMemory(wasmMemory, pointer.address.toInt(), this.size)
+    }
+}
+
+@OptIn(UnsafeWasmMemoryApi::class, ExperimentalWasmJsInterop::class)
+fun FloatArray.toFloat32ArrayFast(): Float32Array<ArrayBufferLike> {
+    withScopedMemoryAllocator { allocator ->
+        val pointer = allocator.allocate(this.size * 4)
+
+        for (i in this.indices) {
+            (pointer + i * 4).storeInt(this[i].toRawBits())
+        }
+
+        return createFloat32ArrayFromLinearMemory(wasmMemory, pointer.address.toInt(), this.size)
     }
 }

@@ -539,7 +539,7 @@ class StarfaitVM(
             )
 
             if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains(currentCallFrame.self.objectName) || functionCallsToBeTraced.contains("*")) {
-                println("VM: [$currentCallFrameCodeName] Called script function \"$functionName(${arguments.joinToString(", ")})\"! Result: ${returnValue ?: "undefined"}")
+                println("VM: [$currentCallFrameCodeName] Called script function \"$functionName(${arguments.joinToString(", ")})\"! Result: $returnValue")
             }
 
             if (returnValue == null) {

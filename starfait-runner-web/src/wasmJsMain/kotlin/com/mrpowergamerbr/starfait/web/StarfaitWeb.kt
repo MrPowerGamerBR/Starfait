@@ -88,7 +88,7 @@ class StarfaitWeb {
                     }
 
                     val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(bundleFS.readFile("data.win")!!, 0))
-                    println(gameWAD.strg.getString(gameWAD.gen8.gameDisplayName))
+                    println(gameWAD.gen8.gameDisplayName)
 
                     val vm = StarfaitVM(
                         gameWAD,

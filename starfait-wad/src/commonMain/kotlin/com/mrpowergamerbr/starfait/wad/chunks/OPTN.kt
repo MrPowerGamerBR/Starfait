@@ -38,8 +38,8 @@ class OPTN(
             val constantCount = reader.readUInt()
             val constants = ArrayList<Constant>(constantCount.toInt())
             repeat(constantCount.toInt()) {
-                val name = reader.readStringPointer()
-                val value = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
+                val value = reader.readStringPointerAndReadNullTerminatedString()
                 constants.add(Constant(name = name, value = value))
             }
 

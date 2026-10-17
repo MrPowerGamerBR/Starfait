@@ -1,8 +1,8 @@
 package com.mrpowergamerbr.starfait.wad
 
 class Font(
-    val name: StringPointer,
-    val fontName: StringPointer,
+    val name: String,
+    val fontName: String,
     val size: UInt,
     val bold: Boolean,
     val italic: Boolean,

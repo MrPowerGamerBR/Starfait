@@ -15,7 +15,7 @@ class OBJT(val objects: List<GameObject>) {
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val spriteIndex = reader.readInt()
                 val visible = reader.readIntBoolean()
                 val solid = reader.readIntBoolean()

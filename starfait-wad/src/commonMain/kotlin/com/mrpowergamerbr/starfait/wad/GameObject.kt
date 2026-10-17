@@ -1,7 +1,7 @@
 package com.mrpowergamerbr.starfait.wad
 
 class GameObject(
-    val name: StringPointer,
+    val name: String,
     val spriteIndex: Int,
     val visible: Boolean,
     val solid: Boolean,

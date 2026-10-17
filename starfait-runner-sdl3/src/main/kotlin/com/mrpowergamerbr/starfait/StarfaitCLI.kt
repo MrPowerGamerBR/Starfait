@@ -75,9 +75,9 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
     val seed by option(help = "Changes the seed of the game, useful for reproducible runs").long().defaultLazy { System.currentTimeMillis() }
     val saveFolder by option(help = "Sets where the game's saves will be saved, by default it is saved to \"saves/GameName/\"")
 
-    fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, StringPointer>?, match: Regex) {
+    fun <T : Any> dump(gameWAD: GameWAD, type: String, list: List<T>, nameSource: KProperty1<T, String>?, match: Regex) {
         for ((index, element) in list.withIndex()) {
-            val name = nameSource?.invoke(element)?.let { gameWAD.strg.getString(it) }
+            val name = nameSource?.invoke(element)
 
             if (name?.matches(match) == true || index.toString().matches(match)) {
                 println("$type #$index:")
@@ -115,7 +115,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
 
         val byteReader = StarfaitByteBuffer.fromByteArray(wadFile.readBytes(), 0)
         val gameWAD = GameWAD.read(byteReader)
-        println("Loaded \"${gameWAD.strg.getString(gameWAD.gen8.gameDisplayName)}\" successfully! [WAD Version ${gameWAD.gen8.wadVersion}]")
+        println("Loaded \"${gameWAD.gen8.gameDisplayName}\" successfully! [WAD Version ${gameWAD.gen8.wadVersion}]")
 
         if (printGameObjects != null) {
             dump(gameWAD, "Object", gameWAD.objt.objects, GameObject::name, Regex(printGameObjects!!))
@@ -179,14 +179,14 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
             val scriptFunctions = mutableSetOf<String>()
 
             for (func in gameWAD.func.functions) {
-                val functionName = func.name.let { gameWAD.strg.getString(it) }
+                val functionName = func.name
 
                 val handler = vm.builtins.registeredFunctions[functionName]
 
                 if (handler != null) {
                     implementedFunctions.add(functionName)
                 } else {
-                    val scpt = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
+                    val scpt = gameWAD.scpt.scripts.firstOrNull { it.name == functionName }
 
                     if (scpt != null) {
                         scriptFunctions.add(functionName)
@@ -214,7 +214,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
         if (printObjectTree != null) {
             val split = printObjectTree!!.split(",")
             for (obj in gameWAD.objt.objects) {
-                val name = obj.name.let { gameWAD.strg.getString(it) }
+                val name = obj.name
 
                 if (split.contains("*") || split.contains(name)) {
                     val objectTree = mutableListOf<GameObject>()
@@ -235,7 +235,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
                         if (!isFirst) {
                             print(" -> ")
                         }
-                        print(gameWAD.strg.getString(entry.name))
+                        print(entry.name)
                         isFirst = false
                     }
                     println()
@@ -249,7 +249,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
             outputFolder.mkdirs()
 
             // TODO: Allow customizing this somehow?
-            val room = gameWAD.room.rooms.first { gameWAD.strg.getString(it.name) == "room_area1" }
+            val room = gameWAD.room.rooms.first { it.name == "room_area1" }
 
             for (tile in room.tiles) {
                 val background = gameWAD.bgnd.backgrounds[tile.backgroundIndex]
@@ -277,7 +277,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
                     entryHeight
                 )
 
-                ImageIO.write(tileImage, "png", File(outputFolder, "${gameWAD.strg.getString(room.name)}_${tile.x}_${tile.y}.png"))
+                ImageIO.write(tileImage, "png", File(outputFolder, "${room.name}_${tile.x}_${tile.y}.png"))
             }
             return
         }
@@ -300,7 +300,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
                         texturePageEntry.sourceHeight.toInt()
                     )
 
-                    ImageIO.write(spriteImage, "png", File(outputFolder, "${gameWAD.strg.getString(sprite.name)}.$index.png"))
+                    ImageIO.write(spriteImage, "png", File(outputFolder, "${sprite.name}.$index.png"))
                 }
             }
             return
@@ -313,7 +313,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
             for (sprite in gameWAD.sprt.sprites) {
                 if (sprite.hasCollisionMask) {
                     for ((collisionMaskIndex, collisionMask) in sprite.collisionMasks.withIndex()) {
-                        File(outputFolder, "${gameWAD.strg.getString(sprite.name)}.$collisionMaskIndex.bin").writeBytes(collisionMask.data)
+                        File(outputFolder, "${sprite.name}.$collisionMaskIndex.bin").writeBytes(collisionMask.data)
 
                         val maskWidth = sprite.width
                         val maskHeight = sprite.height
@@ -327,7 +327,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
                             }
                         }
 
-                        ImageIO.write(image, "png", File(outputFolder, "${gameWAD.strg.getString(sprite.name)}.$collisionMaskIndex.png"))
+                        ImageIO.write(image, "png", File(outputFolder, "${sprite.name}.$collisionMaskIndex.png"))
                     }
                 }
             }
@@ -338,10 +338,10 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
             val disassembler = StarfaitDisassembler(gameWAD)
             StarfaitUtils.remapReferences(gameWAD)
 
-            val codeToBeDisassembled = gameWAD.code.codes.filter { disassemble.contains("*") || gameWAD.strg.getString(it.name) in disassemble }
+            val codeToBeDisassembled = gameWAD.code.codes.filter { disassemble.contains("*") || it.name in disassemble }
 
             for (code in codeToBeDisassembled) {
-                println("CODE ${gameWAD.strg.getString(code.name)}:")
+                println("CODE ${code.name}:")
                 val start = code.offset + (code.bytecodeRelativeOffsetFieldPosition + code.bytecodeRelativeOffset) - gameWAD.code.postAddressPosition
                 val bytecodeInstructions = gameWAD.code.bytecode.copyOfRange(
                     start,
@@ -379,7 +379,7 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
         var saveFolderKind: SaveFolderKind = SaveFolderKind.Memory
 
         if (this.saveFolder != "memory" || this.saveFolder == null) {
-            saveFolderKind = SaveFolderKind.Folder(File(this.saveFolder ?: "./saves/${gameWAD.strg.getString(gameWAD.gen8.gameTitle)}/").also { it.mkdirs() })
+            saveFolderKind = SaveFolderKind.Folder(File(this.saveFolder ?: "./saves/${gameWAD.gen8.gameTitle}/").also { it.mkdirs() })
         }
 
         val window = StarfaitWindow(
@@ -402,14 +402,14 @@ class StarfaitCLI : CliktCommand(name = "starfait-runner") {
                     var room2Id: Int? = null
 
                     for ((index, room) in gameWAD.room.rooms.withIndex()) {
-                        if (room1NameOrId.toIntOrNull() == index || room1NameOrId == gameWAD.strg.getString(room.name)) {
+                        if (room1NameOrId.toIntOrNull() == index || room1NameOrId == room.name) {
                             room1Id = index
                             break
                         }
                     }
 
                     for ((index, room) in gameWAD.room.rooms.withIndex()) {
-                        if (room2NameOrId.toIntOrNull() == index || room2NameOrId == gameWAD.strg.getString(room.name)) {
+                        if (room2NameOrId.toIntOrNull() == index || room2NameOrId == room.name) {
                             room2Id = index
                             break
                         }

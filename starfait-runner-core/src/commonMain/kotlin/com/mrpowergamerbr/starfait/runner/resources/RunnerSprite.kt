@@ -29,7 +29,7 @@ class RunnerSprite private constructor(
 ) {
     companion object {
         fun fromWAD(gameWAD: GameWAD, sprite: Sprite, textureHandles: Map<Short, TextureHandle>) = RunnerSprite(
-            sprite.name.let { gameWAD.strg.getString(it) },
+            sprite.name,
             sprite.width,
             sprite.height,
             sprite.bboxLeft,

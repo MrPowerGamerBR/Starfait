@@ -24,7 +24,7 @@ class VARI(
             val entryCount = remaining / ENTRY_SIZE
             val variables = ArrayList<Variable>(entryCount)
             repeat(entryCount) {
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val instanceType = reader.readInt()
                 val varId = reader.readInt()
                 val occurrenceCount = reader.readInt()

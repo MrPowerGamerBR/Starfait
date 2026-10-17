@@ -50,7 +50,7 @@ class WebAudioManager(val gameWAD: GameWAD, val fileSystem: FileSystem, masterVo
         val audioBuffer = when (sound.kind) {
             Sound.Kind.COMPRESSED_STREAMED -> {
                 // TECHNICALLY sounds can be something that aren't OGGs, but for now, this shall do
-                val fileName = gameWAD.strg.getString(sound.fileName)
+                val fileName = sound.fileName
 
                 decodedStreamedAudioBuffers.getOrPut(fileName) {
                     decodeAsync { fileSystem.readFile(fileName)!! }

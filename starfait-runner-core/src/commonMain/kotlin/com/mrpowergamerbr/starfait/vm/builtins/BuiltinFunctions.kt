@@ -407,9 +407,7 @@ object BuiltinFunctions {
     @GMLFunction fun room_previous(runner: StarfaitRunner, vm: StarfaitVM, roomIndex: Int) = roomGetRelative(runner, vm, roomIndex, -1)
 
     @GMLFunction
-    fun room_get_name(runner: StarfaitRunner, vm: StarfaitVM, roomIndex: Int): String {
-        return runner.resources.strg.getString(runner.resources.room.rooms[roomIndex].name)
-    }
+    fun room_get_name(runner: StarfaitRunner, vm: StarfaitVM, roomIndex: Int) = runner.resources.room.rooms[roomIndex].name
 
     @GMLFunction
     fun tile_layer_shift(runner: StarfaitRunner, vm: StarfaitVM, depth: Int, x: Int, y: Int) {
@@ -969,7 +967,7 @@ object BuiltinFunctions {
     fun object_get_name(vm: StarfaitVM, objectIndex: Int): RValue {
         // When testing in GameMaker: Studio 1.4.9999 it seems that it DOES NOT throw on a invalid object, it just returns undefined
         val gameObject = vm.gameWAD.objt.objects.getOrNull(objectIndex) ?: return RValue.Undefined
-        return RValue.String(vm.gameWAD.strg.getString(gameObject.name))
+        return RValue.String(gameObject.name)
     }
 
     @GMLFunction

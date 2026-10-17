@@ -74,6 +74,30 @@ class StarfaitByteBuffer private constructor(
         return StringPointer(readInt())
     }
 
+    fun readStringPointerAndReadNullTerminatedString(): String {
+        val pointer = readStringPointer()
+        val positionAfterAddress = this.position
+        this.position = pointer.address
+        val string = readNullTerminatedString()
+        this.position = positionAfterAddress
+        return string
+    }
+
+    fun readNullTerminatedString(): String {
+        val startPosition = this.position
+        var size = 0
+        while (true) {
+            val byte = readByte()
+            if (byte == 0.toByte())
+                break
+            size++
+        }
+        this.position = startPosition
+        val string = this.readBytes(size).decodeToString()
+        this.position++ // null
+        return string
+    }
+
     fun readTexturePageEntryPointer(): TexturePageEntryPointer {
         return TexturePageEntryPointer(readInt())
     }

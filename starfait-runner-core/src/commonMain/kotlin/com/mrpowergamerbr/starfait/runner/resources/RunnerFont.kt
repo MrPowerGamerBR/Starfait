@@ -21,8 +21,8 @@ class RunnerFont private constructor(
 ) {
     companion object {
         fun fromWAD(gameWAD: GameWAD, font: Font, textureHandles: Map<Short, TextureHandle>) = RunnerFont(
-            gameWAD.strg.getString(font.name),
-            gameWAD.strg.getString(font.fontName),
+            font.name,
+            font.fontName,
             font.size,
             font.bold,
             font.italic,

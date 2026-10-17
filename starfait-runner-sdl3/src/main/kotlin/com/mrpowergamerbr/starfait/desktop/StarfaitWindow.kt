@@ -230,7 +230,7 @@ class StarfaitWindow(
                                 ""
                             )
 
-                            runner.setPendingRoom(runner.resources.room.rooms.indexOfFirst { runner.resources.strg.getString(it.name) == selectedRoomName })
+                            runner.setPendingRoom(runner.resources.room.rooms.indexOfFirst { it.name == selectedRoomName })
                             runner.audioManager.stopAllSounds()
                         }
 

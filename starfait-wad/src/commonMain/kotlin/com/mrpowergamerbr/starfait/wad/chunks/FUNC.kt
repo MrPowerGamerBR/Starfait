@@ -14,7 +14,7 @@ class FUNC(
             val functions = ArrayList<Function>(count)
 
             repeat(count) {
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val occurenceCount = reader.readInt()
                 val firstAddress = reader.readInt()
 

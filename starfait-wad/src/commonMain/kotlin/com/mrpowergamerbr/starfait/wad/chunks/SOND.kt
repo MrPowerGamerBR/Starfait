@@ -12,10 +12,10 @@ class SOND(val sounds: List<Sound>) {
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val kind = reader.readInt()
-                val fileType = reader.readStringPointer()
-                val fileName = reader.readStringPointer()
+                val fileType = reader.readStringPointerAndReadNullTerminatedString()
+                val fileName = reader.readStringPointerAndReadNullTerminatedString()
                 val effects = reader.readInt()
                 val volume = reader.readFloat()
                 val pan = reader.readFloat()

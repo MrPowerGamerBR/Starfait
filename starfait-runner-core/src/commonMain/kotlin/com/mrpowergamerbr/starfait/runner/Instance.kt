@@ -82,7 +82,7 @@ class Instance(val runner: StarfaitRunner, @DumpRunnerField var id: Int, @DumpRu
     val gameObject: GameObject
         get() = runner.resources.objt.objects[this.objectIndex]
     @DumpRunnerField val objectName: String
-        get() = runner.resources.strg.getString(gameObject.name)
+        get() = gameObject.name
     @DumpRunnerField val spriteName: String?
         get() = if (spriteIndex >= 0.0f) {
             runner.resources.sprites[spriteIndex.toInt()].name

@@ -3,8 +3,8 @@ package com.mrpowergamerbr.starfait.wad
 import com.mrpowergamerbr.starfait.GMLColor
 
 class Room(
-    val name: StringPointer,
-    val caption: StringPointer,
+    val name: String,
+    val caption: String,
     val width: Int,
     val height: Int,
     val speed: Int,

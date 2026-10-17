@@ -12,7 +12,7 @@ class BGND(val backgrounds: List<Background>) {
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val transparent = reader.readIntBoolean()
                 val smooth = reader.readIntBoolean()
                 val preload = reader.readIntBoolean()

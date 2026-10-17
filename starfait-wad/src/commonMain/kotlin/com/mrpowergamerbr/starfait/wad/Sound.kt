@@ -1,10 +1,10 @@
 package com.mrpowergamerbr.starfait.wad
 
 class Sound(
-    val name: StringPointer,
+    val name: String,
     val kind: Kind,
-    val fileType: StringPointer,
-    val fileName: StringPointer,
+    val fileType: String,
+    val fileName: String,
     val effects: Int,
     val volume: Float,
     val pan: Float,

@@ -12,7 +12,7 @@ class PATH(val paths: List<Path>) {
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val kind = reader.readInt()
                 val closed = reader.readIntBoolean()
                 val precision = reader.readInt()

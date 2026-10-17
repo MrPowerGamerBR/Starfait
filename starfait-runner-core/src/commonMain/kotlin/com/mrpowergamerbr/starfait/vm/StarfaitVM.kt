@@ -43,9 +43,9 @@ class StarfaitVM(
     val currentCallFrame: CallFrame
         get() = currentOrNullCallFrame ?: error("No current call frame!")
     val currentCallFrameCodeName: String
-        get() = gameWAD.strg.getString(currentCallFrame.code.name)
+        get() = currentCallFrame.code.name
     val currentOrNullCallFrameCodeName: String?
-        get() = currentOrNullCallFrame?.code?.name?.let { gameWAD.strg.getString(it) }
+        get() = currentOrNullCallFrame?.code?.name?.let { it }
     val currentSelfInstance: Instance
         get() = currentOrNullCallFrame?.self ?: error("No current call frame, so we can't get the current instance!")
 
@@ -63,8 +63,8 @@ class StarfaitVM(
         eventSubtype: Int,
         arguments: Array<RValue>
     ): RValue? {
-        if (traceCodeExecution.contains("*") || traceCodeExecution.contains(gameWAD.strg.getString(code.name)))
-            println("VM: [$currentOrNullCallFrameCodeName] Executing code ${gameWAD.strg.getString(code.name)}")
+        if (traceCodeExecution.contains("*") || traceCodeExecution.contains(code.name))
+            println("VM: [$currentOrNullCallFrameCodeName] Executing code ${code.name}")
 
         val callFrame = CallFrame(this, code, currentInstance, otherInstance, eventObject, eventType, eventSubtype, arguments, stack.top)
         this.callFrameStack.addLast(callFrame)
@@ -85,7 +85,7 @@ class StarfaitVM(
         // causing the stack to "leak" values!
         //
         // To workaround this, we'll just pop them ourselves
-        check(stack.top >= callFrame.stackTopWhenTheCallFrameWasCreated) { "Unbalanced stack! Stack top is ${stack.top} when it should've been equals to or more than ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString(" -> ") { gameWAD.strg.getString(it.code.name) }}"}
+        check(stack.top >= callFrame.stackTopWhenTheCallFrameWasCreated) { "Unbalanced stack! Stack top is ${stack.top} when it should've been equals to or more than ${callFrame.stackTopWhenTheCallFrameWasCreated}! CallFrameStack is ${callFrameStack.joinToString(" -> ") { it.code.name }}"}
         repeat(stack.top - callFrame.stackTopWhenTheCallFrameWasCreated) {
             stack.popAndThrowAway()
         }
@@ -314,7 +314,7 @@ class StarfaitVM(
             if (instanceId >= StarfaitRunner.BASE_INSTANCE_ID) {
                 error("Unable to find any instance with ID $instanceId to read variable \"${getVariableNameFromVariableSlot(varId)}\"")
             } else {
-                val gameObjectName = gameWAD.strg.getString(gameWAD.objt.objects[instanceId].name)
+                val gameObjectName = gameWAD.objt.objects[instanceId].name
                 error("Unable to find any instance for object \"$gameObjectName\" (Object Index: $instanceId) to read variable \"${getVariableNameFromVariableSlot(varId)}\"")
             }
         }
@@ -500,7 +500,7 @@ class StarfaitVM(
             arguments.add(stack.popVariableAndUnwrap())
         }
 
-        val functionName = gameWAD.strg.getString(gameWAD.func.functions[functionIndex].name)
+        val functionName = gameWAD.func.functions[functionIndex].name
         if (functionCallsToBeTraced.contains(functionName) || functionCallsToBeTraced.contains(currentCallFrameCodeName) || functionCallsToBeTraced.contains(currentCallFrame.self.objectName) || functionCallsToBeTraced.contains("*")) {
             println("VM: [$currentCallFrameCodeName] Calling function \"$functionName(${arguments.joinToString(", ")})\"")
         }
@@ -523,7 +523,7 @@ class StarfaitVM(
 
         // This may be a user script!
         // TODO: This could be a O(1) by providing the script function index directly
-        val script = gameWAD.scpt.scripts.firstOrNull { gameWAD.strg.getString(it.name) == functionName }
+        val script = gameWAD.scpt.scripts.firstOrNull { it.name == functionName }
         if (script != null) {
             // The script result (if it is a script) will be on the top of the stack
             val callFrame = this.currentCallFrame
@@ -861,7 +861,7 @@ class StarfaitVM(
     fun associateBuiltins(remapResult: StarfaitUtils.RemapResult) {
         // Register the builtin variable handlers
         builtinVariableHandlers = Array(remapResult.allocatedBuiltinVariables.size) { index ->
-            val name = gameWAD.strg.getString(remapResult.allocatedBuiltinVariables[index].name)
+            val name = remapResult.allocatedBuiltinVariables[index].name
 
             // TODO: In the future this would be nicer if we could toggle a "strict mode" (throws exception) and a lenient mode (only logs)
             builtins.registeredVariables[name] ?: BuiltinVariable(
@@ -872,13 +872,13 @@ class StarfaitVM(
         }
 
         // Register the regular variable names
-        regularVariableNames = Array(remapResult.allocatedRegularVariables.size) { index -> gameWAD.strg.getString(remapResult.allocatedRegularVariables[index].name) }
+        regularVariableNames = Array(remapResult.allocatedRegularVariables.size) { index -> remapResult.allocatedRegularVariables[index].name }
 
         val variableTypeAndNameToSlot = mutableMapOf<Int, MutableMap<String, Int>>()
         for ((index, variable) in remapResult.allocatedBuiltinVariables.withIndex()) {
             val thisType = variableTypeAndNameToSlot.getOrPut(variable.instanceType) { mutableMapOf() }
-            val variableName = gameWAD.strg.getString(variable.name)
-            val previousValue = thisType.putIfAbsent(gameWAD.strg.getString(variable.name), index)
+            val variableName = variable.name
+            val previousValue = thisType.putIfAbsent(variable.name, index)
             check(previousValue == null) { "Variable $variableName was already registered in the name -> variable slot map! Bug?" }
         }
 
@@ -889,8 +889,8 @@ class StarfaitVM(
                 continue
 
             val thisType = variableTypeAndNameToSlot.getOrPut(variable.instanceType) { mutableMapOf() }
-            val variableName = gameWAD.strg.getString(variable.name)
-            val previousValue = thisType.putIfAbsent(gameWAD.strg.getString(variable.name), index + StarfaitUtils.REGULAR_VARIABLES_BASE)
+            val variableName = variable.name
+            val previousValue = thisType.putIfAbsent(variable.name, index + StarfaitUtils.REGULAR_VARIABLES_BASE)
             check(previousValue == null) { "Variable $variableName was already registered in the name -> variable slot map! Bug?" }
         }
         this.variableNameToId = variableTypeAndNameToSlot

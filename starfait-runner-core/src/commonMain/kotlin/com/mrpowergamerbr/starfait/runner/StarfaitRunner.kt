@@ -92,7 +92,7 @@ class StarfaitRunner(
 
     fun initializeRoom(roomId: Int, room: Room, keepPersistentInstances: Boolean) {
         val persistentRoom = persistentRooms.remove(roomId)
-        println("Runner: Initializing room $roomId (${resources.strg.getString(room.name)}) - Has persistent room? ${persistentRoom != null}")
+        println("Runner: Initializing room $roomId (${room.name}) - Has persistent room? ${persistentRoom != null}")
 
         if (persistentRoom != null) {
             val previousRoom = this.currentRoom

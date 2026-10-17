@@ -328,7 +328,7 @@ object GameMakerFeatureTests {
         5
     ) {
         withRunnerAtFrame(4) {
-            assertEquals("room2", it.resources.strg.getString(it.resources.room.rooms[it.currentRoom.roomId].name))
+            assertEquals("room2", it.resources.room.rooms[it.currentRoom.roomId].name)
         }
     }
 
@@ -414,7 +414,7 @@ object GameMakerFeatureTests {
     }
 
     fun RunnerResources.objectIndexByObjectName(objectName: String): Int {
-        val index = this.objt.objects.indexOfFirst { this.strg.getString(it.name) == objectName }
+        val index = this.objt.objects.indexOfFirst { it.name == objectName }
         if (index == -1)
             error("Couldn't find object index for object name \"$objectName\"!")
         return index

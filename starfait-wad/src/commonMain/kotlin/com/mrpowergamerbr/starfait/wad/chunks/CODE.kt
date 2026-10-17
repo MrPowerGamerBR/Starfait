@@ -23,7 +23,7 @@ class CODE(val codes: List<Code>, val postAddressPosition: Int, val bytecode: By
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val length = reader.readUInt()
                 val localsCount = reader.readUShort()
                 val argumentsCount = reader.readUShort() // TODO: Is this even used?

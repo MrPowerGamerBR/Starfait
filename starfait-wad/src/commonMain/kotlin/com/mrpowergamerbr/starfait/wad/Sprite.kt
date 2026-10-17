@@ -4,7 +4,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 class Sprite(
-    val name: StringPointer,
+    val name: String,
     val width: Int,
     val height: Int,
     val bboxLeft: Int,

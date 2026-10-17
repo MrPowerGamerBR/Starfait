@@ -14,8 +14,8 @@ class ROOM(val rooms: List<Room>) {
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
-                val caption = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
+                val caption = reader.readStringPointerAndReadNullTerminatedString()
                 val width = reader.readInt()
                 val height = reader.readInt()
                 val speed = reader.readInt()

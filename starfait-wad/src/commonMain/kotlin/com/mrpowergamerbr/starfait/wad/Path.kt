@@ -1,7 +1,7 @@
 package com.mrpowergamerbr.starfait.wad
 
 class Path(
-    val name: StringPointer,
+    val name: String,
     val kind: PathKind,
     val closed: Boolean,
     val precision: Int,

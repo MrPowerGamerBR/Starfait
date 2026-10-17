@@ -1,7 +1,7 @@
 package com.mrpowergamerbr.starfait.wad
 
 class Background(
-    val name: StringPointer,
+    val name: String,
     val transparent: Boolean,
     val smooth: Boolean,
     val preload: Boolean,

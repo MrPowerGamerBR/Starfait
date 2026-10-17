@@ -20,8 +20,8 @@ class FONT(
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
-                val fontName = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
+                val fontName = reader.readStringPointerAndReadNullTerminatedString()
                 val size = reader.readUInt()
                 val bold = reader.readIntBoolean()
                 val italic = reader.readIntBoolean()

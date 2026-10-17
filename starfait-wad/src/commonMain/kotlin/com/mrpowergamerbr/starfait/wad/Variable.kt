@@ -1,7 +1,7 @@
 package com.mrpowergamerbr.starfait.wad
 
 class Variable(
-    val name: StringPointer,
+    val name: String,
     val instanceType: Int,
     val varId: Int,
     val occurrenceCount: Int,

@@ -12,7 +12,7 @@ class SCPT(val scripts: List<Script>) {
             for (address in addresses) {
                 reader.position = address
 
-                val name = reader.readStringPointer()
+                val name = reader.readStringPointerAndReadNullTerminatedString()
                 val codeIndex = reader.readInt()
 
                 scripts.add(

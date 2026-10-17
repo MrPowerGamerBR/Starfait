@@ -33,7 +33,7 @@ class StarfaitDisassembler(val gameWAD: GameWAD) {
                     Op.CALL -> {
                         val func = gameWAD.func.functions[operand4!!]
                         additionalParams["argCount"] = extra
-                        additionalParams["func"] = gameWAD.strg.getString(func.name)
+                        additionalParams["func"] = func.name
                     }
                 }
 

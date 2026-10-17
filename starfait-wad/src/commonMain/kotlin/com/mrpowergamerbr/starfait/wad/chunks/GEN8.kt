@@ -6,13 +6,13 @@ import com.mrpowergamerbr.starfait.wad.StringPointer
 class GEN8(
     val debugWad: Boolean,
     val wadVersion: Byte,
-    val gameTitle: StringPointer,
-    val yoyoConfig: StringPointer,
+    val gameTitle: String,
+    val yoyoConfig: String,
     val maxRoomInstanceId: Int,
     val maxTileId: Int,
     val gameId: Int,
     val gameGuid: ByteArray,
-    val gameProjectName: StringPointer,
+    val gameProjectName: String,
     val major: Int,
     val minor: Int,
     val release: Int,
@@ -23,7 +23,7 @@ class GEN8(
     val md5Crc: Int,
     val md5: ByteArray,
     val wadDateTime: Long,
-    val gameDisplayName: StringPointer,
+    val gameDisplayName: String,
     val licensedTargets: Long,
     val functionClassifications: Long,
     val steamAppId: Int,
@@ -35,13 +35,13 @@ class GEN8(
             val debugWad = reader.readByteBoolean()
             val wadVersion = reader.readByte()
             reader.readBytes(2) // Padding
-            val gameTitle = reader.readStringPointer()
-            val yoyoConfig = reader.readStringPointer()
+            val gameTitle = reader.readStringPointerAndReadNullTerminatedString()
+            val yoyoConfig = reader.readStringPointerAndReadNullTerminatedString()
             val maxObjectId = reader.readInt()
             val maxTileId = reader.readInt()
             val gameId = reader.readInt()
             val gameGuid = reader.readBytes(16)
-            val gameProjectName = reader.readStringPointer()
+            val gameProjectName = reader.readStringPointerAndReadNullTerminatedString()
             val major = reader.readInt()
             val minor = reader.readInt()
             val release = reader.readInt()
@@ -52,7 +52,7 @@ class GEN8(
             val md5Crc = reader.readInt()
             val md5 = reader.readBytes(16)
             val wadDateTime = reader.readLong()
-            val gameDisplayName = reader.readStringPointer()
+            val gameDisplayName = reader.readStringPointerAndReadNullTerminatedString()
             val licensedTargets = reader.readLong()
             val functionClassifications = reader.readLong()
             val steamAppId = reader.readInt()

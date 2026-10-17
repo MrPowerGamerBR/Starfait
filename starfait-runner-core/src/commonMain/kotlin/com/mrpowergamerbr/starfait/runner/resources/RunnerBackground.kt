@@ -13,7 +13,7 @@ class RunnerBackground private constructor(
 ) {
     companion object {
         fun fromWAD(gameWAD: GameWAD, background: Background, textureHandles: Map<Short, TextureHandle>) = RunnerBackground(
-            gameWAD.strg.getString(background.name),
+            background.name,
             background.transparent,
             background.smooth,
             background.preload,

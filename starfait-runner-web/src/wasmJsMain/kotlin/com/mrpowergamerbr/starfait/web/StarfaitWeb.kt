@@ -158,9 +158,7 @@ class StarfaitWeb {
                         layeredFileSystem,
                         StdoutGameOutput(),
                         TimeUtils.currentTimeMillis(),
-                        mapOf(
-                            1 to 177
-                        )
+                        mapOf()
                     )
                     renderer.runner = runner
                     vm.runner = runner

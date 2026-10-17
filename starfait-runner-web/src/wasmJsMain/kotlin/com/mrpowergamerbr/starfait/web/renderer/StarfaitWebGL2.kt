@@ -54,8 +54,8 @@ private class ObjectStorage<T> {
     fun getObjectById(id: Int) = this.id2object[id]
 
     fun deleteById(id: Int) {
-        this.id2object.remove(id)
         this.object2id.remove(this.id2object[id])
+        this.id2object.remove(id)
     }
 }
 

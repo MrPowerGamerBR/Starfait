@@ -16,8 +16,12 @@ import com.mrpowergamerbr.starfait.runner.StdoutGameOutput
 import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.wad.GameWAD
+import com.mrpowergamerbr.starfait.web.audio.web.WebAudioManager
 import com.mrpowergamerbr.starfait.web.renderer.BrowserImageDecoder
 import com.mrpowergamerbr.starfait.web.renderer.StarfaitWebGL2
+import js.buffer.ArrayBuffer
+import js.buffer.toByteArray
+import js.iterable.iterator
 import js.objects.unsafeJso
 import js.reflect.unsafeCast
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -25,10 +29,13 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import web.blob.arrayBuffer
 import web.blob.byteArray
+import web.blob.bytes
 import web.dom.ElementId
 import web.dom.document
 import web.events.addEventHandler
+import web.file.File
 import web.gl.GLbitfield
 import web.gl.ID
 import web.gl.WebGL2RenderingContext
@@ -43,6 +50,8 @@ import web.keyboard.KEY_UP
 import web.keyboard.KeyboardEvent
 import web.window.window
 import kotlin.js.unsafeCast
+import kotlin.wasm.unsafe.UnsafeWasmMemoryApi
+import kotlin.wasm.unsafe.withScopedMemoryAllocator
 
 class StarfaitWeb {
     fun start() {
@@ -53,10 +62,22 @@ class StarfaitWeb {
                 println("File changed!")
 
                 val element = it.currentTarget as HTMLInputElement
-                val wadFile = element.files!!.item(0)!!
+                val files = mutableListOf<File>()
+
+                for (file in element.files!!) {
+                    println("File: ${file.name}")
+                    files.add(file)
+                }
 
                 GlobalScope.launch(CoroutineExceptionHandler { _, e -> println(e.stackTraceToString()) }) {
-                    val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(wadFile.byteArray(), 0))
+                    val fileToContent = mutableMapOf<String, ByteArray>()
+
+                    for (file in files) {
+                        val content = file.arrayBuffer().toByteArrayFast()
+                        fileToContent[file.name] = content
+                    }
+
+                    val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(fileToContent["data.win"]!!, 0))
                     println(gameWAD.strg.getString(gameWAD.gen8.gameDisplayName))
 
                     val vm = StarfaitVM(
@@ -108,7 +129,7 @@ class StarfaitWeb {
                         RunnerResources.create(vm.gameWAD, renderer),
                         vm,
                         renderer,
-                        NoopAudioManager(),
+                        WebAudioManager(vm.gameWAD),
                         layeredFileSystem,
                         StdoutGameOutput(),
                         TimeUtils.currentTimeMillis(),

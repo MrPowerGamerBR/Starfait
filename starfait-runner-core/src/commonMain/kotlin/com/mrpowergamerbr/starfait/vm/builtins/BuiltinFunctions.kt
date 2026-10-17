@@ -1108,4 +1108,9 @@ object BuiltinFunctions {
     fun instance_deactivate_object(runner: StarfaitRunner, queryId: Int) {
         setInstanceActiveState(runner, queryId, false)
     }
+
+    @GMLFunction
+    fun keyboard_set_map(runner: StarfaitRunner, key1: Int, key2: Int) {
+        runner.keyboard.remappedKeys[key1] = key2
+    }
 }

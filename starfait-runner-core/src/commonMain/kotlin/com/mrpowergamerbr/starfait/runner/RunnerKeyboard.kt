@@ -44,6 +44,7 @@ class RunnerKeyboard {
     val keyPressed = Array(GML_KEY_COUNT) { false }
     val keyHeld = Array(GML_KEY_COUNT) { false }
     val keyReleased = Array(GML_KEY_COUNT) { false }
+    val remappedKeys = Array(GML_KEY_COUNT) { VK_NOKEY }
 
     fun resetPressedAndReleasedKeys() {
         keyPressed.fill(false)
@@ -53,10 +54,18 @@ class RunnerKeyboard {
     fun onKeyDown(key: Int) {
         keyPressed[key] = true
         keyHeld[key] = true
+
+        if (remappedKeys[key] != VK_NOKEY) {
+            onKeyDown(remappedKeys[key])
+        }
     }
 
     fun onKeyUp(key: Int) {
         keyReleased[key] = true
         keyHeld[key] = false
+
+        if (remappedKeys[key] != VK_NOKEY) {
+            onKeyUp(remappedKeys[key])
+        }
     }
 }

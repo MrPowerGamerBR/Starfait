@@ -169,10 +169,16 @@ class StarfaitWeb {
                     window.addEventHandler(KeyboardEvent.KEY_DOWN) { event ->
                         // Useful when the user has not clicked on the page yet
                         audioManager.resumeAudioContext()
+                        if (event.repeat)
+                            return@addEventHandler
+
                         runner.keyboard.onKeyDown(convertWebKeyCodeToGMLVK(event.code.toString()))
                     }
 
                     window.addEventHandler(KeyboardEvent.KEY_UP) { event ->
+                        if (event.repeat)
+                            return@addEventHandler
+                        
                         runner.keyboard.onKeyUp(convertWebKeyCodeToGMLVK(event.code.toString()))
                     }
 

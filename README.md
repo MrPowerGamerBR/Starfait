@@ -166,6 +166,7 @@ Things that I learned along the way while developing Starfait.
 * [Bytecode](docs/bytecode.md)
 * [Precise Collision Masks](docs/precise-collision-masks.md)
 * [Quirks and Miscellaneous Things](docs/quirks.md)
+* [WinPack/TranslaTale WADs](docs/translatale.md)
 * [TinyGameMakerVM](https://github.com/MrPowerGamerBR/TinyGameMakerVM)
  
 ## Why Kotlin?

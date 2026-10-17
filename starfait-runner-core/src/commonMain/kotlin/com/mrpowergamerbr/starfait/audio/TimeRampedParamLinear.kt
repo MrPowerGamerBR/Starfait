@@ -1,14 +1,17 @@
 package com.mrpowergamerbr.starfait.audio
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
+
 // Ported from GameMaker-HTML5/scripts/utils/TimeRampedParamLinear.js
 class TimeRampedParamLinear(initialVal: Float) {
     private var value = initialVal
     private var origin = initialVal
     private var target = initialVal
     private var diff = 0f
-    private var rampStart = 0L
-    private var rampEnd = 0L
-    private var rampScalar = 0.0
+    private var rampStart = TimeSource.Monotonic.markNow()
+    private var rampDuration = Duration.ZERO
 
     fun get() = value
 
@@ -18,25 +21,24 @@ class TimeRampedParamLinear(initialVal: Float) {
         if (timeMs == 0) {
             this.value = target
             this.target = target
-            this.rampEnd = System.nanoTime()
+            this.rampDuration = 0.milliseconds
         } else {
             this.origin = this.value
             this.target = target
             this.diff = this.target - this.origin
 
-            this.rampStart = System.nanoTime()
-            this.rampEnd = this.rampStart + timeMs * 1_000_000L
-            this.rampScalar = 1.0 / (this.rampEnd - this.rampStart)
+            this.rampStart = TimeSource.Monotonic.markNow()
+            this.rampDuration = timeMs.milliseconds
         }
     }
 
     fun update(): Float {
-        val currentTime = System.nanoTime()
+        val currentTime = TimeSource.Monotonic.markNow()
 
-        if (currentTime >= rampEnd) {
+        if (currentTime >= (rampStart + rampDuration)) {
             value = target
         } else {
-            val frac = ((currentTime - rampStart) * rampScalar).coerceIn(0.0, 1.0)
+            val frac = (currentTime - rampStart) / rampDuration
             value = origin + (diff * frac).toFloat()
         }
 

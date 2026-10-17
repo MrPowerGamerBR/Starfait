@@ -71,10 +71,12 @@ class StarfaitWeb {
 
                 GlobalScope.launch(CoroutineExceptionHandler { _, e -> println(e.stackTraceToString()) }) {
                     val fileToContent = mutableMapOf<String, ByteArray>()
+                    val bundleFS = VirtualFileSystem()
 
                     for (file in files) {
                         val content = file.arrayBuffer().toByteArrayFast()
                         fileToContent[file.name] = content
+                        bundleFS.writeFile(file.name, content)
                     }
 
                     val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(fileToContent["data.win"]!!, 0))
@@ -124,12 +126,13 @@ class StarfaitWeb {
                         """.trimIndent(),
                         BrowserImageDecoder()
                     )
-                    val layeredFileSystem = LayeredFileSystem(VirtualFileSystem(), VirtualFileSystem())
+                    val layeredFileSystem = LayeredFileSystem(VirtualFileSystem(), bundleFS)
+                    val audioManager = WebAudioManager(vm.gameWAD, bundleFS)
                     val runner = StarfaitRunner(
                         RunnerResources.create(vm.gameWAD, renderer),
                         vm,
                         renderer,
-                        WebAudioManager(vm.gameWAD),
+                        audioManager,
                         layeredFileSystem,
                         StdoutGameOutput(),
                         TimeUtils.currentTimeMillis(),
@@ -142,6 +145,8 @@ class StarfaitWeb {
                     runner.start()
 
                     window.addEventHandler(KeyboardEvent.KEY_DOWN) { event ->
+                        // Useful when the user has not clicked on the page yet
+                        audioManager.resumeAudioContext()
                         runner.keyboard.onKeyDown(convertWebKeyCodeToGMLVK(event.code.toString()))
                     }
 

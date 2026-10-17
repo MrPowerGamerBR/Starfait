@@ -4,6 +4,8 @@ import com.mrpowergamerbr.starfait.renderer.opengl.DecodedImage
 import com.mrpowergamerbr.starfait.renderer.opengl.RawPixelsDecodedImage
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGL
 import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGLConstants
+import com.mrpowergamerbr.starfait.web.toArrayBufferFast
+import com.mrpowergamerbr.starfait.web.toByteArrayFast
 import com.mrpowergamerbr.starfait.web.toFloat32ArrayFast
 import js.buffer.ArrayBufferLike
 import js.buffer.ArrayBufferView
@@ -94,15 +96,9 @@ class StarfaitWebGL2(val context: WebGL2RenderingContext) : StarfaitGL() {
     override fun vertexAttribPointer(index: Int, size: Int, type: Int, normalized: Boolean, stride: Int, offset: Long) = context.vertexAttribPointer(index.toJsNumber(), size, type.asGLenum(), normalized, stride, offset.toInt())
     override fun enableVertexAttribArray(index: Int) = context.enableVertexAttribArray(index.toJsNumber())
     override fun readPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int): ByteArray {
-        TODO()
-        /* val byteBuffer = ByteBuffer.allocateDirect(width * height * 4)
-        glReadPixels(x, y, width, height, format, type, byteBuffer)
-
-        // We can't use ".array()" directly because it is a ooo allocateDirect
-        val byteArray = ByteArray(width * height * 4)
-        byteBuffer.get(byteArray)
-
-        return byteArray */
+        val dst = Uint8Array<ArrayBufferLike>(width * height * 4)
+        context.readPixels(x, y, width, height, format.asGLenum(), type.asGLenum(), dst)
+        return dst.buffer.toByteArrayFast()
     }
 
     override fun pixelStorei(pname: Int, param: Int) = context.pixelStorei(pname.asGLenum(), param)
@@ -117,7 +113,7 @@ class StarfaitWebGL2(val context: WebGL2RenderingContext) : StarfaitGL() {
     ) {
         when (decodedImage) {
             is RawPixelsDecodedImage -> {
-                val pixels = Uint8Array<ArrayBufferLike>(decodedImage.pixels.toArrayBuffer())
+                val pixels = Uint8Array<ArrayBufferLike>(decodedImage.pixels.toArrayBufferFast())
                 context.texImage2D(target.asGLenum(), level, internalFormat.asGLenum(), decodedImage.width, decodedImage.height, border, format.asGLenum(), type.asGLenum(), pixels)
             }
             is BrowserDecodedImage -> {

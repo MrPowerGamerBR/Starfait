@@ -14,10 +14,10 @@ import kotlin.wasm.unsafe.withScopedMemoryAllocator
 // The tl;dr is that
 // ByteArrays: WasmGC-land (Kotlin/Wasm)
 // ArrayBuffers: JS-land
-// By default the .toByteArray and others do a individual copy and they are (comparatively) slow
+// By default the .toByteArray and others do a for each loop on each element, so they are stupidly slow
 
 @JsFun("(memory, src, dst) => new Uint8Array(memory.buffer, dst, src.byteLength).set(new Uint8Array(src))")
-private external fun copyArrayBufferToLinearMemory(memory: JsAny, src: ArrayBuffer, dst: Int)
+private external fun copyArrayBufferToLinearMemory(memory: JsAny, src: ArrayBufferLike, dst: Int)
 
 // Slice without any parameters = copy
 @JsFun("(memory, src, size) => new Uint8Array(memory.buffer, src, size).slice().buffer")
@@ -28,7 +28,7 @@ private external fun createArrayBufferFromLinearMemory(memory: JsAny, src: Int, 
 private external fun createFloat32ArrayFromLinearMemory(memory: JsAny, src: Int, size: Int): Float32Array<ArrayBufferLike>
 
 @OptIn(UnsafeWasmMemoryApi::class, ExperimentalWasmJsInterop::class)
-fun ArrayBuffer.toByteArrayFast(): ByteArray {
+fun ArrayBufferLike.toByteArrayFast(): ByteArray {
     val size = this.byteLength
     val result = ByteArray(size)
 

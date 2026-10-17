@@ -80,16 +80,14 @@ class StarfaitWeb {
                 }
 
                 GlobalScope.launch(CoroutineExceptionHandler { _, e -> println(e.stackTraceToString()) }) {
-                    val fileToContent = mutableMapOf<String, ByteArray>()
                     val bundleFS = VirtualFileSystem()
 
                     for (file in files) {
                         val content = file.arrayBuffer().toByteArrayFast()
-                        fileToContent[file.name] = content
                         bundleFS.writeFile(file.name, content)
                     }
 
-                    val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(fileToContent["data.win"]!!, 0))
+                    val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(bundleFS.readFile("data.win")!!, 0))
                     println(gameWAD.strg.getString(gameWAD.gen8.gameDisplayName))
 
                     val vm = StarfaitVM(
@@ -178,7 +176,7 @@ class StarfaitWeb {
                     window.addEventHandler(KeyboardEvent.KEY_UP) { event ->
                         if (event.repeat)
                             return@addEventHandler
-                        
+
                         runner.keyboard.onKeyUp(convertWebKeyCodeToGMLVK(event.code.toString()))
                     }
 

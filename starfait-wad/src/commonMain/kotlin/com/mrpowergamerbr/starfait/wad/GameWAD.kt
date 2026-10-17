@@ -46,73 +46,44 @@ class GameWAD(
 
             val wadSize = reader.readInt()
 
-            var gen8: GEN8? = null
-            var strg: STRG? = null
-            var path: PATH? = null
-            var audo: AUDO? = null
-            var sond: SOND? = null
-            var scpt: SCPT? = null
-            var tpag: TPAG? = null
-            var optn: OPTN? = null
-            var bgnd: BGND? = null
-            var txtr: TXTR? = null
-            var font: FONT? = null
-            var sprt: SPRT? = null
-            var objt: OBJT? = null
-            var room: ROOM? = null
-            var code: CODE? = null
-            var vari: VARI? = null
-            var func: FUNC? = null
-
             // wadSize + the form magic + the wad size int
             // This is essentially an IFF file format
+            data class ChunkInfo(val size: Int, val position: Int)
+            val chunkNameToPosition = mutableMapOf<String, ChunkInfo>()
+
             while (wadSize + 4 + 4 > reader.position) {
                 val chunkName = reader.readUTF8String(4)
                 val chunkSize = reader.readInt()
 
                 val startOfChunk = reader.position
 
-                when (chunkName) {
-                    "GEN8" -> gen8 = GEN8.read(reader)
-                    "STRG" -> strg = STRG.read(reader)
-                    "PATH" -> path = PATH.read(reader)
-                    "AUDO" -> audo = AUDO.read(reader)
-                    "SOND" -> sond = SOND.read(reader)
-                    "SCPT" -> scpt = SCPT.read(reader)
-                    "TPAG" -> tpag = TPAG.read(reader)
-                    "OPTN" -> optn = OPTN.read(reader)
-                    "BGND" -> bgnd = BGND.read(reader)
-                    "TXTR" -> txtr = TXTR.read(reader)
-                    "FONT" -> font = FONT.read(reader, chunkSize)
-                    "SPRT" -> sprt = SPRT.read(reader)
-                    "OBJT" -> objt = OBJT.read(reader)
-                    "ROOM" -> room = ROOM.read(reader, gen8!!.wadVersion)
-                    "CODE" -> code = CODE.read(reader)
-                    "VARI" -> vari = VARI.read(reader, chunkSize)
-                    "FUNC" -> func = FUNC.read(reader, chunkSize)
-                    else -> println("Unknown chunk $chunkName! (size: $chunkSize)")
-                }
+                chunkNameToPosition[chunkName] = ChunkInfo(chunkSize, startOfChunk)
 
                 reader.position = startOfChunk + chunkSize
             }
 
-            requireNotNull(gen8)
-            requireNotNull(strg)
-            requireNotNull(path)
-            requireNotNull(audo)
-            requireNotNull(sond)
-            requireNotNull(scpt)
-            requireNotNull(tpag)
-            requireNotNull(optn)
-            requireNotNull(bgnd)
-            requireNotNull(txtr)
-            requireNotNull(font)
-            requireNotNull(sprt)
-            requireNotNull(objt)
-            requireNotNull(room)
-            requireNotNull(code)
-            requireNotNull(vari)
-            requireNotNull(func)
+            fun <T> readChunkAtPosition(chunkInfo: ChunkInfo, block: (StarfaitByteBuffer, Int) -> T): T {
+                reader.position = chunkInfo.position
+                return block(reader, chunkInfo.size)
+            }
+
+            val gen8 = readChunkAtPosition(chunkNameToPosition["GEN8"]!!) { reader, _ -> GEN8.read(reader) }
+            val strg = readChunkAtPosition(chunkNameToPosition["STRG"]!!) { reader, _ -> STRG.read(reader) }
+            val path = readChunkAtPosition(chunkNameToPosition["PATH"]!!) { reader, _ -> PATH.read(reader) }
+            val audo = readChunkAtPosition(chunkNameToPosition["AUDO"]!!) { reader, _ -> AUDO.read(reader) }
+            val sond = readChunkAtPosition(chunkNameToPosition["SOND"]!!) { reader, _ -> SOND.read(reader) }
+            val scpt = readChunkAtPosition(chunkNameToPosition["SCPT"]!!) { reader, _ -> SCPT.read(reader) }
+            val tpag = readChunkAtPosition(chunkNameToPosition["TPAG"]!!) { reader, _ -> TPAG.read(reader) }
+            val optn = readChunkAtPosition(chunkNameToPosition["OPTN"]!!) { reader, _ -> OPTN.read(reader) }
+            val bgnd = readChunkAtPosition(chunkNameToPosition["BGND"]!!) { reader, _ -> BGND.read(reader) }
+            val txtr = readChunkAtPosition(chunkNameToPosition["TXTR"]!!) { reader, _ -> TXTR.read(reader) }
+            val font = readChunkAtPosition(chunkNameToPosition["FONT"]!!) { reader, chunkSize -> FONT.read(reader, chunkSize) }
+            val sprt = readChunkAtPosition(chunkNameToPosition["SPRT"]!!) { reader, _ -> SPRT.read(reader) }
+            val objt = readChunkAtPosition(chunkNameToPosition["OBJT"]!!) { reader, _ -> OBJT.read(reader) }
+            val room = readChunkAtPosition(chunkNameToPosition["ROOM"]!!) { reader, _ -> ROOM.read(reader, gen8.wadVersion) }
+            val code = readChunkAtPosition(chunkNameToPosition["CODE"]!!) { reader, _ -> CODE.read(reader) }
+            val vari = readChunkAtPosition(chunkNameToPosition["VARI"]!!) { reader, chunkSize -> VARI.read(reader, chunkSize) }
+            val func = readChunkAtPosition(chunkNameToPosition["FUNC"]!!) { reader, chunkSize -> FUNC.read(reader, chunkSize) }
 
             return GameWAD(
                 gen8,

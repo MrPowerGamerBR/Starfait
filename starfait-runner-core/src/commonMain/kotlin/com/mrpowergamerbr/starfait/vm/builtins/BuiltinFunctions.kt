@@ -13,6 +13,7 @@ import com.mrpowergamerbr.starfait.runner.DebugBoundingBox
 import com.mrpowergamerbr.starfait.runner.DebugLine
 import com.mrpowergamerbr.starfait.runner.EventType
 import com.mrpowergamerbr.starfait.runner.OpenINI
+import com.mrpowergamerbr.starfait.runner.RunnerKeyboard
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
 import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.runner.resources.RunnerTexturePageEntry
@@ -1110,5 +1111,12 @@ object BuiltinFunctions {
     @GMLFunction
     fun keyboard_set_map(runner: StarfaitRunner, key1: Int, key2: Int) {
         runner.keyboard.remappedKeys[key1] = key2
+    }
+
+    @GMLFunction
+    fun keyboard_clear(runner: StarfaitRunner, key: Int) {
+        runner.keyboard.keyPressed[key] = false
+        runner.keyboard.keyReleased[key] = false
+        runner.keyboard.keyHeld[key] = false
     }
 }

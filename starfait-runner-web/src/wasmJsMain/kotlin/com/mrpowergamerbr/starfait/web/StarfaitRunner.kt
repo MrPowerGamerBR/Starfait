@@ -73,7 +73,7 @@ private suspend fun getNestedFolder(path: String, baseDirectory: FileSystemDirec
 lateinit var gRunner: StarfaitRunner
 
 @JsExport
-fun createRunner(bundlePath: String, savePath: String, gameCanvas: HTMLCanvasElement): Promise<JsBoolean> {
+fun createRunner(bundlePath: String, savePath: String, gameWADName: String, gameCanvas: HTMLCanvasElement): Promise<JsBoolean> {
     return GlobalScope.async(CoroutineExceptionHandler { _, e -> println(e.stackTraceToString()) }) {
         val baseDirectory = navigator.storage.getDirectory()
 
@@ -87,7 +87,7 @@ fun createRunner(bundlePath: String, savePath: String, gameCanvas: HTMLCanvasEle
             }
         }
 
-        val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(bundleFS.readFile("data.win")!!, 0))
+        val gameWAD = GameWAD.read(StarfaitByteBuffer.fromByteArray(bundleFS.readFile(gameWADName)!!, 0))
         println(gameWAD.gen8.gameDisplayName)
 
         val vm = StarfaitVM(

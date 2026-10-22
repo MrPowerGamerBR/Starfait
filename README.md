@@ -204,3 +204,4 @@ If you want to see a what-if scenario, [here's what Starfait would look like if 
 * [reGML](https://github.com/TimGoTheCreator/reGML)
 * [Luna](https://github.com/nommiin/Luna)
 * [TinyGameMakerVM](https://github.com/MrPowerGamerBR/TinyGameMakerVM)
+* [Starfait: Micro Edition (Starfait for J2ME)](https://github.com/SergioFLS/StarfaitME)

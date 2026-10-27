@@ -16,81 +16,69 @@ import com.mrpowergamerbr.starfait.runner.resources.RunnerFont
 import com.mrpowergamerbr.starfait.runner.resources.RunnerSprite
 import com.mrpowergamerbr.starfait.runner.resources.RunnerTexturePageEntry
 import com.mrpowergamerbr.starfait.runner.text.TextHorizontalAlign
+import net.perfectdreams.harmony.gl.ByteArrayTextureSource
+import net.perfectdreams.harmony.gl.GLConstants
+import net.perfectdreams.harmony.gl.GLContext
+import net.perfectdreams.harmony.gl.batcher.SpriteBatcher
 import net.perfectdreams.harmony.gl.shaders.ShaderManager
-import net.perfectdreams.harmony.gl.shaders.bind
-import net.perfectdreams.harmony.gl.textures.Texture
+import net.perfectdreams.harmony.gl.shaders.withProgram
+import net.perfectdreams.harmony.gl.textures.GLTexture
 import net.perfectdreams.harmony.gl.textures.TextureManager
+import net.perfectdreams.harmony.gl.vertex.buildVertexAttributes
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
 class GLRenderer(
-    val gl: StarfaitGL,
+    val gl: GLContext,
     vertexShaderSource: String,
     fragmentShaderSource: String,
-    imageDecoder: ImageDecoder
+    val imageDecoder: ImageDecoder
 ) : Renderer() {
     companion object {
-        private const val MAX_BATCH_ELEMENTS = 512
-        private const val FIELDS_PER_ELEMENT = 48
-        private const val TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT = 8
-        private const val TOTAL_BATCH_SIZE = FIELDS_PER_ELEMENT * MAX_BATCH_ELEMENTS
         // TODO: This shouldn't be hardcoded!
         private const val VIEWPORT_WIDTH = 640
         private const val VIEWPORT_HEIGHT = 480
+
+        private val vertexAttributes = buildVertexAttributes {
+            vec2(0) // aPosition
+            vec2(1) // aTexCoord
+            vec4(2) // aBlendColor
+        }
     }
 
     lateinit var runner: StarfaitRunner
-    val textureManager = TextureManager(gl, imageDecoder)
+    val textureManager = TextureManager(gl)
     val shaderManager = ShaderManager(gl)
     val minimalShader: MinimalShader = shaderManager.loadShader(
         vertexShaderSource,
         fragmentShaderSource,
-        { MinimalShader(gl, it) }
+        ::MinimalShader
     )
-    val batch = FloatArray(TOTAL_BATCH_SIZE)
-    var activeBatchTexture: Texture? = null
-    var currentIndex = 0
-    val vao = gl.genVertexArrays()
-    val vbo = gl.genBuffers()
     val white1x1Texture = textureManager.load1x1WhiteTexture()
-    val textures = mutableMapOf<TextureHandle, Texture>()
+    val batcher = SpriteBatcher(gl, white1x1Texture, minimalShader, minimalShader.uTexture)
+    val textures = mutableMapOf<TextureHandle, GLTexture>()
     var currentTextureId = 0
 
     init {
         // For transparency in sprites
-        gl.enable(StarfaitGLConstants.GL_BLEND)
-        gl.blendFunc(StarfaitGLConstants.GL_SRC_ALPHA, StarfaitGLConstants.GL_ONE_MINUS_SRC_ALPHA)
+        gl.enable(GLConstants.GL_BLEND)
+        gl.blendFunc(GLConstants.GL_SRC_ALPHA, GLConstants.GL_ONE_MINUS_SRC_ALPHA)
 
-        gl.bindVertexArray(vao)
-        gl.bindBuffer(StarfaitGLConstants.GL_ARRAY_BUFFER, vbo)
-        gl.bufferData(StarfaitGLConstants.GL_ARRAY_BUFFER, Float.SIZE_BYTES * FIELDS_PER_ELEMENT.toLong() * MAX_BATCH_ELEMENTS, StarfaitGLConstants.GL_DYNAMIC_DRAW)
-
-        // aPosition
-        // stride is from the START of the current "section"!
-        gl.vertexAttribPointer(0, 2, StarfaitGLConstants.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 0L)
-        gl.enableVertexAttribArray(0)
-
-        // aTexCoord
-        gl.vertexAttribPointer(1, 2, StarfaitGLConstants.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 2L * Float.SIZE_BYTES)
-        gl.enableVertexAttribArray(1)
-
-        // aBlendColor
-        gl.vertexAttribPointer(2, 4, StarfaitGLConstants.GL_FLOAT, false, TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT * Float.SIZE_BYTES, 4L * Float.SIZE_BYTES)
-        gl.enableVertexAttribArray(2)
+        vertexAttributes.apply(gl)
     }
 
-    private fun getGLTextureFromStarfaitHandle(handle: TextureHandle): Texture {
+    private fun getGLTextureFromStarfaitHandle(handle: TextureHandle): GLTexture {
         return this.textures[handle]!!
     }
 
     override suspend fun uploadTexture(texture: com.mrpowergamerbr.starfait.wad.Texture): TextureHandle {
-        val uploadedTexture = this.textureManager.loadTexture(texture.blob, StarfaitGLConstants.GL_NEAREST)
+        val uploadedTexture = this.textureManager.loadTexture(imageDecoder.decode(texture.blob), GLConstants.GL_NEAREST)
         return allocateAndStoreTextureHandle(uploadedTexture)
     }
 
-    private fun allocateAndStoreTextureHandle(texture: Texture): TextureHandle {
+    private fun allocateAndStoreTextureHandle(texture: GLTexture): TextureHandle {
         val textureHandle = TextureHandle(this.currentTextureId++)
         this.textures[textureHandle] = texture
         return textureHandle
@@ -278,8 +266,6 @@ class GLRenderer(
 
         val tpag = font.texturePageEntry
         val texture = getGLTextureFromStarfaitHandle(tpag.textureIndex)
-
-        flushIfNeeded(texture)
 
         val rad = MathUtils.toRadians(rot.toDouble())
 
@@ -495,36 +481,17 @@ class GLRenderer(
             drawLine(x3, y3, x1, y1, 1f, blend3, blend1, alpha)
         } else {
             val texture = this.white1x1Texture
-            flushIfNeeded(texture)
 
-            // vertex #1
-            batch[currentIndex++] = x1; batch[currentIndex++] = y1;
-            batch[currentIndex++] = 0.0f; batch[currentIndex++] = 0.0f;
+            batcher.drawVertexGroup(3, texture) {
+                // vertex #1
+                batcher.drawVertex(x1, y1, 0.0f, 0.0f, blend1.redF, blend1.greenF, blend1.blueF, alpha)
 
-            batch[currentIndex++] = blend1.redF
-            batch[currentIndex++] = blend1.greenF
-            batch[currentIndex++] = blend1.blueF
-            batch[currentIndex++] = alpha
+                // vertex #2
+                batcher.drawVertex(x2, y2, 1.0f, 0.0f, blend2.redF, blend2.greenF, blend2.blueF, alpha)
 
-            // vertex #2
-            batch[currentIndex++] = x2; batch[currentIndex++] = y2;
-            batch[currentIndex++] = 1.0f; batch[currentIndex++] = 0.0f;
-
-            batch[currentIndex++] = blend2.redF
-            batch[currentIndex++] = blend2.greenF
-            batch[currentIndex++] = blend2.blueF
-            batch[currentIndex++] = alpha
-
-            // vertex #3
-            batch[currentIndex++] = x3; batch[currentIndex++] = y3;
-            batch[currentIndex++] = 1.0f; batch[currentIndex++] = 1.0f;
-
-            batch[currentIndex++] = blend3.redF
-            batch[currentIndex++] = blend3.greenF
-            batch[currentIndex++] = blend3.blueF
-            batch[currentIndex++] = alpha
-
-            this.activeBatchTexture = texture
+                // vertex #3
+                batcher.drawVertex(x3, y3, 1.0f, 1.0f, blend3.redF, blend3.greenF, blend3.blueF, alpha)
+            }
         }
     }
 
@@ -557,46 +524,22 @@ class GLRenderer(
             }
         } else {
             val texture = this.white1x1Texture
-            flushIfNeeded(texture)
-
-            val requiredElements = (steps * 3) * TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT
-            if (this.currentIndex + requiredElements >= TOTAL_BATCH_SIZE) {
-                flush()
-            }
 
             repeat(steps) {
                 val point1 = points[it]
                 val point2 = points[(it + 1) % steps]
 
-                // vertex #1
-                batch[currentIndex++] = x; batch[currentIndex++] = y;
-                batch[currentIndex++] = 0.0f; batch[currentIndex++] = 0.0f;
+                batcher.drawVertexGroup(3, texture) {
+                    // vertex #1
+                    batcher.drawVertex(x, y, 0.0f, 0.0f, col1.redF, col1.greenF, col1.blueF, alpha)
 
-                batch[currentIndex++] = col1.redF
-                batch[currentIndex++] = col1.greenF
-                batch[currentIndex++] = col1.blueF
-                batch[currentIndex++] = alpha
+                    // vertex #2
+                    batcher.drawVertex(x + point1.x, y + point1.y, 1.0f, 0.0f, col2.redF, col2.greenF, col2.blueF, alpha)
 
-                // vertex #2
-                batch[currentIndex++] = x + point1.x; batch[currentIndex++] = y + point1.y;
-                batch[currentIndex++] = 1.0f; batch[currentIndex++] = 0.0f;
-
-                batch[currentIndex++] = col2.redF
-                batch[currentIndex++] = col2.greenF
-                batch[currentIndex++] = col2.blueF
-                batch[currentIndex++] = alpha
-
-                // vertex #3
-                batch[currentIndex++] = x + point2.x; batch[currentIndex++] = y + point2.y;
-                batch[currentIndex++] = 1.0f; batch[currentIndex++] = 1.0f;
-
-                batch[currentIndex++] = col2.redF
-                batch[currentIndex++] = col2.greenF
-                batch[currentIndex++] = col2.blueF
-                batch[currentIndex++] = alpha
+                    // vertex #3
+                    batcher.drawVertex(x + point2.x, y + point2.y, 1.0f, 1.0f, col2.redF, col2.greenF, col2.blueF, alpha)
+                }
             }
-
-            this.activeBatchTexture = texture
         }
     }
 
@@ -604,13 +547,13 @@ class GLRenderer(
         // This is a bit painful but it is what it is
 
         // We flush anything pending so that we actually COPY the screen with anything that hasn't been flushed recently
-        flush()
+        batcher.flush()
 
         // TODO: Other surfaces
 
         // This sadly very much sucks quite a bit
         // TODO: Maybe replace this with a framebuffer? We draw directly to the fb and flip it on the GPU
-        val flippedByteArray = gl.readPixels(x, VIEWPORT_HEIGHT - y - height, width, height, StarfaitGLConstants.GL_RGBA, StarfaitGLConstants.GL_UNSIGNED_BYTE)
+        val flippedByteArray = gl.readPixels(x, VIEWPORT_HEIGHT - y - height, width, height, GLConstants.GL_RGBA, GLConstants.GL_UNSIGNED_BYTE)
 
         val byteArray = ByteArray(flippedByteArray.size)
         for (i in (height - 1) downTo 0) {
@@ -619,190 +562,184 @@ class GLRenderer(
 
         // 1. Generate and bind a new texture ID
         val textureId = gl.genTextures()
-        gl.bindTexture(StarfaitGLConstants.GL_TEXTURE_2D, textureId)
+        gl.bindTexture(GLConstants.GL_TEXTURE_2D, textureId)
 
         // 2. Tell OpenGL how to unpack the RGBA bytes.
         // Each component is 1 byte size
-        gl.pixelStorei(StarfaitGLConstants.GL_UNPACK_ALIGNMENT, 1)
+        gl.pixelStorei(GLConstants.GL_UNPACK_ALIGNMENT, 1)
 
         // Create the texture first
         gl.texImage2D(
-            StarfaitGLConstants.GL_TEXTURE_2D,
+            GLConstants.GL_TEXTURE_2D,
             0,
-            StarfaitGLConstants.GL_RGBA,
-            RawPixelsDecodedImage(
+            GLConstants.GL_RGBA,
+            0,
+            GLConstants.GL_RGBA,
+            GLConstants.GL_UNSIGNED_BYTE,
+            ByteArrayTextureSource(
                 width,
                 height,
                 byteArray
-            ),
-            0,
-            StarfaitGLConstants.GL_RGBA,
-            StarfaitGLConstants.GL_UNSIGNED_BYTE
+            )
         )
 
         // 3. Set texture parameters
         // Repeat image in both directions
-        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_WRAP_S, StarfaitGLConstants.GL_REPEAT)
-        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_WRAP_T, StarfaitGLConstants.GL_REPEAT)
+        gl.texParameteri(GLConstants.GL_TEXTURE_2D, GLConstants.GL_TEXTURE_WRAP_S, GLConstants.GL_REPEAT)
+        gl.texParameteri(GLConstants.GL_TEXTURE_2D, GLConstants.GL_TEXTURE_WRAP_T, GLConstants.GL_REPEAT)
         // When stretching the image, pixelate
-        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_MIN_FILTER, StarfaitGLConstants.GL_NEAREST)
+        gl.texParameteri(GLConstants.GL_TEXTURE_2D, GLConstants.GL_TEXTURE_MIN_FILTER, GLConstants.GL_NEAREST)
         // When shrinking the image, pixelate
-        gl.texParameteri(StarfaitGLConstants.GL_TEXTURE_2D, StarfaitGLConstants.GL_TEXTURE_MAG_FILTER, StarfaitGLConstants.GL_NEAREST)
+        gl.texParameteri(GLConstants.GL_TEXTURE_2D, GLConstants.GL_TEXTURE_MAG_FILTER, GLConstants.GL_NEAREST)
 
-        gl.bindFramebuffer(StarfaitGLConstants.GL_READ_FRAMEBUFFER, 0)
+        gl.bindFramebuffer(GLConstants.GL_READ_FRAMEBUFFER, 0)
 
-        return allocateAndStoreTextureHandle(Texture(textureId, width, height))
+        return allocateAndStoreTextureHandle(GLTexture(textureId, width, height))
     }
 
     override fun deleteTextures(textures: List<TextureHandle>) = gl.deleteTextures(textures.mapNotNull { this.textures.remove(it)?.textureId })
 
     override fun withView(view: RunnerRoom.RunnerView?, block: () -> Unit) {
-        flush()
+        gl.enable(GLConstants.GL_SCISSOR_TEST)
 
-        gl.enable(StarfaitGLConstants.GL_SCISSOR_TEST)
+        batcher.withBatcher {
+            minimalShader.withProgram {
+                if (view != null) {
+                    val halfWidth = view.viewWidth.toFloat() / 2f
+                    val halfHeight = view.viewHeight.toFloat() / 2f
 
-        minimalShader.bind {
-            if (view != null) {
-                val halfWidth = view.viewWidth.toFloat() / 2f
-                val halfHeight = view.viewHeight.toFloat() / 2f
+                    // portX/portY = where it will be rendered in the screen
+                    // We do - for the Y because OpenGL is y up
+                    gl.viewport(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+                    gl.scissor(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
 
-                // portX/portY = where it will be rendered in the screen
-                // We do - for the Y because OpenGL is y up
-                gl.viewport(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
-                gl.scissor(view.portX, VIEWPORT_HEIGHT - (view.portY + view.portHeight), view.portWidth, view.portHeight)
+                    minimalShader.uProjection.set(
+                        Matrix4f()
+                            .ortho(
+                                view.viewX.toFloat(),
+                                view.viewX.toFloat() + view.viewWidth.toFloat(),
+                                view.viewY.toFloat() + view.viewHeight.toFloat(),
+                                view.viewY.toFloat(),
+                                1.0f,
+                                -1.0f
+                            )
+                            // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
+                            .translate(halfWidth + view.viewX.toFloat(), halfHeight + view.viewY.toFloat(), 0f)
+                            .rotateZ(MathUtils.toRadians(-view.angle.toDouble()).toFloat())
+                            .translate(-halfWidth - view.viewX.toFloat(), -halfHeight - view.viewY.toFloat(), 0f)
+                            .get(FloatArray(16))
+                    )
+                } else {
+                    gl.viewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+                    gl.scissor(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
 
-                minimalShader.uProjection.set(
-                    Matrix4f()
-                        .ortho(
-                            view.viewX.toFloat(),
-                            view.viewX.toFloat() + view.viewWidth.toFloat(),
-                            view.viewY.toFloat() + view.viewHeight.toFloat(),
-                            view.viewY.toFloat(),
-                            1.0f,
-                            -1.0f
-                        )
-                        // Essentially what we do here is that we want to move the center of the camera to (0, 0), then we apply the rotation, then we move it back to where it is supposed to be
-                        .translate(halfWidth + view.viewX.toFloat(), halfHeight + view.viewY.toFloat(), 0f)
-                        .rotateZ(MathUtils.toRadians(-view.angle.toDouble()).toFloat())
-                        .translate(-halfWidth - view.viewX.toFloat(), -halfHeight - view.viewY.toFloat(), 0f)
-                        .get(FloatArray(16))
-                )
-            } else {
-                gl.viewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
-                gl.scissor(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+                    minimalShader.uProjection.set(
+                        Matrix4f()
+                            .ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f)
+                            .get(FloatArray(16))
+                    )
+                }
 
-                minimalShader.uProjection.set(
-                    Matrix4f()
-                        .ortho(0.0f, runner.currentRoom.width.toFloat(), runner.currentRoom.height.toFloat(), 0.0f, 1.0f, -1.0f)
-                        .get(FloatArray(16))
-                )
+                block()
             }
-
-            block()
         }
 
-        gl.disable(StarfaitGLConstants.GL_SCISSOR_TEST)
+        gl.disable(GLConstants.GL_SCISSOR_TEST)
     }
 
     override fun frame(block: () -> Unit) {
         // TODO: Respect the room's drawBackgroundColor
         val color = runner.currentRoom.backgroundColor
         gl.clearColor(color.redF, color.greenF, color.blueF, 1.0f)
-        gl.clear(StarfaitGLConstants.GL_COLOR_BUFFER_BIT)
+        gl.clear(GLConstants.GL_COLOR_BUFFER_BIT)
 
         block()
 
-        if (runner.enableCollisionRendering) {
-            for (instance in runner.currentRoom.instances) {
-                val bbox = instance.getBoundingBox()
+        batcher.withBatcher {
+            if (runner.enableCollisionRendering) {
+                for (instance in runner.currentRoom.instances) {
+                    val bbox = instance.getBoundingBox()
 
-                drawQuad(
-                    bbox.left,
-                    bbox.top,
-                    0.0f,
-                    0.0f,
-                    1.0f,
-                    1.0f,
-                    bbox.right - bbox.left,
-                    bbox.bottom - bbox.top,
-                    white1x1Texture,
-                    GMLColor(0x00ff00),
-                    0.25f
-                )
+                    drawQuad(
+                        bbox.left,
+                        bbox.top,
+                        0.0f,
+                        0.0f,
+                        1.0f,
+                        1.0f,
+                        bbox.right - bbox.left,
+                        bbox.bottom - bbox.top,
+                        white1x1Texture,
+                        GMLColor(0x00ff00),
+                        0.25f
+                    )
 
-                if (instance.spriteIndex >= 0f) {
-                    val collisionSprite = instance.getCollisionSprite()
-                    if (collisionSprite != null && collisionSprite.hasCollisionMask) {
-                        // This is very much NOT optimized
-                        // I think the best way would be to convert the mask into a image, then blit it to a texture
-                        for (y in 0 until (collisionSprite.height * instance.imageYScale).toInt()) {
-                            for (x in 0 until (collisionSprite.width * instance.imageXScale).toInt()) {
-                                if (collisionSprite.isPixelSolidOnCollisionMask(instance.imageIndex.toInt(), (x / instance.imageXScale).toInt(), (y / instance.imageYScale).toInt(), runner.collisionCompatibilityMode)) {
-                                    drawQuad(
-                                        x + instance.x,
-                                        y + instance.y,
-                                        0.0f,
-                                        0.0f,
-                                        1.0f,
-                                        1.0f,
-                                        1f,
-                                        1f,
-                                        white1x1Texture,
-                                        GMLColor(0x00ffff),
-                                        0.25f
-                                    )
+                    if (instance.spriteIndex >= 0f) {
+                        val collisionSprite = instance.getCollisionSprite()
+                        if (collisionSprite != null && collisionSprite.hasCollisionMask) {
+                            // This is very much NOT optimized
+                            // I think the best way would be to convert the mask into a image, then blit it to a texture
+                            for (y in 0 until (collisionSprite.height * instance.imageYScale).toInt()) {
+                                for (x in 0 until (collisionSprite.width * instance.imageXScale).toInt()) {
+                                    if (collisionSprite.isPixelSolidOnCollisionMask(
+                                            instance.imageIndex.toInt(),
+                                            (x / instance.imageXScale).toInt(),
+                                            (y / instance.imageYScale).toInt(),
+                                            runner.collisionCompatibilityMode
+                                        )
+                                    ) {
+                                        drawQuad(
+                                            x + instance.x,
+                                            y + instance.y,
+                                            0.0f,
+                                            0.0f,
+                                            1.0f,
+                                            1.0f,
+                                            1f,
+                                            1f,
+                                            white1x1Texture,
+                                            GMLColor(0x00ffff),
+                                            0.25f
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                for (debugRectangle in runner.debugRectangles) {
+                    drawQuad(
+                        debugRectangle.bbox.left,
+                        debugRectangle.bbox.top,
+                        0.0f,
+                        0.0f,
+                        1.0f,
+                        1.0f,
+                        debugRectangle.bbox.right - debugRectangle.bbox.left,
+                        debugRectangle.bbox.bottom - debugRectangle.bbox.top,
+                        white1x1Texture,
+                        debugRectangle.color,
+                        0.5f
+                    )
+                }
+
+                for (debugLine in runner.debugLines) {
+                    drawLine(
+                        debugLine.x1,
+                        debugLine.y1,
+                        debugLine.x2,
+                        debugLine.y2,
+                        1f,
+                        debugLine.color,
+                        debugLine.color,
+                        1.0f
+                    )
+                }
             }
 
-            for (debugRectangle in runner.debugRectangles) {
-                drawQuad(
-                    debugRectangle.bbox.left,
-                    debugRectangle.bbox.top,
-                    0.0f,
-                    0.0f,
-                    1.0f,
-                    1.0f,
-                    debugRectangle.bbox.right - debugRectangle.bbox.left,
-                    debugRectangle.bbox.bottom - debugRectangle.bbox.top,
-                    white1x1Texture,
-                    debugRectangle.color,
-                    0.5f
-                )
-            }
-
-            for (debugLine in runner.debugLines) {
-                drawLine(
-                    debugLine.x1,
-                    debugLine.y1,
-                    debugLine.x2,
-                    debugLine.y2,
-                    1f,
-                    debugLine.color,
-                    debugLine.color,
-                    1.0f
-                )
-            }
-        }
-
-        runner.debugRectangles.clear()
-        runner.debugLines.clear()
-
-        flush()
-    }
-
-    fun flushIfNeeded(texture: Texture) {
-        if (this.activeBatchTexture != texture) {
-            flush()
-            return
-        }
-
-        if (this.currentIndex == batch.size) {
-            flush()
-            return
+            runner.debugRectangles.clear()
+            runner.debugLines.clear()
         }
     }
 
@@ -815,7 +752,7 @@ class GLRenderer(
         v2: Float,
         width: Float,
         height: Float,
-        texture: Texture,
+        texture: GLTexture,
         blend: GMLColor,
         alpha: Float
     ) = drawQuad(x, y, x + width, y, x + width, y + height, x, y + height, u1, v1, u2, v2, texture, blend, blend, blend, blend, alpha)
@@ -834,86 +771,43 @@ class GLRenderer(
         v1: Float,
         u2: Float,
         v2: Float,
-        texture: Texture,
+        texture: GLTexture,
         blend1: GMLColor,
         blend2: GMLColor,
         blend3: GMLColor,
         blend4: GMLColor,
         alpha: Float
     ) {
-        flushIfNeeded(texture)
-
-        // top-left
-        batch[currentIndex++] = x1; batch[currentIndex++] = y1;
-        batch[currentIndex++] = u1; batch[currentIndex++] = v1;
-
-        batch[currentIndex++] = blend1.redF
-        batch[currentIndex++] = blend1.greenF
-        batch[currentIndex++] = blend1.blueF
-        batch[currentIndex++] = alpha
-
-        // bottom-right
-        batch[currentIndex++] = x3; batch[currentIndex++] = y3;
-        batch[currentIndex++] = u2; batch[currentIndex++] = v2;
-
-        batch[currentIndex++] = blend3.redF
-        batch[currentIndex++] = blend3.greenF
-        batch[currentIndex++] = blend3.blueF
-        batch[currentIndex++] = alpha
-
-        // bottom-left
-        batch[currentIndex++] = x4; batch[currentIndex++] = y4;
-        batch[currentIndex++] = u1; batch[currentIndex++] = v2;
-
-        batch[currentIndex++] = blend4.redF
-        batch[currentIndex++] = blend4.greenF
-        batch[currentIndex++] = blend4.blueF
-        batch[currentIndex++] = alpha
-
-        // top-left
-        batch[currentIndex++] = x1; batch[currentIndex++] = y1;
-        batch[currentIndex++] = u1; batch[currentIndex++] = v1;
-
-        batch[currentIndex++] = blend1.redF
-        batch[currentIndex++] = blend1.greenF
-        batch[currentIndex++] = blend1.blueF
-        batch[currentIndex++] = alpha
-
-        // top-right
-        batch[currentIndex++] = x2; batch[currentIndex++] = y2;
-        batch[currentIndex++] = u2; batch[currentIndex++] = v1;
-
-        batch[currentIndex++] = blend2.redF
-        batch[currentIndex++] = blend2.greenF
-        batch[currentIndex++] = blend2.blueF
-        batch[currentIndex++] = alpha
-
-        // bottom-right
-        batch[currentIndex++] = x3; batch[currentIndex++] = y3;
-        batch[currentIndex++] = u2; batch[currentIndex++] = v2;
-
-        batch[currentIndex++] = blend3.redF
-        batch[currentIndex++] = blend3.greenF
-        batch[currentIndex++] = blend3.blueF
-        batch[currentIndex++] = alpha
-
-        this.activeBatchTexture = texture
-    }
-
-    fun flush() {
-        gl.bindBuffer(StarfaitGLConstants.GL_ARRAY_BUFFER, vbo)
-        gl.bufferSubData(StarfaitGLConstants.GL_ARRAY_BUFFER, 0, batch)
-
-        val activeBatchTexture = this.activeBatchTexture
-        if (activeBatchTexture != null)
-            minimalShader.uTexture.set(0, activeBatchTexture)
-
-        minimalShader.bind {
-            gl.bindVertexArray(vao)
-            gl.drawArrays(StarfaitGLConstants.GL_TRIANGLES, 0, currentIndex / TOTAL_ATTRIBUTE_SIZE_PER_ELEMENT)
-        }
-
-        this.currentIndex = 0
-        // We don't need to clear the current batch even though it has TRASH in it
+        batcher.drawQuad(
+            x1,
+            y1,
+            x2,
+            y2,
+            x3,
+            y3,
+            x4,
+            y4,
+            u1,
+            v1,
+            u2,
+            v2,
+            texture,
+            blend1.redF,
+            blend1.greenF,
+            blend1.blueF,
+            alpha,
+            blend2.redF,
+            blend2.greenF,
+            blend2.blueF,
+            alpha,
+            blend3.redF,
+            blend3.greenF,
+            blend3.blueF,
+            alpha,
+            blend4.redF,
+            blend4.greenF,
+            blend4.blueF,
+            alpha
+        )
     }
 }

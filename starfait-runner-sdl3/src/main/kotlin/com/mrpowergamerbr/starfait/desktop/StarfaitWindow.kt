@@ -8,7 +8,6 @@ import com.mrpowergamerbr.starfait.filesystem.disk.DiskFileSystem
 import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.opengl.GLRenderer
 import com.mrpowergamerbr.starfait.renderer.opengl.STBImageDecoder
-import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitOpenGL
 import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.resources.RunnerResources
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard.Companion.VK_ADD
@@ -44,7 +43,8 @@ import com.mrpowergamerbr.starfait.vm.StarfaitVM
 import com.mrpowergamerbr.starfait.vm.VariableInstanceType
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import net.perfectdreams.harmony.gl.debug.OpenGLDebugging
+import net.perfectdreams.harmony.gl.opengl.OpenGLContext
+import net.perfectdreams.harmony.gl.opengl.OpenGLDebugging
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.sdl.SDLAudio.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK
@@ -131,7 +131,7 @@ class StarfaitWindow(
         val layeredFileSystem = LayeredFileSystem(saveFileSystem, bundleFileSystem)
 
         val renderer = GLRenderer(
-            StarfaitOpenGL(),
+            OpenGLContext(),
             """
                 #version 330
                 

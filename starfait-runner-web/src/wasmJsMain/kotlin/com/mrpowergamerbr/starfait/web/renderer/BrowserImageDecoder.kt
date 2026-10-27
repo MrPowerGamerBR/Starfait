@@ -1,16 +1,16 @@
 package com.mrpowergamerbr.starfait.web.renderer
 
 import com.mrpowergamerbr.starfait.renderer.opengl.ImageDecoder
-import com.mrpowergamerbr.starfait.web.toArrayBufferFast
 import js.array.toJsArray
 import js.objects.unsafeJso
+import net.perfectdreams.harmony.gl.webgl2.BrowserTextureSource
+import net.perfectdreams.harmony.wasm.toArrayBufferFast
 import web.blob.Blob
-import web.blob.BlobPropertyBag
 import web.images.createImageBitmap
 
 class BrowserImageDecoder : ImageDecoder {
     @OptIn(ExperimentalWasmJsInterop::class)
-    override suspend fun decodeRGBA(data: ByteArray): BrowserDecodedImage {
+    override suspend fun decode(data: ByteArray): BrowserTextureSource {
         val blob = Blob(
             listOf(data.toArrayBufferFast()).toJsArray(),
             unsafeJso {
@@ -20,6 +20,6 @@ class BrowserImageDecoder : ImageDecoder {
 
         val image = createImageBitmap(blob)
 
-        return BrowserDecodedImage(image.width, image.height, image)
+        return BrowserTextureSource(image.width, image.height, image)
     }
 }

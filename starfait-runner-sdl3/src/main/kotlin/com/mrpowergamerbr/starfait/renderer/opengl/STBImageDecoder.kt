@@ -1,12 +1,14 @@
 package com.mrpowergamerbr.starfait.renderer.opengl
 
+import net.perfectdreams.harmony.gl.ByteArrayTextureSource
+import net.perfectdreams.harmony.gl.TextureSource
 import org.lwjgl.stb.STBImage
 import org.lwjgl.stb.STBImage.stbi_set_flip_vertically_on_load
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 
 class STBImageDecoder : ImageDecoder {
-    override suspend fun decodeRGBA(data: ByteArray): DecodedImage {
+    override suspend fun decode(data: ByteArray): TextureSource {
         stbi_set_flip_vertically_on_load(false)
 
         val imageBuffer = MemoryUtil.memAlloc(data.size)
@@ -33,7 +35,7 @@ class STBImageDecoder : ImageDecoder {
                 decodedImage.get(0, pixels)
                 STBImage.stbi_image_free(decodedImage)
 
-                return RawPixelsDecodedImage(w.get(), h.get(), pixels)
+                return ByteArrayTextureSource(w.get(), h.get(), pixels)
             }
         } finally {
             MemoryUtil.memFree(imageBuffer)

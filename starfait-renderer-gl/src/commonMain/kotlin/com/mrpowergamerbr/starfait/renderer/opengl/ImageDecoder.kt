@@ -1,8 +1,10 @@
 package com.mrpowergamerbr.starfait.renderer.opengl
 
+import net.perfectdreams.harmony.gl.TextureSource
+
 /**
- * Decodes encoded images (PNG, etc) into RGBA pixels
+ * Decodes the encoded images (PNG, etc) into a [net.perfectdreams.harmony.gl.TextureSource]
  */
 interface ImageDecoder {
-    suspend fun decodeRGBA(data: ByteArray): DecodedImage
+    suspend fun decode(data: ByteArray): TextureSource
 }

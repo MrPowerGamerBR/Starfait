@@ -1,9 +1,9 @@
 package com.mrpowergamerbr.starfait.renderer.opengl.shaders
 
-import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGL
-import net.perfectdreams.harmony.gl.shaders.GameShader
+import net.perfectdreams.harmony.gl.GLContext
+import net.perfectdreams.harmony.gl.shaders.ShaderProgram
 
-class MinimalShader(gl: StarfaitGL, programId: Int) : GameShader(gl, programId) {
+class MinimalShader(gl: GLContext, programId: Int) : ShaderProgram(gl, programId) {
     companion object {
         val VERTEX_SHADER_CODE = """
             // For batching, we store the position of each quad directly on the position, so we don't actually *need* to have a uModel

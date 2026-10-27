@@ -8,7 +8,6 @@ import com.mrpowergamerbr.starfait.TimeUtils
 import com.mrpowergamerbr.starfait.filesystem.LayeredFileSystem
 import com.mrpowergamerbr.starfait.filesystem.virtual.VirtualFileSystem
 import com.mrpowergamerbr.starfait.renderer.opengl.GLRenderer
-import com.mrpowergamerbr.starfait.renderer.opengl.StarfaitGLConstants.GL_COLOR_BUFFER_BIT
 import com.mrpowergamerbr.starfait.renderer.opengl.shaders.MinimalShader
 import com.mrpowergamerbr.starfait.runner.RunnerKeyboard
 import com.mrpowergamerbr.starfait.runner.StarfaitRunner
@@ -19,7 +18,6 @@ import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.web.audio.web.WebAudioManager
 import com.mrpowergamerbr.starfait.web.filesystem.opfs.OPFSFileSystem
 import com.mrpowergamerbr.starfait.web.renderer.BrowserImageDecoder
-import com.mrpowergamerbr.starfait.web.renderer.StarfaitWebGL2
 import js.buffer.ArrayBuffer
 import js.buffer.ArrayBufferLike
 import js.coroutines.asPromise
@@ -34,6 +32,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import net.perfectdreams.harmony.gl.GLConstants.GL_COLOR_BUFFER_BIT
+import net.perfectdreams.harmony.gl.webgl2.WebGL2Context
+import net.perfectdreams.harmony.wasm.toByteArrayFast
 import web.blob.arrayBuffer
 import web.dom.ElementId
 import web.dom.document
@@ -115,7 +116,7 @@ fun createRunner(bundlePath: String, savePath: String, gameWADName: String, game
         println("Creating renderer")
 
         val renderer = GLRenderer(
-            StarfaitWebGL2(context),
+            WebGL2Context(context),
             """
                             #version 300 es
                             precision highp float;

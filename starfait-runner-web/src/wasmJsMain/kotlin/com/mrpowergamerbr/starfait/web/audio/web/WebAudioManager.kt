@@ -4,11 +4,11 @@ import com.mrpowergamerbr.starfait.audio.AudioManager
 import com.mrpowergamerbr.starfait.filesystem.FileSystem
 import com.mrpowergamerbr.starfait.wad.GameWAD
 import com.mrpowergamerbr.starfait.wad.Sound
-import com.mrpowergamerbr.starfait.web.toArrayBufferFast
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import net.perfectdreams.harmony.wasm.toArrayBufferFast
 import web.audio.AudioBuffer
 import web.audio.AudioContext
 import web.audio.decodeAudioData

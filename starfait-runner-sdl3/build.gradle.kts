@@ -14,7 +14,7 @@ val lwjglNatives = findProperty("lwjglNativesPlatform") ?: "natives-linux"
 dependencies {
     api(project(":starfait-runner-core"))
     api(project(":starfait-renderer-gl"))
-    api("net.perfectdreams.harmony:harmony-opengl-lwjgl:0.0.1-SNAPSHOT")
+    api("net.perfectdreams.harmony:harmony-opengl-lwjgl:0.0.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
 

@@ -2,8 +2,9 @@ package com.mrpowergamerbr.starfait.renderer.opengl.shaders
 
 import net.perfectdreams.harmony.gl.GLContext
 import net.perfectdreams.harmony.gl.shaders.ShaderProgram
+import net.perfectdreams.harmony.graphics.batcher.SpriteShader
 
-class MinimalShader(gl: GLContext, programId: Int) : ShaderProgram(gl, programId) {
+class MinimalShader(gl: GLContext, programId: Int) : SpriteShader(gl, programId) {
     companion object {
         val VERTEX_SHADER_CODE = """
             // For batching, we store the position of each quad directly on the position, so we don't actually *need* to have a uModel
@@ -38,5 +39,5 @@ class MinimalShader(gl: GLContext, programId: Int) : ShaderProgram(gl, programId
         """
     }
     val uProjection = uniformMatrix4fv("uProjection")
-    val uTexture = uniform1Sampler2D("uTexture")
+    override val uTexture = uniform1Sampler2D("uTexture")
 }

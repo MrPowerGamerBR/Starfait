@@ -4,8 +4,6 @@ plugins {
 
 rootProject.name = "Starfait"
 
-includeBuild("../HarmonyFramework")
-
 include(":starfait-common")
 include(":starfait-annotations")
 include(":starfait-annotation-processor")

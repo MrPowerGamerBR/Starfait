@@ -11,6 +11,7 @@ allprojects {
 
     repositories {
         mavenCentral()
+        maven("https://repo.perfectdreams.net/")
     }
 
     plugins.withType<org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin> {
